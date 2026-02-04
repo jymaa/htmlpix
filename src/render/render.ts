@@ -117,10 +117,10 @@ export async function render(request: RenderRequest): Promise<RenderResult | Ren
               for (const urlMatch of urls) {
                 const url = urlMatch.replace(/url\\(["']?|["']?\\)/g, '');
                 if (url && !url.startsWith('data:')) {
-                  bgPromises.push(new Promise((resolve, reject) => {
+                  bgPromises.push(new Promise((resolve) => {
                     const img = new Image();
                     img.onload = () => resolve();
-                    img.onerror = () => reject(new Error('Background image failed: ' + url));
+                    img.onerror = () => resolve(); // Don't fail on blocked/missing images
                     img.src = url;
                   }));
                 }

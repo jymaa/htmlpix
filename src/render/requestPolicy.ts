@@ -65,8 +65,8 @@ export function createRequestInterceptor(
         return;
       }
 
-      // For non-document requests, only allow whitelisted hosts
-      if (resourceType !== "document") {
+      // For non-document requests, check allowlist (images allowed from any host)
+      if (resourceType !== "document" && resourceType !== "image") {
         if (!isGoogleFonts && !isAdditionalAllowed) {
           stats.blockedCount++;
           await request.abort("blockedbyclient");
