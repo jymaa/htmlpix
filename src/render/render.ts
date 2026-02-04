@@ -93,17 +93,44 @@ export async function render(request: RenderRequest): Promise<RenderResult | Ren
       timeout: timeoutMs,
     });
 
-    // Wait for all images to be fully loaded
+    // Wait for all images to be fully loaded (both <img> and CSS background-image)
     await page.evaluate(`
-      Promise.all(
-        Array.from(document.querySelectorAll('img')).map(img => {
+      (async () => {
+        // Wait for <img> elements
+        const imgPromises = Array.from(document.querySelectorAll('img')).map(img => {
           if (img.complete) return Promise.resolve();
           return new Promise((resolve, reject) => {
             img.addEventListener('load', () => resolve());
             img.addEventListener('error', () => reject(new Error('Image failed: ' + img.src)));
           });
-        })
-      )
+        });
+
+        // Wait for CSS background images
+        const bgPromises = [];
+        const elements = document.querySelectorAll('*');
+        for (const el of elements) {
+          const style = getComputedStyle(el);
+          const bg = style.backgroundImage;
+          if (bg && bg !== 'none') {
+            const urls = bg.match(/url\\(["']?([^"')]+)["']?\\)/g);
+            if (urls) {
+              for (const urlMatch of urls) {
+                const url = urlMatch.replace(/url\\(["']?|["']?\\)/g, '');
+                if (url && !url.startsWith('data:')) {
+                  bgPromises.push(new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve();
+                    img.onerror = () => reject(new Error('Background image failed: ' + url));
+                    img.src = url;
+                  }));
+                }
+              }
+            }
+          }
+        }
+
+        await Promise.all([...imgPromises, ...bgPromises]);
+      })()
     `);
 
     // Wait for fonts to load
