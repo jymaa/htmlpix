@@ -89,9 +89,22 @@ export async function render(request: RenderRequest): Promise<RenderResult | Ren
     const timeoutMs = request.timeoutMs || DEFAULT_TIMEOUT_MS;
 
     await page.setContent(html, {
-      waitUntil: "load",
+      waitUntil: ["load", "networkidle0"],
       timeout: timeoutMs,
     });
+
+    // Wait for all images to be fully loaded
+    await page.evaluate(`
+      Promise.all(
+        Array.from(document.querySelectorAll('img')).map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve, reject) => {
+            img.addEventListener('load', () => resolve());
+            img.addEventListener('error', () => reject(new Error('Image failed: ' + img.src)));
+          });
+        })
+      )
+    `);
 
     // Wait for fonts to load
     await page.evaluate("document.fonts.ready");
