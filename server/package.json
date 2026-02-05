@@ -1,0 +1,12 @@
+{
+  "name": "htmlpix-server",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run dist/server.js"
+  },
+  "dependencies": {
+    "convex": "^1.31.7",
+    "puppeteer": "^24.36.1"
+  }
+}

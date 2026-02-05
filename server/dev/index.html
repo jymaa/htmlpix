@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTMLPix Dev Testing</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    h1 { margin: 0 0 20px; font-size: 24px; }
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .panel {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      color: #666;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 13px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #0066cc;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control label {
+      font-size: 12px;
+      color: #666;
+      font-weight: 500;
+    }
+    .control input, .control select {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .control input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+    .checkbox-control {
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
+    button {
+      padding: 12px 24px;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #0052a3; }
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+    .result-panel {
+      min-height: 400px;
+    }
+    #result {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+    #result img {
+      max-width: 100%;
+      display: block;
+    }
+    #result .placeholder {
+      color: #999;
+      font-size: 14px;
+    }
+    #result .error {
+      color: #cc0000;
+      padding: 16px;
+      text-align: center;
+    }
+    .preview-frame {
+      width: 100%;
+      height: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+    }
+    .snippets {
+      margin-top: 20px;
+    }
+    .snippets h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      color: #666;
+    }
+    .snippet-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .snippet-btn {
+      padding: 6px 12px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .snippet-btn:hover {
+      background: #0066cc;
+      transform: translateY(-1px);
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    #status {
+      font-size: 13px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>HTMLPix Dev Testing</h1>
+
+  <div class="container">
+    <div class="left-col">
+      <div class="panel">
+        <h2>HTML</h2>
+        <textarea id="html" placeholder="Enter HTML here..."><div style="padding: 40px; font-family: sans-serif;">
+  <h1>Hello World</h1>
+  <p>Test your HTML rendering here.</p>
+</div></textarea>
+      </div>
+
+      <div class="panel" style="margin-top: 20px;">
+        <h2>CSS (injected into page)</h2>
+        <textarea id="css" placeholder="Enter CSS here (optional)..."></textarea>
+      </div>
+
+      <div class="panel snippets">
+        <h2>Test Snippets</h2>
+        <div class="snippet-grid" id="snippets"></div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="panel">
+        <h2>Options</h2>
+        <div class="controls">
+          <div class="control" style="grid-column: 1 / -1;">
+            <label>API Key</label>
+            <input type="text" id="apiKey" placeholder="hpx_..." style="font-family: monospace;">
+          </div>
+          <div class="control">
+            <label>Width</label>
+            <input type="number" id="width" value="800" min="1" max="4000">
+          </div>
+          <div class="control">
+            <label>Height</label>
+            <input type="number" id="height" value="600" min="1" max="4000">
+          </div>
+          <div class="control">
+            <label>Format</label>
+            <select id="format">
+              <option value="png">PNG</option>
+              <option value="jpeg">JPEG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </div>
+          <div class="control">
+            <label>Scale</label>
+            <input type="number" id="deviceScaleFactor" value="1" min="0.5" max="4" step="0.5">
+          </div>
+          <div class="control checkbox-control">
+            <input type="checkbox" id="fullPage">
+            <label>Full Page</label>
+          </div>
+          <div class="control checkbox-control">
+            <input type="checkbox" id="omitBackground">
+            <label>Transparent BG</label>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="render">Render</button>
+          <span id="status"></span>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top: 20px;">
+        <h2>Preview (Live)</h2>
+        <iframe id="preview" class="preview-frame"></iframe>
+      </div>
+
+      <div class="panel result-panel" style="margin-top: 20px;">
+        <h2>Rendered Image</h2>
+        <div id="result">
+          <span class="placeholder">Click "Render" to generate image</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const snippets = {
+      'Typography': {
+        html: `<div style="padding: 40px; font-family: system-ui, sans-serif;">
+  <h1>Heading 1</h1>
+  <h2>Heading 2</h2>
+  <h3>Heading 3</h3>
+  <p>Regular paragraph with <strong>bold</strong>, <em>italic</em>, and <a href="#">links</a>.</p>
+  <ul>
+    <li>Unordered list item 1</li>
+    <li>Unordered list item 2</li>
+  </ul>
+  <ol>
+    <li>Ordered list item 1</li>
+    <li>Ordered list item 2</li>
+  </ol>
+</div>`,
+        css: ''
+      },
+      'Box Model': {
+        html: `<div class="box-demo">
+  <div class="box">margin</div>
+</div>`,
+        css: `.box-demo {
+  padding: 40px;
+  background: #f5f5f5;
+}
+.box {
+  background: #4CAF50;
+  color: white;
+  padding: 30px;
+  margin: 20px;
+  border: 5px solid #2E7D32;
+  border-radius: 8px;
+  text-align: center;
+  font-family: sans-serif;
+}`
+      },
+      'Flexbox': {
+        html: `<div class="flex-container">
+  <div class="flex-item">1</div>
+  <div class="flex-item">2</div>
+  <div class="flex-item">3</div>
+  <div class="flex-item">4</div>
+  <div class="flex-item">5</div>
+</div>`,
+        css: `.flex-container {
+  display: flex;
+  gap: 16px;
+  padding: 40px;
+  background: #f0f0f0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.flex-item {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-family: sans-serif;
+  border-radius: 8px;
+}`
+      },
+      'CSS Grid': {
+        html: `<div class="grid-container">
+  <div class="grid-item header">Header</div>
+  <div class="grid-item sidebar">Sidebar</div>
+  <div class="grid-item main">Main Content</div>
+  <div class="grid-item footer">Footer</div>
+</div>`,
+        css: `.grid-container {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header header"
+    "sidebar main"
+    "footer footer";
+  gap: 16px;
+  padding: 20px;
+  min-height: 400px;
+  font-family: sans-serif;
+}
+.grid-item {
+  padding: 20px;
+  border-radius: 8px;
+  color: white;
+}
+.header { grid-area: header; background: #2196F3; }
+.sidebar { grid-area: sidebar; background: #4CAF50; }
+.main { grid-area: main; background: #FF9800; }
+.footer { grid-area: footer; background: #9C27B0; }`
+      },
+      'Transforms': {
+        html: `<div class="transform-demo">
+  <div class="card rotate">Rotate</div>
+  <div class="card scale">Scale</div>
+  <div class="card skew">Skew</div>
+  <div class="card perspective">3D</div>
+</div>`,
+        css: `.transform-demo {
+  display: flex;
+  gap: 40px;
+  padding: 60px;
+  background: #1a1a2e;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.card {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: sans-serif;
+  font-size: 14px;
+  border-radius: 8px;
+}
+.rotate { transform: rotate(15deg); }
+.scale { transform: scale(1.2); }
+.skew { transform: skewX(-10deg); }
+.perspective { transform: perspective(200px) rotateY(20deg); }`
+      },
+      'Gradients': {
+        html: `<div class="gradient-demo">
+  <div class="grad linear">Linear</div>
+  <div class="grad radial">Radial</div>
+  <div class="grad conic">Conic</div>
+</div>`,
+        css: `.gradient-demo {
+  display: flex;
+  gap: 20px;
+  padding: 40px;
+  background: #111;
+  justify-content: center;
+}
+.grad {
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: sans-serif;
+  font-weight: bold;
+  border-radius: 12px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.linear {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+.radial {
+  background: radial-gradient(circle, #4facfe, #00f2fe);
+}
+.conic {
+  background: conic-gradient(from 0deg, #ff0080, #ff8c00, #40e0d0, #ff0080);
+}`
+      },
+      'Shadows': {
+        html: `<div class="shadow-demo">
+  <div class="shadow-card soft">Soft Shadow</div>
+  <div class="shadow-card hard">Hard Shadow</div>
+  <div class="shadow-card layered">Layered</div>
+</div>`,
+        css: `.shadow-demo {
+  display: flex;
+  gap: 30px;
+  padding: 60px;
+  background: #f0f0f0;
+  justify-content: center;
+}
+.shadow-card {
+  width: 140px;
+  height: 140px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;
+  font-size: 13px;
+  border-radius: 12px;
+}
+.soft {
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+.hard {
+  box-shadow: 8px 8px 0 #333;
+}
+.layered {
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.1),
+    0 8px 16px rgba(0,0,0,0.1),
+    0 16px 32px rgba(0,0,0,0.1);
+}`
+      },
+      'Google Fonts': {
+        html: `<div class="fonts-demo">
+  <p class="font-roboto">Roboto - The quick brown fox</p>
+  <p class="font-playfair">Playfair Display - Elegant serif</p>
+  <p class="font-mono">Fira Code - console.log("Hello")</p>
+</div>`,
+        css: `@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@700&family=Fira+Code&display=swap');
+
+.fonts-demo {
+  padding: 40px;
+  background: white;
+}
+.fonts-demo p {
+  margin: 16px 0;
+  font-size: 24px;
+}
+.font-roboto { font-family: 'Roboto', sans-serif; }
+.font-playfair { font-family: 'Playfair Display', serif; }
+.font-mono { font-family: 'Fira Code', monospace; font-size: 18px; }`
+      },
+      'Table': {
+        html: `<table class="styled-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Alice</td><td>Developer</td><td><span class="badge green">Active</span></td></tr>
+    <tr><td>Bob</td><td>Designer</td><td><span class="badge green">Active</span></td></tr>
+    <tr><td>Carol</td><td>Manager</td><td><span class="badge yellow">Away</span></td></tr>
+  </tbody>
+</table>`,
+        css: `.styled-table {
+  width: 100%;
+  max-width: 500px;
+  margin: 20px auto;
+  border-collapse: collapse;
+  font-family: sans-serif;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.styled-table th, .styled-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+.styled-table th {
+  background: #2196F3;
+  color: white;
+}
+.styled-table tr:hover { background: #f5f5f5; }
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.badge.green { background: #e8f5e9; color: #2e7d32; }
+.badge.yellow { background: #fff8e1; color: #f57f17; }`
+      },
+      'Form': {
+        html: `<form class="styled-form">
+  <div class="form-group">
+    <label>Email</label>
+    <input type="email" placeholder="you@example.com">
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" placeholder="••••••••">
+  </div>
+  <div class="form-group">
+    <label>Country</label>
+    <select>
+      <option>United States</option>
+      <option>Canada</option>
+      <option>United Kingdom</option>
+    </select>
+  </div>
+  <button type="submit">Sign In</button>
+</form>`,
+        css: `.styled-form {
+  max-width: 320px;
+  margin: 20px auto;
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  font-family: sans-serif;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.styled-form button {
+  width: 100%;
+  padding: 12px;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}`
+      },
+      'Pseudo Elements': {
+        html: `<div class="pseudo-demo">
+  <blockquote class="quote">Design is not just what it looks like. Design is how it works.</blockquote>
+  <div class="ribbon">Featured</div>
+</div>`,
+        css: `.pseudo-demo {
+  padding: 60px 40px;
+  background: #f5f5f5;
+  font-family: sans-serif;
+}
+.quote {
+  position: relative;
+  padding: 20px 30px;
+  background: white;
+  border-left: 4px solid #2196F3;
+  margin: 0 0 40px;
+  font-style: italic;
+  color: #555;
+}
+.quote::before {
+  content: '"';
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  font-size: 60px;
+  color: #2196F3;
+  opacity: 0.3;
+}
+.ribbon {
+  position: relative;
+  display: inline-block;
+  padding: 10px 30px;
+  background: #ff5722;
+  color: white;
+  font-weight: bold;
+}
+.ribbon::before, .ribbon::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  border: 10px solid transparent;
+  border-top-color: #bf360c;
+}
+.ribbon::before { left: 0; border-left-color: #bf360c; }
+.ribbon::after { right: 0; border-right-color: #bf360c; }`
+      },
+      'Image Card': {
+        html: `<div class="card-demo">
+  <div class="image-card">
+    <img src="https://picsum.photos/400/200" alt="Random">
+    <div class="card-content">
+      <h3>Beautiful Scenery</h3>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      <button>Learn More</button>
+    </div>
+  </div>
+</div>`,
+        css: `.card-demo {
+  padding: 40px;
+  background: #f0f0f0;
+  display: flex;
+  justify-content: center;
+}
+.image-card {
+  width: 320px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  font-family: sans-serif;
+}
+.image-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+.card-content {
+  padding: 20px;
+}
+.card-content h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.card-content p {
+  margin: 0 0 16px;
+  color: #666;
+  font-size: 14px;
+}
+.card-content button {
+  padding: 10px 20px;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}`
+      },
+      'Filters': {
+        html: `<div class="filter-demo">
+  <div class="filter-item">
+    <img src="https://picsum.photos/120/120?random=1" alt="Original">
+    <span>Original</span>
+  </div>
+  <div class="filter-item">
+    <img src="https://picsum.photos/120/120?random=1" class="blur" alt="Blur">
+    <span>blur(4px)</span>
+  </div>
+  <div class="filter-item">
+    <img src="https://picsum.photos/120/120?random=1" class="grayscale" alt="Grayscale">
+    <span>grayscale(1)</span>
+  </div>
+  <div class="filter-item">
+    <img src="https://picsum.photos/120/120?random=1" class="sepia" alt="Sepia">
+    <span>sepia(1)</span>
+  </div>
+  <div class="filter-item">
+    <img src="https://picsum.photos/120/120?random=1" class="hue" alt="Hue">
+    <span>hue-rotate(90deg)</span>
+  </div>
+  <div class="filter-item">
+    <img src="https://picsum.photos/120/120?random=1" class="multi" alt="Multi">
+    <span>Combined</span>
+  </div>
+</div>`,
+        css: `.filter-demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 30px;
+  background: #1a1a2e;
+  justify-content: center;
+}
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.filter-item img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.filter-item span {
+  color: #fff;
+  font-family: sans-serif;
+  font-size: 11px;
+}
+.blur { filter: blur(4px); }
+.grayscale { filter: grayscale(1); }
+.sepia { filter: sepia(1); }
+.hue { filter: hue-rotate(90deg); }
+.multi { filter: contrast(1.2) saturate(1.5) brightness(1.1) drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }`
+      },
+      'Backdrop Filter': {
+        html: `<div class="glass-demo">
+  <div class="glass-card">
+    <h3>Glassmorphism</h3>
+    <p>This card uses backdrop-filter to create a frosted glass effect over the background.</p>
+  </div>
+</div>`,
+        css: `.glass-demo {
+  min-height: 350px;
+  padding: 60px;
+  background:
+    linear-gradient(135deg, #667eea 0%, #764ba2 100%),
+    url('https://picsum.photos/800/400?random=2');
+  background-size: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.glass-card {
+  padding: 30px 40px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-family: sans-serif;
+  max-width: 320px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+.glass-card h3 {
+  margin: 0 0 12px;
+  font-size: 22px;
+}
+.glass-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.9;
+}`
+      },
+      'Blend Modes': {
+        html: `<div class="blend-demo">
+  <div class="blend-item multiply">Multiply</div>
+  <div class="blend-item screen">Screen</div>
+  <div class="blend-item overlay">Overlay</div>
+  <div class="blend-item difference">Difference</div>
+  <div class="bg-blend">
+    <span>background-blend-mode</span>
+  </div>
+</div>`,
+        css: `.blend-demo {
+  padding: 40px;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+.blend-item {
+  width: 120px;
+  height: 120px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+  border-radius: 8px;
+}
+.multiply { mix-blend-mode: multiply; }
+.screen { mix-blend-mode: screen; }
+.overlay { mix-blend-mode: overlay; }
+.difference { mix-blend-mode: difference; color: white; }
+.bg-blend {
+  width: 200px;
+  height: 120px;
+  background:
+    url('https://picsum.photos/200/120?random=3'),
+    linear-gradient(45deg, #ff0080, #7928ca);
+  background-blend-mode: overlay;
+  background-size: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+.bg-blend span {
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-family: sans-serif;
+  font-size: 11px;
+}`
+      },
+      'Clip Path': {
+        html: `<div class="clip-demo">
+  <div class="clip-item polygon">Polygon</div>
+  <div class="clip-item circle">Circle</div>
+  <div class="clip-item ellipse">Ellipse</div>
+  <div class="clip-item inset">Inset</div>
+</div>`,
+        css: `.clip-demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  padding: 50px;
+  background: #0f0f23;
+  justify-content: center;
+}
+.clip-item {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+}
+.polygon {
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+}
+.circle {
+  clip-path: circle(50% at 50% 50%);
+}
+.ellipse {
+  clip-path: ellipse(50% 35% at 50% 50%);
+}
+.inset {
+  clip-path: inset(10% 5% 10% 5% round 10px);
+}`
+      },
+      'CSS Masks': {
+        html: `<div class="mask-demo">
+  <div class="mask-gradient">
+    <img src="https://picsum.photos/200/200?random=4" alt="Masked">
+    <span>Gradient Mask</span>
+  </div>
+  <div class="mask-radial">
+    <img src="https://picsum.photos/200/200?random=5" alt="Masked">
+    <span>Radial Mask</span>
+  </div>
+</div>`,
+        css: `.mask-demo {
+  display: flex;
+  gap: 40px;
+  padding: 50px;
+  background: #1a1a2e;
+  justify-content: center;
+}
+.mask-gradient, .mask-radial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.mask-gradient img {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+}
+.mask-radial img {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  -webkit-mask-image: radial-gradient(circle, black 40%, transparent 70%);
+  mask-image: radial-gradient(circle, black 40%, transparent 70%);
+}
+.mask-demo span {
+  color: #fff;
+  font-family: sans-serif;
+  font-size: 13px;
+}`
+      },
+      'Text Effects': {
+        html: `<div class="text-demo">
+  <h1 class="stroke-text">Outlined</h1>
+  <h1 class="shadow-text">Multi Shadow</h1>
+  <h1 class="gradient-text">Gradient Fill</h1>
+</div>`,
+        css: `.text-demo {
+  padding: 40px;
+  background: #1a1a2e;
+  text-align: center;
+}
+.text-demo h1 {
+  font-family: 'Arial Black', sans-serif;
+  font-size: 48px;
+  margin: 20px 0;
+}
+.stroke-text {
+  color: transparent;
+  -webkit-text-stroke: 2px #fff;
+}
+.shadow-text {
+  color: #fff;
+  text-shadow:
+    3px 3px 0 #ff0080,
+    6px 6px 0 #7928ca,
+    9px 9px 0 #4ecdc4;
+}
+.gradient-text {
+  background: linear-gradient(90deg, #ff0080, #7928ca, #4ecdc4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}`
+      },
+      'Writing Mode': {
+        html: `<div class="writing-demo">
+  <div class="horizontal">
+    <h3>Horizontal (default)</h3>
+    <p>Text flows left to right, top to bottom.</p>
+  </div>
+  <div class="vertical-rl">
+    <h3>vertical-rl</h3>
+    <p>Text flows top to bottom, right to left.</p>
+  </div>
+  <div class="vertical-lr">
+    <h3>vertical-lr</h3>
+    <p>Text flows top to bottom, left to right.</p>
+  </div>
+</div>`,
+        css: `.writing-demo {
+  display: flex;
+  gap: 30px;
+  padding: 40px;
+  background: #f5f5f5;
+  font-family: sans-serif;
+  min-height: 300px;
+}
+.writing-demo > div {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.horizontal {
+  flex: 1;
+}
+.vertical-rl {
+  writing-mode: vertical-rl;
+  height: 220px;
+}
+.vertical-lr {
+  writing-mode: vertical-lr;
+  height: 220px;
+}
+.writing-demo h3 {
+  margin: 0 0 12px;
+  color: #2196F3;
+  font-size: 14px;
+}
+.writing-demo p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}`
+      },
+      'Multi-Column': {
+        html: `<div class="column-demo">
+  <h2>Multi-Column Layout</h2>
+  <div class="columns">
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+    <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa quae ab illo inventore veritatis.</p>
+  </div>
+</div>`,
+        css: `.column-demo {
+  padding: 40px;
+  background: #fff;
+  font-family: Georgia, serif;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.column-demo h2 {
+  text-align: center;
+  margin: 0 0 24px;
+  font-size: 24px;
+  color: #333;
+}
+.columns {
+  column-count: 3;
+  column-gap: 30px;
+  column-rule: 1px solid #ddd;
+}
+.columns p {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #444;
+  text-align: justify;
+}`
+      },
+      'Aspect Ratio': {
+        html: `<div class="aspect-demo">
+  <div class="aspect-box ratio-16-9">
+    <img src="https://picsum.photos/800/450?random=6" alt="16:9">
+    <span>16:9</span>
+  </div>
+  <div class="aspect-box ratio-1-1">
+    <img src="https://picsum.photos/400/400?random=7" alt="1:1">
+    <span>1:1</span>
+  </div>
+  <div class="aspect-box ratio-4-3">
+    <img src="https://picsum.photos/400/300?random=8" alt="4:3">
+    <span>4:3</span>
+  </div>
+</div>`,
+        css: `.aspect-demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 40px;
+  background: #1a1a2e;
+  justify-content: center;
+}
+.aspect-box {
+  position: relative;
+  background: #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.aspect-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.aspect-box span {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: sans-serif;
+  font-size: 12px;
+}
+.ratio-16-9 {
+  width: 240px;
+  aspect-ratio: 16/9;
+}
+.ratio-1-1 {
+  width: 150px;
+  aspect-ratio: 1/1;
+}
+.ratio-4-3 {
+  width: 180px;
+  aspect-ratio: 4/3;
+}`
+      },
+      'CSS Animation': {
+        html: `<div class="anim-demo">
+  <div class="anim-box pulse">Pulse</div>
+  <div class="anim-box rotate">Rotate</div>
+  <div class="anim-box bounce">Bounce</div>
+  <p class="anim-note">Animations paused at different keyframe points</p>
+</div>`,
+        css: `@keyframes pulse-anim {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.8; }
+}
+@keyframes rotate-anim {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes bounce-anim {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+.anim-demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  padding: 50px;
+  background: #0f0f23;
+  justify-content: center;
+  align-items: center;
+}
+.anim-box {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+  border-radius: 12px;
+}
+.pulse {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  animation: pulse-anim 2s ease-in-out infinite;
+  animation-play-state: paused;
+  animation-delay: -0.5s;
+}
+.rotate {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  animation: rotate-anim 4s linear infinite;
+  animation-play-state: paused;
+  animation-delay: -1s;
+}
+.bounce {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  animation: bounce-anim 1s ease-in-out infinite;
+  animation-play-state: paused;
+  animation-delay: -0.25s;
+}
+.anim-note {
+  width: 100%;
+  text-align: center;
+  color: #666;
+  font-family: sans-serif;
+  font-size: 12px;
+  margin: 10px 0 0;
+}`
+      },
+      'Sticky (Scroll)': {
+        html: `<div class="sticky-page">
+  <h2>position: sticky (scrolled state)</h2>
+  <p class="sticky-sub">Scroll the container in the live preview to verify the header stays pinned.</p>
+
+  <div class="sticky-scroll" id="stickyScroll">
+    <div class="sticky-header">
+      <span class="pill">STICKY</span>
+      <span>Header should stay at the top while scrolling</span>
+    </div>
+    <div class="sticky-content">
+      ${Array.from({ length: 26 })
+        .map((_, i) => `<div class="row"><span class="idx">${String(i + 1).padStart(2, "0")}</span>Scrollable row content</div>`)
+        .join("")}
+    </div>
+  </div>
+</div>`,
+        css: `.sticky-page{
+  padding: 40px;
+  background: radial-gradient(1200px 600px at 10% 0%, #1f2a44 0%, #0b1020 55%, #070a14 100%);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #e5e7eb;
+}
+.sticky-page h2{
+  margin: 0 0 8px;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+.sticky-sub{
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: rgba(229, 231, 235, 0.75);
+}
+.sticky-scroll{
+  width: min(620px, 100%);
+  height: 300px;
+  margin: 0 auto;
+  overflow: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+}
+.sticky-header{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(90deg, rgba(59,130,246,0.32), rgba(16,185,129,0.18));
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+.pill{
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.16);
+}
+.sticky-content{
+  padding: 10px;
+}
+.row{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.035);
+  margin: 8px 0;
+}
+.row:nth-child(4n+1){ background: rgba(59,130,246,0.06); }
+.row:nth-child(4n+2){ background: rgba(16,185,129,0.06); }
+.row:nth-child(4n+3){ background: rgba(236,72,153,0.06); }
+.idx{
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}`
+      },
+      'Fixed + Transform': {
+        html: `<div class="fixed-page">
+  <div class="fixed-global">position: fixed (viewport)</div>
+
+  <div class="fixed-grid">
+    <div class="fixed-card">
+      <h3>Normal container</h3>
+      <p>Global fixed badge should be pinned to viewport top-right.</p>
+      <div class="stage stage-normal">
+        <div class="chip">Stage content</div>
+      </div>
+    </div>
+
+    <div class="fixed-card">
+      <h3>Transformed ancestor</h3>
+      <p>When an ancestor is transformed, some engines treat fixed children as “fixed-to-ancestor”.</p>
+      <div class="stage stage-transformed">
+        <div class="fixed-inside">fixed inside transform</div>
+        <div class="chip">Stage content</div>
+      </div>
+    </div>
+  </div>
+</div>`,
+        css: `.fixed-page{
+  padding: 44px 34px 34px;
+  background: linear-gradient(180deg, #0b1220 0%, #050814 100%);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #e5e7eb;
+}
+.fixed-global{
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-weight: 650;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+}
+.fixed-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.fixed-card{
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.fixed-card h3{ margin: 0 0 8px; font-size: 16px; }
+.fixed-card p{ margin: 0 0 12px; font-size: 12px; color: rgba(229,231,235,0.75); }
+.stage{
+  position: relative;
+  height: 260px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px dashed rgba(255,255,255,0.18);
+  background:
+    radial-gradient(500px 180px at 20% 20%, rgba(59,130,246,0.35), transparent 60%),
+    radial-gradient(400px 220px at 80% 70%, rgba(236,72,153,0.28), transparent 55%),
+    rgba(0,0,0,0.25);
+}
+.stage-transformed{
+  transform: translateZ(0) rotate(0.001deg);
+}
+.fixed-inside{
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(16,185,129,0.22);
+  border: 1px solid rgba(16,185,129,0.35);
+  color: #d1fae5;
+  font-size: 12px;
+  font-weight: 650;
+}
+.chip{
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 12px;
+}`
+      },
+      'Overflow Clip + Radius': {
+        html: `<div class="clip-page">
+  <h2>overflow + border-radius + filters</h2>
+  <p class="sub">Common failure mode: child effects bleed outside rounded corners or clip incorrectly in headless rasterization.</p>
+
+  <div class="clip-row">
+    <div class="clip-card">
+      <div class="clip-title">Expected: clipped glow</div>
+      <div class="clip-box">
+        <div class="glow"></div>
+        <div class="content">
+          <div class="badge">overflow: hidden</div>
+          <div class="big">Rounded clipping</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="clip-card">
+      <div class="clip-title">Expected: clip + shadow stays inside</div>
+      <div class="clip-box clip-variant">
+        <div class="glow glow2"></div>
+        <div class="content">
+          <div class="badge">filter: blur()</div>
+          <div class="big">No bleeding</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`,
+        css: `.clip-page{
+  padding: 40px;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #0b1020;
+  color: #e5e7eb;
+}
+.clip-page h2{ margin: 0 0 8px; font-size: 20px; letter-spacing: -0.02em; }
+.sub{ margin: 0 0 18px; font-size: 12px; color: rgba(229,231,235,0.72); max-width: 820px; }
+.clip-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.clip-card{
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.clip-title{ font-size: 12px; color: rgba(229,231,235,0.75); margin-bottom: 10px; }
+.clip-box{
+  height: 260px;
+  border-radius: 22px;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.glow{
+  position: absolute;
+  inset: -40px -30px auto auto;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle at 30% 30%, rgba(59,130,246,0.95), rgba(59,130,246,0) 60%);
+  filter: blur(18px);
+  opacity: 0.95;
+}
+.glow2{
+  inset: auto auto -60px -50px;
+  background: radial-gradient(circle at 60% 40%, rgba(236,72,153,0.95), rgba(236,72,153,0) 62%);
+}
+.content{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  text-align: center;
+}
+.badge{
+  display: inline-block;
+  margin: 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.30);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+.big{
+  font-size: 24px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+.clip-variant{
+  transform: translateZ(0);
+}`
+      },
+      'Line Clamp': {
+        html: `<div class="clamp-page">
+  <h2>-webkit-line-clamp</h2>
+  <div class="clamp-grid">
+    <div class="card">
+      <div class="label">3 lines</div>
+      <div class="text clamp-3">
+        Headless screenshot engines sometimes mishandle line clamping, especially with variable fonts and mixed inline elements.
+        <strong>Bold</strong> <em>italic</em> and <span class="pill">inline pill</span> should not break the clamp.
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">2 lines</div>
+      <div class="text clamp-2">
+        This paragraph should truncate cleanly with an ellipsis after two lines, without overflowing or showing extra fragments.
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">No clamp</div>
+      <div class="text">
+        This is the full text version for comparison. If clamping fails, the “2 lines” and “3 lines” cards may look identical to this one.
+      </div>
+    </div>
+  </div>
+</div>`,
+        css: `.clamp-page{
+  padding: 40px;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #0b1020;
+  color: #e5e7eb;
+}
+.clamp-page h2{ margin: 0 0 14px; font-size: 20px; letter-spacing: -0.02em; }
+.clamp-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.card{
+  padding: 14px 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.label{
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(229,231,235,0.75);
+  margin-bottom: 10px;
+}
+.text{
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(229,231,235,0.92);
+}
+.pill{
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(59,130,246,0.18);
+  border: 1px solid rgba(59,130,246,0.30);
+  font-size: 12px;
+}
+.clamp-2, .clamp-3{
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.clamp-2{ -webkit-line-clamp: 2; }
+.clamp-3{ -webkit-line-clamp: 3; }`
+      },
+      'SVG Filters': {
+        html: `<div class="svg-page">
+  <h2>SVG filters + CSS filter</h2>
+  <div class="svg-wrap">
+    <svg class="art" width="520" height="220" viewBox="0 0 520 220" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="goo" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+          <feColorMatrix in="blur" mode="matrix"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" result="goo" />
+          <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+        </filter>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#60a5fa"/>
+          <stop offset="1" stop-color="#f472b6"/>
+        </linearGradient>
+      </defs>
+
+      <rect x="16" y="16" width="488" height="188" rx="22" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)"/>
+      <g filter="url(#goo)">
+        <circle cx="180" cy="110" r="46" fill="url(#g)"/>
+        <circle cx="240" cy="92" r="34" fill="url(#g)"/>
+        <circle cx="260" cy="132" r="40" fill="url(#g)"/>
+      </g>
+      <text x="320" y="108" fill="white" font-size="18" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-weight="700">
+        SVG filter
+      </text>
+      <text x="320" y="134" fill="rgba(255,255,255,0.75)" font-size="12" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+        feGaussianBlur + feColorMatrix
+      </text>
+    </svg>
+
+    <div class="css-filter">
+      <div class="tag">CSS filter: drop-shadow()</div>
+      <div class="dot"></div>
+      <div class="dot alt"></div>
+    </div>
+  </div>
+</div>`,
+        css: `.svg-page{
+  padding: 40px;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #0b1020;
+  color: #e5e7eb;
+}
+.svg-page h2{ margin: 0 0 14px; font-size: 20px; letter-spacing: -0.02em; }
+.svg-wrap{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.art{
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  background:
+    radial-gradient(800px 260px at 30% 20%, rgba(59,130,246,0.18), transparent 60%),
+    radial-gradient(650px 240px at 80% 70%, rgba(236,72,153,0.14), transparent 58%),
+    rgba(0,0,0,0.22);
+}
+.css-filter{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.tag{
+  font-size: 12px;
+  color: rgba(229,231,235,0.75);
+}
+.dot{
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #60a5fa, #f472b6);
+  filter: drop-shadow(0 10px 18px rgba(96,165,250,0.45));
+}
+.dot.alt{
+  background: linear-gradient(135deg, #34d399, #fbbf24);
+  filter: drop-shadow(0 10px 18px rgba(251,191,36,0.35));
+}`
+      }
+    };
+
+    // API Key persistence
+    const apiKeyInput = document.getElementById('apiKey');
+    const storedApiKey = localStorage.getItem('htmlpix_api_key');
+    if (storedApiKey) {
+      apiKeyInput.value = storedApiKey;
+    }
+    apiKeyInput.addEventListener('input', () => {
+      localStorage.setItem('htmlpix_api_key', apiKeyInput.value);
+    });
+
+    // Live preview
+    const previewFrame = document.getElementById('preview');
+    const htmlInput = document.getElementById('html');
+    const cssInput = document.getElementById('css');
+
+    function updatePreview() {
+      const html = htmlInput.value;
+      const css = cssInput.value;
+      const doc = previewFrame.contentDocument;
+      doc.open();
+      doc.write(`<!DOCTYPE html>
+<html>
+<head><style>${css}</style></head>
+<body style="margin:0">${html}</body>
+</html>`);
+      doc.close();
+    }
+
+    htmlInput.addEventListener('input', updatePreview);
+    cssInput.addEventListener('input', updatePreview);
+    updatePreview();
+
+    // Build snippet buttons
+    const snippetGrid = document.getElementById('snippets');
+    Object.keys(snippets).forEach(name => {
+      const btn = document.createElement('button');
+      btn.className = 'snippet-btn';
+      btn.textContent = name;
+      btn.onclick = () => {
+        htmlInput.value = snippets[name].html;
+        cssInput.value = snippets[name].css;
+        updatePreview();
+      };
+      snippetGrid.appendChild(btn);
+    });
+
+    // Render function
+    const renderBtn = document.getElementById('render');
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+
+    renderBtn.onclick = async () => {
+      const apiKey = apiKeyInput.value.trim();
+      if (!apiKey) {
+        statusEl.textContent = 'API key required';
+        resultEl.innerHTML = '<div class="error">Please enter an API key. Create one in the dashboard at /api-keys</div>';
+        return;
+      }
+
+      const html = htmlInput.value;
+      const css = cssInput.value;
+      const width = parseInt(document.getElementById('width').value);
+      const height = parseInt(document.getElementById('height').value);
+      const format = document.getElementById('format').value;
+      const deviceScaleFactor = parseFloat(document.getElementById('deviceScaleFactor').value);
+      const fullPage = document.getElementById('fullPage').checked;
+      const omitBackground = document.getElementById('omitBackground').checked;
+
+      renderBtn.disabled = true;
+      statusEl.textContent = 'Rendering...';
+      resultEl.innerHTML = '<span class="placeholder">Rendering...</span>';
+
+      try {
+        const start = performance.now();
+        const response = await fetch('/render', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            html,
+            css: css || undefined,
+            viewport: { width, height },
+            format,
+            deviceScaleFactor,
+            fullPage,
+            omitBackground
+          })
+        });
+
+        const data = await response.json();
+        const elapsed = Math.round(performance.now() - start);
+
+        if (response.ok) {
+          statusEl.textContent = `Done in ${elapsed}ms`;
+          resultEl.innerHTML = `<img src="${data.url}" alt="Rendered result">`;
+        } else {
+          statusEl.textContent = `Error (${elapsed}ms)`;
+          resultEl.innerHTML = `<div class="error"><strong>${data.code || 'Error'}</strong><br>${data.message}</div>`;
+        }
+      } catch (err) {
+        statusEl.textContent = 'Network error';
+        resultEl.innerHTML = `<div class="error">${err.message}</div>`;
+      } finally {
+        renderBtn.disabled = false;
+      }
+    };
+
+    // Ctrl+Enter to render
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        renderBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>

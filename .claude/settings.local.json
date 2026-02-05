@@ -7,7 +7,14 @@
       "Bash(lsof:*)",
       "Bash(ls:*)",
       "Bash(bun test:*)",
-      "Bash(API_KEYS=\"testkey:TestApp:1000\" bun:*)"
+      "Bash(API_KEYS=\"testkey:TestApp:1000\" bun:*)",
+      "Bash(bun install)",
+      "Bash(xargs:*)",
+      "Bash(sqlite3:*)",
+      "WebFetch(domain:www.convex.dev)",
+      "WebFetch(domain:docs.convex.dev)",
+      "Bash(bunx convex codegen:*)",
+      "Bash(bunx convex dev:*)"
     ]
   }
 }
