@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PublicHeader } from "@/components/PublicHeader";
 
 export default function Home() {
   return (
@@ -23,48 +24,11 @@ export default function Home() {
       <div className="fixed top-4 right-4 z-50 h-8 w-8 border-t-2 border-r-2 border-[#1a1a1a]/20" />
       <div className="fixed bottom-4 left-4 z-50 h-8 w-8 border-b-2 border-l-2 border-[#1a1a1a]/20" />
       <div className="fixed right-4 bottom-4 z-50 h-8 w-8 border-r-2 border-b-2 border-[#1a1a1a]/20" />
-      {/* Navigation */}
-      <nav className="fixed top-0 right-0 left-0 z-50 bg-[#f5f0e8]/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-6 md:px-0">
-          <Link href="/" className="group flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center border-2 border-[#1a1a1a]">
-              <span className="font-bold text-[#1a1a1a]">{"<>"}</span>
-              <div className="absolute -top-1 -right-1 h-2 w-2 bg-[#ff4d00]" />
-            </div>
-            <div>
-              <div className="text-xs tracking-widest text-[#1a1a1a]/40 uppercase">Project</div>
-              <div className="font-bold tracking-wider">HTMLPIX</div>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-8 text-xs tracking-widest uppercase">
-            <Link
-              href="#spec"
-              className="flex items-center gap-2 text-[#1a1a1a]/50 transition-colors hover:text-[#ff4d00]"
-            >
-              <span className="h-1 w-1 bg-current" />
-              Specifications
-            </Link>
-            <Link
-              href="#pricing"
-              className="flex items-center gap-2 text-[#1a1a1a]/50 transition-colors hover:text-[#ff4d00]"
-            >
-              <span className="h-1 w-1 bg-current" />
-              Pricing
-            </Link>
-            <Link
-              href="/dashboard"
-              className="border-2 border-[#1a1a1a] px-5 py-2 text-[#1a1a1a] transition-colors hover:bg-[#1a1a1a] hover:text-[#f5f0e8]"
-            >
-              ACCESS API →
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PublicHeader />
       {/* Hero Section */}
-      <section className="relative z-10 flex min-h-screen items-center px-8 pt-24">
+      <section className="relative z-10 flex min-h-screen items-center px-4 pt-24 md:px-8">
         <div className="mx-auto w-full max-w-7xl">
-          <div className="grid grid-cols-12 gap-8">
+          <div className="grid grid-cols-12 gap-4 md:gap-8">
             {/* Left side - main content */}
             <div className="col-span-12 lg:col-span-7">
               {/* Technical annotation */}
@@ -73,43 +37,47 @@ export default function Home() {
                 <span className="text-xs tracking-widest text-[#ff4d00] uppercase">REV 2.0</span>
               </div>
 
-              <h1 className="mb-8 font-[family-name:var(--font-bebas-neue)] text-6xl leading-tight tracking-tight md:text-8xl">
+              <h1 className="mb-6 font-[family-name:var(--font-bebas-neue)] text-5xl leading-tight tracking-tight sm:text-6xl md:mb-8 md:text-8xl">
                 <span className="text-[#ff4d00]">HTML</span>
-                <span className="mx-4 text-[#1a1a1a]/20">→</span>
+                <span className="mx-2 text-[#1a1a1a]/20 md:mx-4">→</span>
                 <span>IMAGE</span>
               </h1>
 
-              <div className="relative mb-12 border-l-2 border-[#1a1a1a]/20 pl-8">
+              <div className="relative mb-8 border-l-2 border-[#1a1a1a]/20 pl-6 md:mb-12 md:pl-8">
                 <div className="absolute top-0 left-0 h-2 w-2 -translate-x-[5px] bg-[#ff4d00]" />
-                <p className="max-w-xl text-lg leading-relaxed text-[#1a1a1a]/60">
+                <p className="max-w-xl text-base leading-relaxed text-[#1a1a1a]/60 md:text-lg">
                   Precision rendering API for developers. Transform your HTML and CSS markup into
                   pixel-perfect image assets with sub-200ms latency.
                 </p>
               </div>
 
               {/* Specs table */}
-              <div className="mb-8 border-2 border-[#1a1a1a]/10">
+              <div className="mb-6 border-2 border-[#1a1a1a]/10 md:mb-8">
                 <div className="grid grid-cols-3 text-xs">
                   {[
                     { label: "AVG LATENCY", value: "<200ms" },
                     { label: "UPTIME SLA", value: "99.9%" },
                     { label: "FORMATS", value: "PNG/JPG/WEBP" },
                   ].map((spec, i) => (
-                    <div key={i} className={`p-4 ${i !== 2 ? "border-r-2 border-[#1a1a1a]/10" : ""}`}>
-                      <div className="mb-1 tracking-wider text-[#1a1a1a]/40 uppercase">{spec.label}</div>
-                      <div className="text-lg font-bold text-[#ff4d00]">{spec.value}</div>
+                    <div key={i} className={`p-2 md:p-4 ${i !== 2 ? "border-r-2 border-[#1a1a1a]/10" : ""}`}>
+                      <div className="mb-1 text-[10px] tracking-wider text-[#1a1a1a]/40 uppercase md:text-xs">
+                        {spec.label}
+                      </div>
+                      <div className="text-sm font-bold text-[#ff4d00] md:text-lg">{spec.value}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
               <Link
-                href="/dashboard"
-                className="group inline-flex items-center gap-4 bg-[#ff4d00] px-8 py-4 text-[#f5f0e8] transition-colors hover:bg-[#1a1a1a]"
+                href="/login"
+                className="group inline-flex items-center gap-3 bg-[#ff4d00] px-6 py-3 text-[#f5f0e8] transition-colors hover:bg-[#1a1a1a] md:gap-4 md:px-8 md:py-4"
               >
-                <span className="text-sm font-bold tracking-widest uppercase">Request API Access</span>
+                <span className="text-xs font-bold tracking-widest uppercase md:text-sm">
+                  Request API Access
+                </span>
                 <svg
-                  className="h-5 w-5 transform transition-transform group-hover:translate-x-1"
+                  className="h-4 w-4 transform transition-transform group-hover:translate-x-1 md:h-5 md:w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -125,10 +93,10 @@ export default function Home() {
             </div>
 
             {/* Right side - technical diagram */}
-            <div className="col-span-12 lg:col-span-5">
+            <div className="col-span-12 mt-8 lg:col-span-5 lg:mt-0">
               <div className="relative">
                 {/* Diagram box */}
-                <div className="relative border-2 border-[#1a1a1a]/20 bg-[#f5f0e8] p-8">
+                <div className="relative border-2 border-[#1a1a1a]/20 bg-[#f5f0e8] p-4 md:p-8">
                   {/* Corner annotations */}
                   <div className="absolute -top-6 left-4 text-xs text-[#1a1a1a]/30">FIG. 01</div>
                   <div className="absolute -top-6 right-4 text-xs text-[#1a1a1a]/30">SCALE 1:1</div>
@@ -136,13 +104,55 @@ export default function Home() {
                   {/* Flow diagram */}
                   <div className="space-y-6">
                     {/* Input */}
-                    <div className="border-2 border-dashed border-[#1a1a1a]/20 p-4">
-                      <div className="mb-2 text-xs text-[#ff4d00]">INPUT</div>
-                      <pre className="text-sm text-[#1a1a1a]/70">
-                        {`<div class="card">
-    <h1>Hello</h1>
-  </div>`}
-                      </pre>
+                    <div className="relative overflow-hidden border-2 border-dashed border-[#1a1a1a]/20 bg-[#1a1a1a]/[0.03] p-4">
+                      {/* Subtle grid pattern */}
+                      <div
+                        className="pointer-events-none absolute inset-0 opacity-30"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(90deg, #1a1a1a 1px, transparent 1px), linear-gradient(#1a1a1a 1px, transparent 1px)",
+                          backgroundSize: "8px 8px",
+                          opacity: 0.03,
+                        }}
+                      />
+                      <div className="relative">
+                        <div className="mb-3 flex items-center gap-2">
+                          <div className="flex gap-1.5">
+                            <div className="h-2 w-2 rounded-full bg-[#1a1a1a]/20" />
+                            <div className="h-2 w-2 rounded-full bg-[#1a1a1a]/20" />
+                            <div className="h-2 w-2 rounded-full bg-[#1a1a1a]/20" />
+                          </div>
+                          <span className="text-[10px] tracking-wider text-[#ff4d00] uppercase">
+                            input.html
+                          </span>
+                        </div>
+                        <pre className="text-xs leading-relaxed md:text-sm">
+                          <code>
+                            <div>
+                              <span className="text-[#1a1a1a]/40">&lt;</span>
+                              <span className="font-medium text-[#ff4d00]">div</span>
+                              <span className="text-[#1a1a1a]/60"> class</span>
+                              <span className="text-[#1a1a1a]/40">=</span>
+                              <span className="text-[#0d7377]">&quot;card&quot;</span>
+                              <span className="text-[#1a1a1a]/40">&gt;</span>
+                            </div>
+                            <div>
+                              <span className="text-[#1a1a1a]/40"> &lt;</span>
+                              <span className="font-medium text-[#ff4d00]">h1</span>
+                              <span className="text-[#1a1a1a]/40">&gt;</span>
+                              <span className="text-[#1a1a1a]/80">Hello</span>
+                              <span className="text-[#1a1a1a]/40">&lt;/</span>
+                              <span className="font-medium text-[#ff4d00]">h1</span>
+                              <span className="text-[#1a1a1a]/40">&gt;</span>
+                            </div>
+                            <div>
+                              <span className="text-[#1a1a1a]/40">&lt;/</span>
+                              <span className="font-medium text-[#ff4d00]">div</span>
+                              <span className="text-[#1a1a1a]/40">&gt;</span>
+                            </div>
+                          </code>
+                        </pre>
+                      </div>
                     </div>
 
                     {/* Arrow */}
@@ -178,16 +188,58 @@ export default function Home() {
                     </div>
 
                     {/* Output */}
-                    <div className="border-2 border-[#ff4d00] bg-[#ff4d00]/5 p-4">
-                      <div className="mb-2 text-xs font-bold text-[#ff4d00]">OUTPUT</div>
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-16 items-center justify-center border-2 border-[#1a1a1a]/30 text-[#1a1a1a]/50">
-                          .PNG
+                    <div className="relative overflow-hidden border-2 border-[#ff4d00] bg-gradient-to-br from-[#ff4d00]/10 to-[#ff4d00]/5 p-4">
+                      {/* Animated scan line */}
+                      <div
+                        className="pointer-events-none absolute inset-0 opacity-20"
+                        style={{
+                          background:
+                            "linear-gradient(180deg, transparent 0%, transparent 45%, #ff4d00 50%, transparent 55%, transparent 100%)",
+                          backgroundSize: "100% 200%",
+                          animation: "scanline 3s linear infinite",
+                        }}
+                      />
+                      <style>{`@keyframes scanline { 0% { background-position: 0% 0%; } 100% { background-position: 0% 200%; } }`}</style>
+
+                      <div className="relative">
+                        <div className="mb-3 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 animate-pulse rounded-full bg-[#28c840]" />
+                            <span className="text-[10px] font-bold tracking-wider text-[#ff4d00] uppercase">
+                              Output Ready
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-[#1a1a1a]/40">✓ Rendered</span>
                         </div>
-                        <div className="text-xs text-[#1a1a1a]/50">
-                          <div>1200 × 630 px</div>
-                          <div>24-bit color</div>
-                          <div>~245 KB</div>
+
+                        <div className="flex items-center gap-4">
+                          {/* Image preview mockup */}
+                          <div className="relative flex h-14 w-20 items-center justify-center overflow-hidden border-2 border-[#1a1a1a]/20 bg-white">
+                            {/* Mini preview of "Hello" card */}
+                            <div className="flex h-8 w-14 flex-col items-center justify-center rounded-sm bg-gradient-to-br from-[#f5f0e8] to-[#e8e0d5] shadow-sm">
+                              <div className="text-[6px] font-bold text-[#1a1a1a]">Hello</div>
+                            </div>
+                            {/* Format badge */}
+                            <div className="absolute right-0 bottom-0 bg-[#ff4d00] px-1 py-0.5 text-[6px] font-bold text-white">
+                              PNG
+                            </div>
+                          </div>
+
+                          {/* Specs */}
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[#1a1a1a]/40">Dimensions</span>
+                              <span className="font-mono font-medium text-[#1a1a1a]/70">1200×630</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[#1a1a1a]/40">Depth</span>
+                              <span className="font-mono font-medium text-[#1a1a1a]/70">24-bit</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[#1a1a1a]/40">Size</span>
+                              <span className="font-mono font-medium text-[#1a1a1a]/70">~245KB</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -206,21 +258,21 @@ export default function Home() {
         </div>
       </section>
       {/* Specifications Section */}
-      <section id="spec" className="relative z-10 px-8 py-32">
+      <section id="spec" className="relative z-10 px-4 py-16 md:px-8 md:py-32">
         <div className="mx-auto max-w-7xl">
           {/* Section header */}
-          <div className="mb-16 flex items-center gap-8">
+          <div className="mb-8 flex flex-col gap-4 md:mb-16 md:flex-row md:items-center md:gap-8">
             <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
               SECTION 02
             </div>
-            <div className="h-px flex-grow bg-[#1a1a1a]/10" />
-            <h2 className="font-[family-name:var(--font-bebas-neue)] text-4xl tracking-wide">
+            <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
+            <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide md:text-4xl">
               Technical Specifications
             </h2>
-            <div className="h-px flex-grow bg-[#1a1a1a]/10" />
+            <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
             {[
               {
                 id: "01",
@@ -261,76 +313,337 @@ export default function Home() {
         </div>
       </section>
       {/* Code Example */}
-      <section className="relative z-10 bg-[#1a1a1a] px-8 py-32">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-12 flex items-center gap-8">
+      <section className="relative z-10 overflow-hidden bg-[#0d0d0d] px-4 py-16 md:px-8 md:py-32">
+        {/* Ambient glow effect */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute top-1/2 left-1/2 h-[600px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ff4d00]/5 blur-[120px]" />
+        </div>
+
+        {/* Scan lines overlay */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(0deg, transparent, transparent 2px, #fff 2px, #fff 4px)",
+          }}
+        />
+
+        <div className="relative mx-auto max-w-5xl">
+          <div className="mb-8 flex flex-col gap-4 md:mb-12 md:flex-row md:items-center md:gap-8">
             <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
               SECTION 03
             </div>
-            <div className="h-px flex-grow bg-[#f5f0e8]/10" />
-            <h2 className="font-[family-name:var(--font-bebas-neue)] text-4xl tracking-wide text-[#f5f0e8]">
+            <div className="hidden h-px flex-grow bg-[#f5f0e8]/10 md:block" />
+            <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide text-[#f5f0e8] md:text-4xl">
               Implementation
             </h2>
-            <div className="h-px flex-grow bg-[#f5f0e8]/10" />
+            <div className="hidden h-px flex-grow bg-[#f5f0e8]/10 md:block" />
           </div>
 
-          <div className="relative border-2 border-[#f5f0e8]/20">
-            {/* Tab */}
-            <div className="absolute -top-px left-8 bg-[#1a1a1a] px-4">
-              <span className="text-xs tracking-wider text-[#ff4d00] uppercase">api-request.ts</span>
+          {/* Terminal-style code window */}
+          <div className="group relative">
+            {/* Outer glow on hover */}
+            <div className="absolute -inset-px rounded-sm bg-gradient-to-b from-[#ff4d00]/20 to-transparent opacity-0 blur-sm transition-opacity duration-500 group-hover:opacity-100" />
+
+            <div className="relative overflow-hidden rounded-sm border border-[#f5f0e8]/10 bg-[#0a0a0a]">
+              {/* Window chrome */}
+              <div className="flex items-center justify-between border-b border-[#f5f0e8]/5 bg-[#111] px-4 py-3">
+                <div className="flex items-center gap-3">
+                  {/* Traffic lights */}
+                  <div className="flex gap-2">
+                    <div className="h-3 w-3 rounded-full bg-[#ff5f57] opacity-80" />
+                    <div className="h-3 w-3 rounded-full bg-[#febc2e] opacity-80" />
+                    <div className="h-3 w-3 rounded-full bg-[#28c840] opacity-80" />
+                  </div>
+                  {/* Separator */}
+                  <div className="h-4 w-px bg-[#f5f0e8]/10" />
+                  {/* File tab */}
+                  <div className="flex items-center gap-2 rounded bg-[#1a1a1a] px-3 py-1">
+                    <svg className="h-4 w-4 text-[#3178c6]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M3 3h18v18H3V3zm16.525 13.707c0-.131-.061-.262-.183-.391-.117-.131-.354-.262-.704-.391a5.77 5.77 0 0 0-.978-.262 4.588 4.588 0 0 1-.635-.183 1.488 1.488 0 0 1-.387-.209.387.387 0 0 1-.13-.313c0-.131.052-.235.157-.313.104-.078.261-.117.47-.117.209 0 .374.052.496.157.122.104.196.235.222.391h.887a1.4 1.4 0 0 0-.209-.639 1.344 1.344 0 0 0-.496-.478c-.209-.122-.465-.183-.765-.183-.287 0-.539.052-.757.157a1.205 1.205 0 0 0-.5.435c-.117.183-.174.391-.174.626 0 .287.091.513.274.678.183.166.474.3.874.4.287.074.513.148.678.222.166.074.287.157.365.248a.507.507 0 0 1 .117.339.45.45 0 0 1-.183.365c-.122.096-.3.144-.535.144-.248 0-.448-.057-.6-.17a.714.714 0 0 1-.274-.47h-.9c.013.261.083.496.209.704.126.209.309.374.548.496.239.122.526.183.861.183.313 0 .587-.052.822-.157.235-.104.418-.252.548-.443.131-.191.196-.413.196-.665zM8.837 16.413V15.1h2.687v-1.018H8.837v-1.3h3.009V11.76H7.7v4.652h1.137z" />
+                    </svg>
+                    <span className="text-xs text-[#f5f0e8]/70">api-request.ts</span>
+                    <span className="text-[10px] text-[#f5f0e8]/30">M</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-[#f5f0e8]/30">
+                  <span className="hidden sm:inline">UTF-8</span>
+                  <span className="hidden sm:inline">TypeScript</span>
+                  <span>Ln 1, Col 1</span>
+                </div>
+              </div>
+
+              {/* Code content with line numbers */}
+              <div className="relative overflow-x-auto p-4 md:p-6">
+                <pre className="text-[13px] leading-relaxed md:text-sm">
+                  <code>
+                    {/* Line 1 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">1</span>
+                      <span>
+                        <span className="text-[#c586c0]">const</span>
+                        <span className="text-[#9cdcfe]"> renderImage</span>
+                        <span className="text-[#f5f0e8]/50"> = </span>
+                        <span className="text-[#c586c0]">async</span>
+                        <span className="text-[#f5f0e8]/50"> () </span>
+                        <span className="text-[#569cd6]">{`=>`}</span>
+                        <span className="text-[#ffd700]"> {`{`}</span>
+                      </span>
+                    </div>
+                    {/* Line 2 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">2</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#c586c0]">const</span>
+                        <span className="text-[#9cdcfe]"> response</span>
+                        <span className="text-[#f5f0e8]/50"> = </span>
+                        <span className="text-[#c586c0]">await</span>
+                        <span className="text-[#dcdcaa]"> fetch</span>
+                        <span className="text-[#da70d6]">(</span>
+                        <span className="text-[#ce9178]">{`'https://api.htmlpix.com/render'`}</span>
+                        <span className="text-[#f5f0e8]/50">, </span>
+                        <span className="text-[#ffd700]">{`{`}</span>
+                      </span>
+                    </div>
+                    {/* Line 3 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">3</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#9cdcfe]">method</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#ce9178]">{`'POST'`}</span>
+                        <span className="text-[#f5f0e8]/50">,</span>
+                      </span>
+                    </div>
+                    {/* Line 4 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">4</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#9cdcfe]">headers</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#da70d6]">{`{`}</span>
+                      </span>
+                    </div>
+                    {/* Line 5 */}
+                    <div className="group/line flex rounded-sm transition-colors hover:bg-[#ff4d00]/5">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none group-hover/line:text-[#ff4d00]/50">
+                        5
+                      </span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#ce9178]">{`'Authorization'`}</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#ce9178]">{`\`Bearer \${`}</span>
+                        <span className="text-[#9cdcfe]">process.env.HTMLPIX_KEY</span>
+                        <span className="text-[#ce9178]">{`}\``}</span>
+                        <span className="text-[#f5f0e8]/50">,</span>
+                      </span>
+                    </div>
+                    {/* Line 6 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">6</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#ce9178]">{`'Content-Type'`}</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#ce9178]">{`'application/json'`}</span>
+                      </span>
+                    </div>
+                    {/* Line 7 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">7</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#da70d6]">{`}`}</span>
+                        <span className="text-[#f5f0e8]/50">,</span>
+                      </span>
+                    </div>
+                    {/* Line 8 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">8</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#9cdcfe]">body</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#9cdcfe]">JSON</span>
+                        <span className="text-[#f5f0e8]/50">.</span>
+                        <span className="text-[#dcdcaa]">stringify</span>
+                        <span className="text-[#da70d6]">(</span>
+                        <span className="text-[#179fff]">{`{`}</span>
+                      </span>
+                    </div>
+                    {/* Line 9 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">9</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#9cdcfe]">html</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#ce9178]">{`'<div class="og-card">...</div>'`}</span>
+                        <span className="text-[#f5f0e8]/50">,</span>
+                      </span>
+                    </div>
+                    {/* Line 10 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">10</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#9cdcfe]">css</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#ce9178]">{`'.og-card { background: #fff; }'`}</span>
+                        <span className="text-[#f5f0e8]/50">,</span>
+                      </span>
+                    </div>
+                    {/* Line 11 */}
+                    <div className="group/line flex rounded-sm transition-colors hover:bg-[#ff4d00]/5">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none group-hover/line:text-[#ff4d00]/50">
+                        11
+                      </span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#9cdcfe]">viewport</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#da70d6]">{`{`}</span>
+                        <span className="text-[#9cdcfe]"> width</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#b5cea8]">1200</span>
+                        <span className="text-[#f5f0e8]/50">, </span>
+                        <span className="text-[#9cdcfe]">height</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#b5cea8]">630</span>
+                        <span className="text-[#da70d6]"> {`}`}</span>
+                        <span className="text-[#f5f0e8]/50">,</span>
+                      </span>
+                    </div>
+                    {/* Line 12 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">12</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#9cdcfe]">format</span>
+                        <span className="text-[#f5f0e8]/50">: </span>
+                        <span className="text-[#ce9178]">{`'png'`}</span>
+                      </span>
+                    </div>
+                    {/* Line 13 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">13</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#179fff]">{`}`}</span>
+                        <span className="text-[#da70d6]">)</span>
+                      </span>
+                    </div>
+                    {/* Line 14 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">14</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#ffd700]">{`}`}</span>
+                        <span className="text-[#da70d6]">)</span>
+                        <span className="text-[#f5f0e8]/50">;</span>
+                      </span>
+                    </div>
+                    {/* Line 15 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">15</span>
+                      <span />
+                    </div>
+                    {/* Line 16 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">16</span>
+                      <span>
+                        <span className="text-[#f5f0e8]/50"> </span>
+                        <span className="text-[#c586c0]">return</span>
+                        <span className="text-[#9cdcfe]"> response</span>
+                        <span className="text-[#f5f0e8]/50">.</span>
+                        <span className="text-[#dcdcaa]">arrayBuffer</span>
+                        <span className="text-[#da70d6]">()</span>
+                        <span className="text-[#f5f0e8]/50">;</span>
+                      </span>
+                    </div>
+                    {/* Line 17 */}
+                    <div className="flex">
+                      <span className="mr-6 w-6 shrink-0 text-right text-[#f5f0e8]/20 select-none">17</span>
+                      <span>
+                        <span className="text-[#ffd700]">{`}`}</span>
+                        <span className="text-[#f5f0e8]/50">;</span>
+                      </span>
+                    </div>
+                  </code>
+                </pre>
+
+                {/* Cursor blink animation */}
+                <div className="absolute bottom-6 left-[52px] h-5 w-0.5 animate-pulse bg-[#ff4d00] md:left-[58px]" />
+              </div>
+
+              {/* Status bar */}
+              <div className="flex items-center justify-between border-t border-[#f5f0e8]/5 bg-[#007acc] px-4 py-1 text-[11px] text-white">
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-1">
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                    Ready
+                  </span>
+                  <span className="hidden sm:inline">0 Problems</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="hidden sm:inline">Spaces: 2</span>
+                  <span>TypeScript</span>
+                </div>
+              </div>
             </div>
 
-            <div className="p-8 pt-10">
-              <pre className="overflow-x-auto text-sm">
-                <code className="text-[#f5f0e8]/70">
-                  {`const renderImage = async () => {
-    const response = await fetch('https://api.htmlpix.com/render', {
-      method: 'POST',
-      headers: {
-        'Authorization': \`Bearer \${process.env.HTMLPIX_KEY}\`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        html: '<div class="og-card">...</div>',
-        css: '.og-card { background: #fff; }',
-        viewport: { width: 1200, height: 630 },
-        format: 'png'
-      })
-    });
+            {/* Decorative corner brackets */}
+            <div className="absolute -top-2 -left-2 h-4 w-4 border-t-2 border-l-2 border-[#ff4d00]/30" />
+            <div className="absolute -top-2 -right-2 h-4 w-4 border-t-2 border-r-2 border-[#ff4d00]/30" />
+            <div className="absolute -bottom-2 -left-2 h-4 w-4 border-b-2 border-l-2 border-[#ff4d00]/30" />
+            <div className="absolute -right-2 -bottom-2 h-4 w-4 border-r-2 border-b-2 border-[#ff4d00]/30" />
+          </div>
 
-    return response.arrayBuffer();
-  };`}
-                </code>
-              </pre>
+          {/* Code annotation */}
+          <div className="mt-6 flex items-center justify-between text-xs text-[#f5f0e8]/30">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-[#28c840]" />
+                No errors
+              </span>
+              <span className="hidden sm:inline">·</span>
+              <span className="hidden sm:inline">TypeScript 5.3</span>
             </div>
-
-            {/* Bottom annotations */}
-            <div className="flex justify-between border-t border-[#f5f0e8]/10 px-8 py-3 text-xs text-[#f5f0e8]/30">
-              <span>TypeScript / Node.js</span>
-              <span>Lines: 18</span>
-            </div>
+            <span>Copy to clipboard →</span>
           </div>
         </div>
       </section>
       {/* Pricing Section */}
-      <section id="pricing" className="relative z-10 px-8 py-32">
+      <section id="pricing" className="relative z-10 px-4 py-16 md:px-8 md:py-32">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-16 flex items-center gap-8">
+          <div className="mb-8 flex flex-col gap-4 md:mb-16 md:flex-row md:items-center md:gap-8">
             <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
               SECTION 04
             </div>
-            <div className="h-px flex-grow bg-[#1a1a1a]/10" />
-            <h2 className="font-[family-name:var(--font-bebas-neue)] text-4xl tracking-wide">
+            <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
+            <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide md:text-4xl">
               Pricing Schedule
             </h2>
-            <div className="h-px flex-grow bg-[#1a1a1a]/10" />
+            <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-3">
             {[
               {
                 tier: "TIER-A",
                 name: "Starter",
+                planId: "starter",
                 price: 8,
                 renders: "1,000",
                 desc: "For prototypes & side projects",
@@ -338,6 +651,7 @@ export default function Home() {
               {
                 tier: "TIER-B",
                 name: "Pro",
+                planId: "pro",
                 price: 15,
                 renders: "3,000",
                 desc: "For production applications",
@@ -346,6 +660,7 @@ export default function Home() {
               {
                 tier: "TIER-C",
                 name: "Scale",
+                planId: "scale",
                 price: 35,
                 renders: "10,000",
                 desc: "For high-volume requirements",
@@ -412,7 +727,7 @@ export default function Home() {
                 </ul>
 
                 <Link
-                  href="/dashboard"
+                  href={`/login?plan=${plan.planId}`}
                   className={`block py-3 text-center text-sm font-bold tracking-wider uppercase transition-colors ${
                     plan.recommended
                       ? "bg-[#ff4d00] text-white hover:bg-[#f5f0e8] hover:text-[#1a1a1a]"
@@ -427,20 +742,20 @@ export default function Home() {
         </div>
       </section>
       {/* CTA */}
-      <section className="relative z-10 bg-[#ff4d00] px-8 py-32">
+      <section className="relative z-10 bg-[#ff4d00] px-4 py-16 md:px-8 md:py-32">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-6 font-[family-name:var(--font-bebas-neue)] text-6xl text-white md:text-8xl">
+          <h2 className="mb-4 font-[family-name:var(--font-bebas-neue)] text-4xl text-white sm:text-6xl md:mb-6 md:text-8xl">
             READY TO BUILD?
           </h2>
-          <p className="mx-auto mb-10 max-w-xl text-lg text-white/70">
+          <p className="mx-auto mb-8 max-w-xl text-base text-white/70 md:mb-10 md:text-lg">
             Get your API key and start rendering images in minutes. Full documentation included.
           </p>
           <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-4 bg-white px-10 py-5 font-bold tracking-wider text-[#ff4d00] uppercase transition-colors hover:bg-[#1a1a1a] hover:text-white"
+            href="/login"
+            className="inline-flex items-center gap-3 bg-white px-6 py-4 font-bold tracking-wider text-[#ff4d00] uppercase transition-colors hover:bg-[#1a1a1a] hover:text-white md:gap-4 md:px-10 md:py-5"
           >
             Access API Documentation
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -452,26 +767,23 @@ export default function Home() {
         </div>
       </section>
       {/* Footer */}
-      <footer className="relative z-10 border-t-2 border-[#1a1a1a]/10 px-8 py-12">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">
+      <footer className="relative z-10 border-t-2 border-[#1a1a1a]/10 px-4 py-8 md:px-8 md:py-12">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row md:gap-6">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center border-2 border-[#1a1a1a]">
-              <span className="text-xs font-bold text-[#1a1a1a]">HP</span>
+              <span className="text-xs font-bold text-[#1a1a1a]">{"<>"}</span>
             </div>
             <span className="font-bold tracking-wider">HTMLPIX</span>
           </div>
-          <div className="flex gap-8 text-xs tracking-widest text-[#1a1a1a]/30 uppercase">
-            <Link href="#" className="transition-colors hover:text-[#ff4d00]">
+          <div className="flex gap-4 text-xs tracking-widest text-[#1a1a1a]/30 uppercase md:gap-8">
+            <Link href="/docs" className="transition-colors hover:text-[#ff4d00]">
               Documentation
-            </Link>
-            <Link href="#" className="transition-colors hover:text-[#ff4d00]">
-              GitHub
             </Link>
             <Link href="#" className="transition-colors hover:text-[#ff4d00]">
               Status
             </Link>
           </div>
-          <span className="text-xs text-[#1a1a1a]/20">© 2025 HTMLPix v2.0</span>
+          <span className="text-xs text-[#1a1a1a]/20">© 2025 HTMLPix</span>
         </div>
       </footer>
     </div>

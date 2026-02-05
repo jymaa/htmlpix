@@ -1,0 +1,24 @@
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.htmlpix.com";
+
+# Quick Start
+
+Make your first API call with curl:
+
+```bash
+curl -X POST https://api.htmlpix.com/render \
+  -H "Authorization: Bearer hpx_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "html": "<div style=\"padding: 40px; background: #fff;\"><h1>Hello World</h1></div>",
+    "width": 800,
+    "height": 400,
+    "format": "png"
+  }' \
+  --output image.png
+```
+
+## What's Next?
+
+1. Get your API key from the [dashboard](/api-keys)
+2. Read about [authentication](/docs/authentication)
+3. Explore the full [API reference](/docs/endpoints)

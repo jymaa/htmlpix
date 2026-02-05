@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { ConvexClientProvider } from "../ConvexClientProvider";
-import { Header } from "@/components/Header";
+import { DashboardHeader } from "@/components/DashboardHeader";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
   return (
     <ConvexClientProvider>
-      <Header />
+      <DashboardHeader />
       <main className="container mx-auto p-4">{children}</main>
     </ConvexClientProvider>
   );

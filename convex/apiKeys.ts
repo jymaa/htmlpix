@@ -48,18 +48,8 @@ export const createKey = mutation({
     const keyHash = await hashKey(rawKey);
     const keyPrefix = rawKey.slice(0, 12);
 
-    const quota = await ctx.db
-      .query("quotas")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .first();
-
-    if (!quota) {
-      await ctx.db.insert("quotas", {
-        userId,
-        plan: "free",
-        monthlyLimit: 100,
-      });
-    }
+    // Note: Quota is now created via Stripe subscription flow
+    // Users need an active subscription to use the API
 
     const keyId = await ctx.db.insert("apiKeys", {
       userId,

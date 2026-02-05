@@ -16,8 +16,13 @@ export default defineSchema({
 
   quotas: defineTable({
     userId: v.string(),
-    plan: v.union(v.literal("free"), v.literal("pro"), v.literal("enterprise")),
+    plan: v.union(v.literal("starter"), v.literal("pro"), v.literal("scale")),
     monthlyLimit: v.number(),
+    stripeSubscriptionId: v.optional(v.string()),
+    stripeSubscriptionStatus: v.optional(v.string()),
+    stripePriceId: v.optional(v.string()),
+    currentPeriodEnd: v.optional(v.number()),
+    cancelAtPeriodEnd: v.optional(v.boolean()),
   }).index("by_userId", ["userId"]),
 
   renders: defineTable({
@@ -38,6 +43,5 @@ export default defineSchema({
     userId: v.string(),
     year: v.number(),
     month: v.number(),
-  })
-    .index("by_userId_year_month", ["userId", "year", "month"]),
+  }).index("by_userId_year_month", ["userId", "year", "month"]),
 });

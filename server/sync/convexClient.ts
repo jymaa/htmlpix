@@ -60,7 +60,7 @@ export interface AuthSuccess {
 
 export interface AuthError {
   valid: false;
-  code: "MISSING_KEY" | "INVALID_KEY" | "KEY_INACTIVE" | "QUOTA_EXCEEDED" | "NOT_READY";
+  code: "MISSING_KEY" | "INVALID_KEY" | "KEY_INACTIVE" | "QUOTA_EXCEEDED" | "NOT_READY" | "SUBSCRIPTION_INACTIVE";
   message: string;
 }
 
@@ -106,6 +106,26 @@ export function validateApiKey(authHeader: string | null): AuthResult {
   const quota = getQuota(apiKey.userId);
   if (!quota) {
     return { valid: false, code: "INVALID_KEY", message: "No quota found for user" };
+  }
+
+  // Check subscription status
+  // User has access if: status === "active" OR (status === "canceled" && currentPeriodEnd > now)
+  const now = Date.now();
+  const status = quota.stripeSubscriptionStatus;
+  const periodEnd = quota.currentPeriodEnd;
+
+  if (status) {
+    const hasActiveSubscription =
+      status === "active" ||
+      (status === "canceled" && periodEnd && periodEnd > now);
+
+    if (!hasActiveSubscription) {
+      return {
+        valid: false,
+        code: "SUBSCRIPTION_INACTIVE",
+        message: "Subscription is inactive. Please renew your subscription.",
+      };
+    }
   }
 
   if (quota.currentUsage >= quota.monthlyLimit) {

@@ -24,7 +24,12 @@ export const getAuthData = query({
             upper: { key: [q.userId, year, month], inclusive: true },
           },
         });
-        return { ...q, currentUsage: usage };
+        return {
+          ...q,
+          currentUsage: usage,
+          stripeSubscriptionStatus: q.stripeSubscriptionStatus,
+          currentPeriodEnd: q.currentPeriodEnd,
+        };
       })
     );
 

@@ -47,7 +47,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0;
   /* Warm blueprint palette - matches page.tsx */
   --background: #f5f0e8;
   --foreground: #1a1a1a;

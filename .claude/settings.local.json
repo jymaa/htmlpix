@@ -15,7 +15,16 @@
       "WebFetch(domain:docs.convex.dev)",
       "Bash(bunx convex codegen:*)",
       "Bash(bunx convex dev:*)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(bunx tsc:*)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:stack.convex.dev)",
+      "Bash(npm view:*)",
+      "WebFetch(domain:labs.convex.dev)",
+      "Bash(bunx --bun shadcn@latest add:*)",
+      "Bash(tree:*)"
     ]
   }
 }

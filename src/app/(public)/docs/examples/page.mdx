@@ -1,0 +1,94 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CodeBlock } from "@/components/docs/CodeBlock";
+
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.htmlpix.com";
+
+# Code Examples
+
+<Tabs defaultValue="curl" className="w-full">
+  <TabsList className="grid w-full grid-cols-3">
+    <TabsTrigger value="curl">cURL</TabsTrigger>
+    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
+    <TabsTrigger value="python">Python</TabsTrigger>
+  </TabsList>
+  <TabsContent value="curl" className="mt-4">
+    <CodeBlock
+      language="bash"
+      filename="render.sh"
+      code={`curl -X POST ${API_BASE_URL}/render \\
+  -H "Authorization: Bearer hpx_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "html": "<div class=\\"card\\"><h1>Hello World</h1><p>Welcome to HTMLPix</p></div>",
+    "css": ".card { padding: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; }",
+    "width": 1200,
+    "height": 630,
+    "format": "png"
+  }' \\
+  --output og-image.png`}
+    />
+  </TabsContent>
+  <TabsContent value="typescript" className="mt-4">
+    <CodeBlock
+      language="typescript"
+      filename="render.ts"
+      code={`async function renderImage() {
+  const response = await fetch('${API_BASE_URL}/render', {
+    method: 'POST',
+    headers: {
+      'Authorization': \`Bearer \${process.env.HTMLPIX_API_KEY}\`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      html: '<div class="card"><h1>Hello World</h1></div>',
+      css: '.card { padding: 40px; background: #fff; }',
+      width: 1200,
+      height: 630,
+      format: 'png',
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message);
+  }
+
+  const imageBuffer = await response.arrayBuffer();
+  return Buffer.from(imageBuffer);
+}`}
+    />
+  </TabsContent>
+  <TabsContent value="python" className="mt-4">
+    <CodeBlock
+      language="python"
+      filename="render.py"
+      code={`import requests
+import os
+
+def render_image():
+    response = requests.post(
+        '${API_BASE_URL}/render',
+        headers={
+            'Authorization': f'Bearer {os.environ["HTMLPIX_API_KEY"]}',
+            'Content-Type': 'application/json',
+        },
+        json={
+            'html': '<div class="card"><h1>Hello World</h1></div>',
+            'css': '.card { padding: 40px; background: #fff; }',
+            'width': 1200,
+            'height': 630,
+            'format': 'png',
+        },
+    )
+
+    if not response.ok:
+        raise Exception(response.json()['message'])
+
+    return response.content
+
+# Save to file
+with open('image.png', 'wb') as f:
+    f.write(render_image())`}
+    />
+  </TabsContent>
+</Tabs>

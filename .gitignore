@@ -28,6 +28,9 @@
 
 # misc
 .DS_Store
+
+# turbopack artifact bug workaround
+/Documents/
 *.pem
 
 # debug

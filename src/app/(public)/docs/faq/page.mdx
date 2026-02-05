@@ -1,0 +1,59 @@
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { CodeBlock } from "@/components/docs/CodeBlock";
+
+# FAQ
+
+<Accordion type="single" collapsible className="w-full">
+  <AccordionItem value="google-fonts">
+    <AccordionTrigger>How do I use Google Fonts?</AccordionTrigger>
+    <AccordionContent>
+      Pass the font names in the `googleFonts` array, then reference them in your CSS:
+      <CodeBlock
+        language="json"
+        code={`{
+  "html": "<h1 style=\\"font-family: 'Inter', sans-serif;\\">Hello</h1>",
+  "googleFonts": ["Inter:wght@400;600;700"]
+}`}
+      />
+    </AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="og-images">
+    <AccordionTrigger>What dimensions should I use for OG images?</AccordionTrigger>
+    <AccordionContent>
+      For Open Graph (social sharing) images, use `1200x630` pixels. This is the recommended size for Facebook, Twitter/X, and LinkedIn.
+    </AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="transparency">
+    <AccordionTrigger>How do I create transparent images?</AccordionTrigger>
+    <AccordionContent>
+      Set `"format": "png"` and `"background": "transparent"`. Make sure your HTML doesn't have a background color set on the root element.
+    </AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="retina">
+    <AccordionTrigger>How do I create Retina/HiDPI images?</AccordionTrigger>
+    <AccordionContent>
+      Use the `deviceScaleFactor` parameter. Set it to `2` for 2x resolution. The resulting image will be double the viewport dimensions.
+    </AccordionContent>
+  </AccordionItem>
+</Accordion>
+
+## Rate Limits
+
+Each plan includes a monthly render quota. When you exceed your quota, subsequent requests will return a `429 QUOTA_EXCEEDED` error.
+
+| Plan | Monthly Renders | Price |
+|------|-----------------|-------|
+| Starter | 1,000 | $8/month |
+| Pro | 3,000 | $15/month |
+| Scale | 10,000 | $35/month |
+
+Need more? [Upgrade your plan](/billing) at any time.
+
+## Need Help?
+
+Can't find what you're looking for? [Contact Support](mailto:support@htmlpix.com).

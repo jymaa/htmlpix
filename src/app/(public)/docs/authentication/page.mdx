@@ -1,0 +1,16 @@
+# Authentication
+
+All API requests require an API key. Include it in the `Authorization` header:
+
+```http
+Authorization: Bearer hpx_your_api_key
+```
+
+Get your API key from the [dashboard](/api-keys). Keep it secret - never expose it in client-side code.
+
+## Security Best Practices
+
+- Store API keys in environment variables
+- Never commit keys to version control
+- Rotate keys periodically
+- Use separate keys for development and production

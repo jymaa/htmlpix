@@ -1,0 +1,36 @@
+# Errors
+
+## Response Format
+
+### Success Response
+
+On success, the API returns the rendered image binary with the appropriate Content-Type header (`image/png`, `image/jpeg`, or `image/webp`).
+
+### Error Response
+
+On error, the API returns a JSON object:
+
+```json
+{
+  "error": {
+    "code": "QUOTA_EXCEEDED",
+    "message": "Monthly quota of 1000 renders exceeded"
+  }
+}
+```
+
+## Error Codes
+
+| HTTP Status | Code | Description |
+|-------------|------|-------------|
+| 400 | `INVALID_BODY` | Request body is not valid JSON |
+| 400 | `MISSING_HTML` | html field is required |
+| 400 | `HTML_TOO_LARGE` | HTML exceeds maximum size (500KB) |
+| 400 | `CSS_TOO_LARGE` | CSS exceeds maximum size (200KB) |
+| 401 | `MISSING_KEY` | Authorization header missing |
+| 401 | `INVALID_KEY` | API key is invalid |
+| 401 | `KEY_INACTIVE` | API key has been revoked |
+| 402 | `SUBSCRIPTION_INACTIVE` | Subscription has expired |
+| 429 | `QUOTA_EXCEEDED` | Monthly render quota exceeded |
+| 500 | `RENDER_ERROR` | Failed to render the HTML |
+| 503 | `NOT_READY` | Service is starting up |
