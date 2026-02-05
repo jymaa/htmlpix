@@ -23,7 +23,7 @@ Dual-stack application: HTML-to-image rendering API + Next.js web dashboard.
 
 ### Rendering Server (`server/`)
 
-Bun HTTP server with Puppeteer for HTML→image conversion.
+Bun HTTP server with Puppeteer for HTML→image conversion, Convex-synced auth/quota, in-memory + disk image cache, and a background upload queue.
 
 **Endpoints:**
 - `POST /render` - Render HTML to image (requires API key auth)
@@ -36,7 +36,14 @@ Bun HTTP server with Puppeteer for HTML→image conversion.
 - `server/render/browserPool.ts` - Puppeteer browser pool with semaphore concurrency
 - `server/render/render.ts` - HTML→screenshot with viewport, format, CSS/font injection
 - `server/render/requestPolicy.ts` - Request interception, domain allowlist, byte limits
-- `server/db/` - SQLite storage for images, renders, API keys
+- `server/validation.ts` - Request validation and size limits
+- `server/middleware/auth.ts` - Auth header validation + quota checks
+- `server/cache/lmdb.ts` - LMDB cache for auth/quota vitals (Convex is source of truth)
+- `server/sync/convexClient.ts` - Convex sync client + auth cache refresh
+- `server/sync/usageSync.ts` - Render usage reporting
+- `server/sync/uploadQueue.ts` - Image upload/link retry queue
+- `server/store/imageStore.ts` - In-memory image cache with TTL
+- `server/store/diskImageStore.ts` - Disk image cache with TTL
 
 ### Web Frontend (`src/`)
 
@@ -51,14 +58,19 @@ Next.js 16 App Router with Convex backend and Better Auth.
 ### Key Environment Variables
 
 **Server:**
-- `PORT`, `BASE_URL` - Server binding
-- `BROWSER_INSTANCES`, `RENDER_CONCURRENCY` - Pool sizing
-- `MAX_QUEUE_LENGTH`, `MAX_ASSET_BYTES` - Request limits
-- `API_KEYS` - Format: `key1:client1:rateLimit,key2:client2:rateLimit`
-- `DB_PATH` - SQLite path
+- `PORT`, `BASE_URL` - Server binding + external base URL
+- `CONVEX_URL` - Convex backend endpoint for sync/actions (required)
+- `BROWSER_INSTANCES`, `RENDER_CONCURRENCY` - Puppeteer pool sizing
+- `MAX_QUEUE_LENGTH`, `MAX_HTML_LENGTH`, `MAX_CSS_LENGTH` - Request limits
+- `ALLOWED_HOSTS`, `MAX_ASSET_BYTES` - Remote asset allowlist + download cap
+- `DEFAULT_TIMEOUT_MS`, `FONT_STABILIZATION_MS`, `ASSET_WAIT_MS` - Render timing
+- `CACHE_PATH` - LMDB cache directory for auth/quota vitals
+- `IMAGE_DIR`, `IMAGE_TTL_MS`, `MAX_STORED_IMAGES` - Image cache controls
+- `UPLOAD_CONCURRENCY`, `UPLOAD_RETRY_*`, `LINK_RETRY_*` - Upload/link backoff tuning
 
-**Frontend:**
-- `NEXT_PUBLIC_CONVEX_URL`, `CONVEX_URL` - Convex endpoints
+**Frontend/Convex:**
+- `NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL` - Convex endpoints
+- `NEXT_PUBLIC_SITE_URL`, `SITE_URL` - Base URLs for auth callbacks
 - `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` - Auth
 
 ## Bun Preferences
@@ -73,8 +85,40 @@ Use Bun instead of Node.js for all operations.
 
 **Built-in APIs (don't use npm alternatives):**
 - `Bun.serve()` - HTTP server (not express)
-- `bun:sqlite` - SQLite (not better-sqlite3)
 - `Bun.file` - File I/O (prefer over node:fs)
+
+## Convex Actions Notes
+
+## Common Pitfalls
+
+### Convex Action use node
+If you add `"use node"`, the file can only define actions (no queries or mutations). Prefer web-safe APIs like `atob` + `Uint8Array` + `Blob`.
+
+If using more than the fetch api from node, you need to use the `use node` directive. If using use node, you can only define actions in that file.
+
+```ts
+"use node";
+```
+
+### Convex Action Return Types
+When an action uses `ctx.runQuery` or `ctx.runMutation`, TypeScript can't infer the return type. Add explicit return type annotations:
+```ts
+// BAD - causes "implicitly has type 'any'" error
+export const myAction = action({
+  handler: async (ctx, args) => {
+    return await ctx.runQuery(api.something.get, { id: args.id });
+  },
+});
+
+// GOOD - explicit return type
+export const myAction = action({
+  handler: async (ctx, args): Promise<{ success: boolean }> => {
+    return await ctx.runQuery(api.something.get, { id: args.id });
+  },
+});
+```
+
+
 
 ## Deployment
 
@@ -82,5 +126,5 @@ Blue-green deployment to VPS. See `deploy.md` for details.
 
 **Requirements for server changes:**
 - Must expose `/readyz` endpoint returning 200 when ready
-- Must respect `PORT` and `DB_PATH` env vars
+- Must respect `PORT` and `CACHE_PATH` env vars
 - Must have `start` script in `server/package.json`

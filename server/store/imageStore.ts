@@ -4,7 +4,7 @@ interface StoredImage {
   createdAt: number;
 }
 
-const IMAGE_TTL_MS = parseInt(process.env.IMAGE_TTL_MS || "3600000", 10); // 1 hour default
+const IMAGE_TTL_MS = parseInt(process.env.IMAGE_TTL_MS || "86400000", 10); // 24 hours default
 const MAX_STORED_IMAGES = parseInt(process.env.MAX_STORED_IMAGES || "1000", 10);
 
 class ImageStore {

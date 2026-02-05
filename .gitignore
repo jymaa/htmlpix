@@ -22,6 +22,10 @@
 /build
 /server/dist
 
+# server cache
+/server/cache/images
+/server/cache/lmdb
+
 # misc
 .DS_Store
 *.pem

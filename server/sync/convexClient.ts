@@ -1,6 +1,19 @@
 import { ConvexClient } from "convex/browser";
 import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import {
+  initCache,
+  closeCache,
+  clearApiKeys,
+  clearQuotas,
+  putApiKey,
+  putQuota,
+  getApiKey,
+  getQuota,
+  getCacheStats as getAuthCacheStats,
+  setLastUpdate,
+  type CachedApiKey,
+  type CachedQuota,
+} from "../cache/lmdb";
 
 const CONVEX_URL = process.env.CONVEX_URL;
 if (!CONVEX_URL) {
@@ -9,56 +22,28 @@ if (!CONVEX_URL) {
 
 const client = new ConvexClient(CONVEX_URL);
 
-interface CachedApiKey {
-  _id: Id<"apiKeys">;
-  userId: string;
-  keyHash: string;
-  keyPrefix: string;
-  name: string;
-  active: boolean;
-  createdAt: number;
-}
-
-interface CachedQuota {
-  _id: Id<"quotas">;
-  userId: string;
-  plan: "free" | "pro" | "enterprise";
-  monthlyLimit: number;
-  currentUsage: number;
-}
-
-interface AuthCache {
-  keys: Map<string, CachedApiKey>;
-  quotas: Map<string, CachedQuota>;
-  lastUpdate: number;
-}
-
-let authCache: AuthCache = {
-  keys: new Map(),
-  quotas: new Map(),
-  lastUpdate: 0,
-};
-
 let subscribed = false;
 
 export function initConvexSync(): void {
   if (subscribed) return;
 
+  initCache();
+
   client.onUpdate(api.sync.getAuthData, {}, (data) => {
-    authCache.keys.clear();
-    authCache.quotas.clear();
+    clearApiKeys();
+    clearQuotas();
 
     for (const key of data.keys) {
-      authCache.keys.set(key.keyHash, key as CachedApiKey);
+      putApiKey(key.keyHash, key);
     }
 
     for (const quota of data.quotas) {
-      authCache.quotas.set(quota.userId, quota as CachedQuota);
+      putQuota(quota.userId, quota);
     }
 
-    authCache.lastUpdate = Date.now();
+    setLastUpdate(Date.now(), data.keys.length, data.quotas.length);
     console.log(
-      `Synced auth data: ${authCache.keys.size} keys, ${authCache.quotas.size} quotas`
+      `Synced auth data: ${data.keys.length} keys, ${data.quotas.length} quotas`
     );
   });
 
@@ -88,7 +73,8 @@ function hashApiKey(key: string): string {
 }
 
 export function validateApiKey(authHeader: string | null): AuthResult {
-  if (authCache.lastUpdate === 0) {
+  const cacheStats = getCacheStats();
+  if (cacheStats.lastUpdate === 0) {
     return { valid: false, code: "NOT_READY", message: "Auth system not ready yet" };
   }
 
@@ -108,7 +94,7 @@ export function validateApiKey(authHeader: string | null): AuthResult {
   const rawKey = match[1]!;
   const keyHash = hashApiKey(rawKey);
 
-  const apiKey = authCache.keys.get(keyHash);
+  const apiKey = getApiKey(keyHash);
   if (!apiKey) {
     return { valid: false, code: "INVALID_KEY", message: "Invalid API key" };
   }
@@ -117,7 +103,7 @@ export function validateApiKey(authHeader: string | null): AuthResult {
     return { valid: false, code: "KEY_INACTIVE", message: "API key is inactive" };
   }
 
-  const quota = authCache.quotas.get(apiKey.userId);
+  const quota = getQuota(apiKey.userId);
   if (!quota) {
     return { valid: false, code: "INVALID_KEY", message: "No quota found for user" };
   }
@@ -143,13 +129,10 @@ export function getConvexClient(): ConvexClient {
 }
 
 export function getCacheStats(): { keys: number; quotas: number; lastUpdate: number } {
-  return {
-    keys: authCache.keys.size,
-    quotas: authCache.quotas.size,
-    lastUpdate: authCache.lastUpdate,
-  };
+  return getAuthCacheStats();
 }
 
 export async function closeConvexClient(): Promise<void> {
   await client.close();
+  closeCache();
 }

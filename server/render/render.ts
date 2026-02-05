@@ -8,6 +8,7 @@ const DEFAULT_WIDTH = 1200;
 const DEFAULT_HEIGHT = 800;
 const DEFAULT_TIMEOUT_MS = parseInt(process.env.DEFAULT_TIMEOUT_MS || "5000", 10);
 const FONT_STABILIZATION_MS = parseInt(process.env.FONT_STABILIZATION_MS || "100", 10);
+const ASSET_WAIT_MS = parseInt(process.env.ASSET_WAIT_MS || "2000", 10);
 
 export interface RenderResult {
   buffer: Uint8Array;
@@ -102,12 +103,12 @@ export async function render(request: RenderRequest): Promise<RenderResult | Ren
     const timeoutMs = request.timeoutMs || DEFAULT_TIMEOUT_MS;
 
     await page.setContent(html, {
-      waitUntil: ["load", "networkidle0"],
+      waitUntil: "load",
       timeout: timeoutMs,
     });
 
     // Wait for all images to be fully loaded (both <img> and CSS background-image)
-    await page.evaluate(`
+    const waitForAssets = page.evaluate(`
       (async () => {
         // Wait for <img> elements
         const imgPromises = Array.from(document.querySelectorAll('img')).map(img => {
@@ -146,8 +147,18 @@ export async function render(request: RenderRequest): Promise<RenderResult | Ren
       })()
     `);
 
-    // Wait for fonts to load
-    await page.evaluate("document.fonts.ready");
+    const waitForFonts = page.evaluate("document.fonts.ready");
+    const waitForAllAssets = Promise.all([waitForAssets, waitForFonts]);
+
+    if (ASSET_WAIT_MS > 0) {
+      await Promise.race([
+        waitForAllAssets,
+        new Promise((resolve) => setTimeout(resolve, ASSET_WAIT_MS)),
+      ]);
+      void waitForAllAssets.catch(() => undefined);
+    } else {
+      await waitForAllAssets;
+    }
 
     // Small stabilization delay for fonts
     if (useGoogleFonts) {

@@ -6,6 +6,8 @@
   "scripts": {
     "dev:server": "bun run --watch server/server.ts",
     "dev:web": "next dev -p 3200",
+    "start": "next start",
+    "build": "next build",
     "build:server": "bun build server/server.ts --target=bun --outdir=server/dist --sourcemap",
     "typecheck": "tsc --noEmit"
   },
@@ -47,6 +49,7 @@
     "clsx": "^2.1.1",
     "convex": "^1.31.7",
     "lucide-react": "^0.563.0",
+    "lmdb": "^3.4.6",
     "next": "^16.1.6",
     "puppeteer": "^24.36.1",
     "react": "^19.2.4",

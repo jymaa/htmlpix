@@ -40,7 +40,7 @@ Deployment Process for api.htmlpix.com
 
   PORT=3301
   BASE_URL=https://api.htmlpix.com
-  DB_PATH=./data.db
+  CACHE_PATH=./cache/lmdb
   BROWSER_INSTANCES=2
   RENDER_CONCURRENCY=4
   MAX_QUEUE_LENGTH=100
@@ -58,7 +58,7 @@ Deployment Process for api.htmlpix.com
   3. Must have start script in server/package.json - systemd runs bun run start
   4. Must expose /readyz endpoint - deploy script polls this for health
   5. Must respect PORT env var - server binds to this port
-  6. Must handle DB_PATH env var - SQLite path is symlinked
+  6. Must handle CACHE_PATH env var - LMDB cache directory is symlinked
 
   Deploy Command
 
