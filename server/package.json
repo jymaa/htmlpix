@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "convex": "^1.31.7",
-    "lmdb": "^3.4.6",
+    "lmdb": "^3.5.1",
     "puppeteer": "^24.36.1"
   }
 }

@@ -14,7 +14,8 @@
       "WebFetch(domain:www.convex.dev)",
       "WebFetch(domain:docs.convex.dev)",
       "Bash(bunx convex codegen:*)",
-      "Bash(bunx convex dev:*)"
+      "Bash(bunx convex dev:*)",
+      "Bash(git check-ignore:*)"
     ]
   }
 }
