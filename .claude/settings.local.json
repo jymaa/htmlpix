@@ -29,7 +29,8 @@
       "WebFetch(domain:htmlcsstoimage.com)",
       "WebFetch(domain:pictify.io)",
       "Bash(npx tsc:*)",
-      "Bash(bun install:*)"
+      "Bash(bun install:*)",
+      "Bash(chmod:*)"
     ]
   }
 }

@@ -14,23 +14,20 @@ Deployment Process for api.htmlpix.com
   Deploy flow:
   1. Determine which slot is active (blue or green)
   2. Clone/pull code to the inactive slot
-  3. Build server: bun run build:server
-  4. Install server deps only: cd server && bun install --frozen-lockfile
-  5. Symlink shared DB: ln -sf /opt/htmlpix/shared/data.db ./server/data.db
-  6. Copy env and set port: blue=3301, green=3302
-  7. Start new instance, wait for /readyz to return 200
-  8. Update nginx upstream to new port, reload nginx
-  9. Stop old instance
+  3. Install server deps only: cd server && bun install --frozen-lockfile
+  4. Build server bundle: bun build server/server.ts --target=bun --outdir=server/dist
+  5. Copy env and set port: blue=3301, green=3302
+  6. Start new instance, wait for /readyz to return 200
+  7. Update nginx upstream to new port, reload nginx
+  8. Stop old instance
 
   Key Files
   ┌────────────────────────────────────────────┬─────────────────────────────┐
   │                    Path                    │           Purpose           │
   ├────────────────────────────────────────────┼─────────────────────────────┤
-  │ /opt/htmlpix/deploy.sh                     │ Deployment script           │
+  │ deploy.sh (repo root)                      │ Deployment script           │
   ├────────────────────────────────────────────┼─────────────────────────────┤
   │ /opt/htmlpix/shared/.env                   │ Shared environment config   │
-  ├────────────────────────────────────────────┼─────────────────────────────┤
-  │ /opt/htmlpix/shared/data.db                │ SQLite database (symlinked) │
   ├────────────────────────────────────────────┼─────────────────────────────┤
   │ /etc/systemd/system/htmlpix@.service       │ Service template            │
   ├────────────────────────────────────────────┼─────────────────────────────┤
@@ -38,34 +35,57 @@ Deployment Process for api.htmlpix.com
   └────────────────────────────────────────────┴─────────────────────────────┘
   Environment Variables
 
+  # Required
   PORT=3301
   BASE_URL=https://api.htmlpix.com
-  CACHE_PATH=./cache/lmdb
-  BROWSER_INSTANCES=2
-  RENDER_CONCURRENCY=4
-  MAX_QUEUE_LENGTH=100
+  CONVEX_URL=<convex deployment url>
+
+  # Browser pool
+  BROWSER_INSTANCES=1
+  RENDER_CONCURRENCY=3
+
+  # Request limits
+  MAX_QUEUE_LENGTH=50
   MAX_HTML_LENGTH=500000
+  MAX_CSS_LENGTH=200000
   MAX_ASSET_BYTES=10485760
-  IMAGE_TTL_MS=3600000
-  DEFAULT_TIMEOUT_MS=10000
-  API_KEYS=key1:client1:10000,key2:client2:5000
+
+  # Render timing
+  DEFAULT_TIMEOUT_MS=5000
+  FONT_STABILIZATION_MS=100
+  ASSET_WAIT_MS=2000
+
+  # Asset allowlist
   ALLOWED_HOSTS=fonts.googleapis.com,fonts.gstatic.com
+
+  # Cache / storage
+  CACHE_PATH=./cache/lmdb
+  IMAGE_DIR=./cache/images
+  IMAGE_TTL_MS=86400000
+  MAX_STORED_IMAGES=1000
+
+  # Upload queue
+  UPLOAD_CONCURRENCY=2
+  UPLOAD_RETRY_MAX=5
+  UPLOAD_RETRY_BASE_MS=500
+  UPLOAD_RETRY_MAX_MS=60000
+
+  # Optional
+  CORS_ORIGIN=
 
   Requirements for Code Changes
 
   1. Must have server/bun.lock - install uses --frozen-lockfile
-  2. Must have build:server script in root package.json - builds to server/dist/
-  3. Must have start script in server/package.json - systemd runs bun run start
-  4. Must expose /readyz endpoint - deploy script polls this for health
-  5. Must respect PORT env var - server binds to this port
-  6. Must handle CACHE_PATH env var - LMDB cache directory is symlinked
+  2. Must have start script in server/package.json - systemd runs bun run start
+  3. Must expose /readyz endpoint - deploy script polls this for health
+  4. Must respect PORT env var - server binds to this port
+  5. Must set CONVEX_URL env var - required for Convex sync
 
   Deploy Command
 
-  ssh ubuntu@api.htmlpix.com 'sudo -u deploy /opt/htmlpix/deploy.sh master'
+  ssh ubuntu@api.htmlpix.com 'sudo -u deploy /opt/htmlpix/blue/deploy.sh master'
 
-  Or if logged in:
-  sudo -u deploy deploy   # alias for deploy.sh master
+  The script lives in the repo and gets pulled with each deploy.
 
   Branch
 
