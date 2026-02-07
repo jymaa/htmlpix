@@ -14,7 +14,11 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "dev-asia.504fe3e01303e85e7c073450f63e27cb.r2.cloudflarestorage.com",
+        hostname: "cdn.htmlpix.com",
+      },
+      {
+        protocol: "https",
+        hostname: "pub-d90268f86a134686a1cf1d990af7b506.r2.dev",
       },
     ],
   },

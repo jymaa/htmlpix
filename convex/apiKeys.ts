@@ -3,7 +3,7 @@ import { components } from "./_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { usageAggregate } from "./usage";
-import { r2 } from "./images";
+import { cdnUrl } from "./helpers/cdn";
 
 function generateApiKey(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -183,7 +183,7 @@ export const getUserRenders = query({
         let imageUrl: string | undefined;
         if (render.imageKey) {
           try {
-            imageUrl = await r2.getUrl(render.imageKey);
+            imageUrl = cdnUrl(render.imageKey);
           } catch {
             // Signed URL generation failed
           }
@@ -221,7 +221,7 @@ export const getUserRendersPaginated = query({
         let imageUrl: string | undefined;
         if (render.imageKey) {
           try {
-            imageUrl = await r2.getUrl(render.imageKey);
+            imageUrl = cdnUrl(render.imageKey);
           } catch {
             // Signed URL generation failed — leave undefined
           }

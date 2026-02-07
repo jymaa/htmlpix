@@ -2,6 +2,7 @@ import { R2 } from "@convex-dev/r2";
 import { components, internal } from "./_generated/api";
 import { action, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
+import { cdnUrl } from "./helpers/cdn";
 
 export const r2 = new R2(components.r2);
 
@@ -36,7 +37,7 @@ export const uploadImage = action({
       imageKey: key,
     });
 
-    const url = await r2.getUrl(key);
+    const url = cdnUrl(key);
     return { key, url, linked };
   },
 });
@@ -116,7 +117,7 @@ export const checkCachedRender = action({
 export const getImageUrl = action({
   args: { imageKey: v.string() },
   handler: async (_, { imageKey }) => {
-    return await r2.getUrl(imageKey);
+    return cdnUrl(imageKey);
   },
 });
 
@@ -125,7 +126,7 @@ export const getImageUrlByRender = action({
   handler: async (ctx, { renderId }): Promise<string | null> => {
     const render = await ctx.runQuery(internal.images.getRenderByExternalId, { renderId });
     if (!render?.imageKey) return null;
-    return await r2.getUrl(render.imageKey);
+    return cdnUrl(render.imageKey);
   },
 });
 

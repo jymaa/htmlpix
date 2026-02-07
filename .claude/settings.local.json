@@ -30,7 +30,8 @@
       "WebFetch(domain:pictify.io)",
       "Bash(npx tsc:*)",
       "Bash(bun install:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(bunx convex typecheck:*)"
     ]
   }
 }
