@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 
 const PLANS = [
   {
@@ -145,13 +145,38 @@ export default function SettingsPage() {
                 Account
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <div className="text-muted-foreground font-mono text-[10px] tracking-widest uppercase">
-                  Email
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                {session?.user?.image ? (
+                  <img
+                    src={session.user.image}
+                    alt=""
+                    className="h-10 w-10 border object-cover"
+                  />
+                ) : (
+                  <div className="bg-muted flex h-10 w-10 items-center justify-center border">
+                    <User className="text-muted-foreground h-4 w-4" />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <div className="font-[family-name:var(--font-bebas-neue)] text-2xl leading-none">
+                    {session?.user?.name ?? "—"}
+                  </div>
+                  <div className="text-muted-foreground mt-0.5 truncate font-mono text-xs">
+                    {session?.user?.email ?? "—"}
+                  </div>
                 </div>
-                <div className="mt-0.5 text-sm font-medium">{session?.user?.email ?? "—"}</div>
               </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-mono text-xs tracking-wider uppercase"
+                onClick={handleSignOut}
+              >
+                <LogOut className="mr-2 h-3.5 w-3.5" />
+                Sign Out
+              </Button>
             </CardContent>
           </Card>
 
@@ -329,19 +354,6 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        {/* Sign Out */}
-        <div className="border-border/50 border-t pt-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">Sign Out</h3>
-              <p className="text-muted-foreground text-sm">Sign out of your account on this device</p>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
       </div>
     </>
   );
