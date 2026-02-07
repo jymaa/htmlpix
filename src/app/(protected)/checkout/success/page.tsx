@@ -9,51 +9,76 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { BlueprintSpinner } from "@/components/ui/blueprint-spinner";
 
+const MIN_VISIBLE_MS = 900;
+const FALLBACK_REDIRECT_MS = 4500;
+
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get("session_id");
 
   const syncSubscription = useAction(api.stripe.syncSubscription);
-  const [status, setStatus] = useState<"loading" | "success" | "error">(sessionId ? "loading" : "error");
+  const [status, setStatus] = useState<"syncing" | "redirecting" | "error">(sessionId ? "syncing" : "error");
+  const [showManualLink, setShowManualLink] = useState(false);
 
   useEffect(() => {
     if (!sessionId) return;
 
+    let isCancelled = false;
+    const startedAt = Date.now();
+
     const sync = async () => {
       try {
         await syncSubscription({ sessionId });
-        setStatus("success");
       } catch (error) {
         console.error("Failed to sync subscription:", error);
-        // Still show success - webhook will handle it
-        setStatus("success");
+        // Webhook still syncs subscription, continue users to dashboard.
+      } finally {
+        const elapsed = Date.now() - startedAt;
+        const waitMs = Math.max(0, MIN_VISIBLE_MS - elapsed);
+
+        window.setTimeout(() => {
+          if (isCancelled) return;
+          setStatus("redirecting");
+          router.replace("/dashboard");
+        }, waitMs);
       }
     };
 
-    sync();
-  }, [sessionId, syncSubscription]);
+    void sync();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [router, sessionId, syncSubscription]);
 
   useEffect(() => {
-    if (status === "success") {
-      const timer = setTimeout(() => {
-        router.push("/dashboard");
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [status, router]);
+    if (status === "error") return;
+
+    const timer = window.setTimeout(() => {
+      setShowManualLink(true);
+      window.location.assign("/dashboard");
+    }, FALLBACK_REDIRECT_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [status]);
 
   if (status === "error") {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle>Something went wrong</CardTitle>
-            <CardDescription>We couldn&apos;t verify your checkout session.</CardDescription>
+            <CardTitle>Unable to verify checkout</CardTitle>
+            <CardDescription>
+              We couldn&apos;t verify this checkout session. Your payment may still finish in the background.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex gap-2">
+            <Link href="/dashboard">
+              <Button>Open Dashboard</Button>
+            </Link>
             <Link href="/settings">
-              <Button>Return to Settings</Button>
+              <Button variant="outline">Billing Settings</Button>
             </Link>
           </CardContent>
         </Card>
@@ -70,21 +95,23 @@ export default function CheckoutSuccessPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <CardTitle>Payment Successful!</CardTitle>
+          <CardTitle>Upgrade confirmed</CardTitle>
           <CardDescription>
-            {status === "loading" ? "Setting up your subscription..." : "Your subscription is now active."}
+            {status === "syncing"
+              ? "Finalizing your subscription and account access."
+              : "Taking you to your dashboard now."}
           </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-4">
-          {status === "loading" ? (
-            <BlueprintSpinner size="md" label="Processing" />
-          ) : (
-            <>
-              <p className="text-muted-foreground text-sm">Redirecting you to the dashboard...</p>
-              <Link href="/dashboard">
-                <Button>Go to Dashboard</Button>
-              </Link>
-            </>
+          <BlueprintSpinner size="md" label={status === "syncing" ? "Finalizing" : "Redirecting"} />
+          <p className="text-muted-foreground text-sm">
+            This usually takes a second. You&apos;ll be redirected automatically.
+          </p>
+          {showManualLink && (
+            <Link href="/dashboard">
+              <Button>Continue to Dashboard</Button>
+            </Link>
           )}
         </CardContent>
       </Card>

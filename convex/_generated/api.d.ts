@@ -38,7 +38,11 @@ import type * as templates from "../templates.js";
 import type * as usage from "../usage.js";
 import type * as users from "../users.js";
 
-import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server";
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
 
 declare const fullApi: ApiFromModules<{
   apiKeys: typeof apiKeys;
@@ -80,7 +84,10 @@ declare const fullApi: ApiFromModules<{
  * const myFunctionReference = api.myModule.myFunction;
  * ```
  */
-export declare const api: FilterApi<typeof fullApi, FunctionReference<any, "public">>;
+export declare const api: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "public">
+>;
 
 /**
  * A utility for referencing Convex functions in your app's internal API.
@@ -90,7 +97,10 @@ export declare const api: FilterApi<typeof fullApi, FunctionReference<any, "publ
  * const myFunctionReference = internal.myModule.myFunction;
  * ```
  */
-export declare const internal: FilterApi<typeof fullApi, FunctionReference<any, "internal">>;
+export declare const internal: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "internal">
+>;
 
 export declare const components: {
   betterAuth: {
@@ -199,7 +209,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -227,7 +243,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -260,14 +282,26 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
                 model: "verification";
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "identifier" | "value" | "expiresAt" | "createdAt" | "updatedAt" | "_id";
+                  field:
+                    | "identifier"
+                    | "value"
+                    | "expiresAt"
+                    | "createdAt"
+                    | "updatedAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -280,14 +314,25 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
                 model: "jwks";
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "publicKey" | "privateKey" | "createdAt" | "expiresAt" | "_id";
+                  field:
+                    | "publicKey"
+                    | "privateKey"
+                    | "createdAt"
+                    | "expiresAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -300,7 +345,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               };
           onDeleteHandle?: string;
@@ -347,7 +398,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -375,7 +432,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -408,14 +471,26 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
                 model: "verification";
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "identifier" | "value" | "expiresAt" | "createdAt" | "updatedAt" | "_id";
+                  field:
+                    | "identifier"
+                    | "value"
+                    | "expiresAt"
+                    | "createdAt"
+                    | "updatedAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -428,14 +503,25 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
                 model: "jwks";
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "publicKey" | "privateKey" | "createdAt" | "expiresAt" | "_id";
+                  field:
+                    | "publicKey"
+                    | "privateKey"
+                    | "createdAt"
+                    | "expiresAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -448,7 +534,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               };
           onDeleteHandle?: string;
@@ -487,7 +579,13 @@ export declare const components: {
               | "contains"
               | "starts_with"
               | "ends_with";
-            value: string | number | boolean | Array<string> | Array<number> | null;
+            value:
+              | string
+              | number
+              | boolean
+              | Array<string>
+              | Array<number>
+              | null;
           }>;
         },
         any
@@ -514,7 +612,13 @@ export declare const components: {
               | "contains"
               | "starts_with"
               | "ends_with";
-            value: string | number | boolean | Array<string> | Array<number> | null;
+            value:
+              | string
+              | number
+              | boolean
+              | Array<string>
+              | Array<number>
+              | null;
           }>;
         },
         any
@@ -562,7 +666,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -599,7 +709,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -646,7 +762,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -660,7 +782,13 @@ export declare const components: {
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "identifier" | "value" | "expiresAt" | "createdAt" | "updatedAt" | "_id";
+                  field:
+                    | "identifier"
+                    | "value"
+                    | "expiresAt"
+                    | "createdAt"
+                    | "updatedAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -673,7 +801,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -686,7 +820,12 @@ export declare const components: {
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "publicKey" | "privateKey" | "createdAt" | "expiresAt" | "_id";
+                  field:
+                    | "publicKey"
+                    | "privateKey"
+                    | "createdAt"
+                    | "expiresAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -699,7 +838,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               };
           onUpdateHandle?: string;
@@ -757,7 +902,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -794,7 +945,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -841,7 +998,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -855,7 +1018,13 @@ export declare const components: {
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "identifier" | "value" | "expiresAt" | "createdAt" | "updatedAt" | "_id";
+                  field:
+                    | "identifier"
+                    | "value"
+                    | "expiresAt"
+                    | "createdAt"
+                    | "updatedAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -868,7 +1037,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               }
             | {
@@ -881,7 +1056,12 @@ export declare const components: {
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "publicKey" | "privateKey" | "createdAt" | "expiresAt" | "_id";
+                  field:
+                    | "publicKey"
+                    | "privateKey"
+                    | "createdAt"
+                    | "expiresAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -894,7 +1074,13 @@ export declare const components: {
                     | "contains"
                     | "starts_with"
                     | "ends_with";
-                  value: string | number | boolean | Array<string> | Array<number> | null;
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
                 }>;
               };
           onUpdateHandle?: string;
@@ -905,9 +1091,24 @@ export declare const components: {
   };
   resend: {
     lib: {
-      cancelEmail: FunctionReference<"mutation", "internal", { emailId: string }, null>;
-      cleanupAbandonedEmails: FunctionReference<"mutation", "internal", { olderThan?: number }, null>;
-      cleanupOldEmails: FunctionReference<"mutation", "internal", { olderThan?: number }, null>;
+      cancelEmail: FunctionReference<
+        "mutation",
+        "internal",
+        { emailId: string },
+        null
+      >;
+      cleanupAbandonedEmails: FunctionReference<
+        "mutation",
+        "internal",
+        { olderThan?: number },
+        null
+      >;
+      cleanupOldEmails: FunctionReference<
+        "mutation",
+        "internal",
+        { olderThan?: number },
+        null
+      >;
       createManualEmail: FunctionReference<
         "mutation",
         "internal",
@@ -983,7 +1184,12 @@ export declare const components: {
             | "failed";
         } | null
       >;
-      handleEmailEvent: FunctionReference<"mutation", "internal", { event: any }, null>;
+      handleEmailEvent: FunctionReference<
+        "mutation",
+        "internal",
+        { event: any },
+        null
+      >;
       sendEmail: FunctionReference<
         "mutation",
         "internal",
@@ -1077,8 +1283,18 @@ export declare const components: {
         { key: any; namespace?: any },
         null | { k: any; s: number; v: any }
       >;
-      offset: FunctionReference<"query", "internal", { k1?: any; key: any; namespace?: any }, number>;
-      offsetUntil: FunctionReference<"query", "internal", { k2?: any; key: any; namespace?: any }, number>;
+      offset: FunctionReference<
+        "query",
+        "internal",
+        { k1?: any; key: any; namespace?: any },
+        number
+      >;
+      offsetUntil: FunctionReference<
+        "query",
+        "internal",
+        { k2?: any; key: any; namespace?: any },
+        number
+      >;
       paginate: FunctionReference<
         "query",
         "internal",
@@ -1102,12 +1318,22 @@ export declare const components: {
         { cursor?: string; limit: number },
         { cursor: string; isDone: boolean; page: Array<any> }
       >;
-      validate: FunctionReference<"query", "internal", { namespace?: any }, any>;
+      validate: FunctionReference<
+        "query",
+        "internal",
+        { namespace?: any },
+        any
+      >;
     };
     inspect: {
       display: FunctionReference<"query", "internal", { namespace?: any }, any>;
       dump: FunctionReference<"query", "internal", { namespace?: any }, string>;
-      inspectNode: FunctionReference<"query", "internal", { namespace?: any; node?: string }, null>;
+      inspectNode: FunctionReference<
+        "query",
+        "internal",
+        { namespace?: any; node?: string },
+        null
+      >;
       listTreeNodes: FunctionReference<
         "query",
         "internal",
@@ -1140,8 +1366,18 @@ export declare const components: {
         { maxNodeSize?: number; namespace?: any; rootLazy?: boolean },
         null
       >;
-      delete_: FunctionReference<"mutation", "internal", { key: any; namespace?: any }, null>;
-      deleteIfExists: FunctionReference<"mutation", "internal", { key: any; namespace?: any }, any>;
+      delete_: FunctionReference<
+        "mutation",
+        "internal",
+        { key: any; namespace?: any },
+        null
+      >;
+      deleteIfExists: FunctionReference<
+        "mutation",
+        "internal",
+        { key: any; namespace?: any },
+        any
+      >;
       init: FunctionReference<
         "mutation",
         "internal",
@@ -1154,7 +1390,12 @@ export declare const components: {
         { key: any; namespace?: any; summand?: number; value: any },
         null
       >;
-      makeRootLazy: FunctionReference<"mutation", "internal", { namespace?: any }, null>;
+      makeRootLazy: FunctionReference<
+        "mutation",
+        "internal",
+        { namespace?: any },
+        null
+      >;
       replace: FunctionReference<
         "mutation",
         "internal",
@@ -1185,7 +1426,12 @@ export declare const components: {
   };
   r2: {
     lib: {
-      deleteMetadata: FunctionReference<"mutation", "internal", { bucket: string; key: string }, null>;
+      deleteMetadata: FunctionReference<
+        "mutation",
+        "internal",
+        { bucket: string; key: string },
+        null
+      >;
       deleteObject: FunctionReference<
         "mutation",
         "internal",
@@ -1655,7 +1901,12 @@ export declare const components: {
   };
   workflow: {
     event: {
-      create: FunctionReference<"mutation", "internal", { name: string; workflowId: string }, string>;
+      create: FunctionReference<
+        "mutation",
+        "internal",
+        { name: string; workflowId: string },
+        string
+      >;
       send: FunctionReference<
         "mutation",
         "internal",
@@ -1766,7 +2017,9 @@ export declare const components: {
         {
           generationNumber: number;
           steps: Array<{
-            retry?: boolean | { base: number; initialBackoffMs: number; maxAttempts: number };
+            retry?:
+              | boolean
+              | { base: number; initialBackoffMs: number; maxAttempts: number };
             schedulerOptions?: { runAt?: number } | { runAfter?: number };
             step:
               | {
@@ -1882,8 +2135,18 @@ export declare const components: {
       >;
     };
     workflow: {
-      cancel: FunctionReference<"mutation", "internal", { workflowId: string }, null>;
-      cleanup: FunctionReference<"mutation", "internal", { workflowId: string }, boolean>;
+      cancel: FunctionReference<
+        "mutation",
+        "internal",
+        { workflowId: string },
+        null
+      >;
+      cleanup: FunctionReference<
+        "mutation",
+        "internal",
+        { workflowId: string },
+        boolean
+      >;
       complete: FunctionReference<
         "mutation",
         "internal",

@@ -20,6 +20,11 @@ if (!CONVEX_URL) {
   throw new Error("CONVEX_URL environment variable is required");
 }
 
+const SERVER_SECRET = process.env.SERVER_SECRET!;
+if (!SERVER_SECRET) {
+  throw new Error("SERVER_SECRET environment variable is required");
+}
+
 const client = new ConvexClient(CONVEX_URL);
 
 let subscribed = false;
@@ -29,7 +34,7 @@ export function initConvexSync(): void {
 
   initCache();
 
-  client.onUpdate(api.sync.getAuthData, {}, (data) => {
+  client.onUpdate(api.sync.getAuthData, { serverSecret: SERVER_SECRET }, (data) => {
     clearApiKeys();
     clearQuotas();
 

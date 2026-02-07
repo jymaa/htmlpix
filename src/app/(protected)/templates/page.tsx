@@ -50,7 +50,7 @@ export default function TemplatesPage() {
   const userId = session?.user?.id;
   const router = useRouter();
 
-  const userTemplates = useQuery(api.templates.listUserTemplates, userId ? { userId } : "skip");
+  const userTemplates = useQuery(api.templates.listUserTemplates, userId ? {} : "skip");
   const starterTemplates = useQuery(api.templates.listStarterTemplates);
 
   const createTemplate = useMutation(api.templates.createTemplate);
@@ -68,7 +68,6 @@ export default function TemplatesPage() {
     setCreating(true);
     try {
       const id = await createTemplate({
-        userId,
         name: newName.trim(),
         description: newDesc.trim() || undefined,
         html: '<div class="card">\n  <h1>{{title}}</h1>\n  <p>{{subtitle}}</p>\n</div>',
@@ -98,7 +97,7 @@ export default function TemplatesPage() {
     if (!userId) return;
     setCloning(templateId);
     try {
-      const newId = await cloneTemplate({ templateId, userId });
+      const newId = await cloneTemplate({ templateId });
       router.push(`/templates/${newId}`);
     } finally {
       setCloning(null);

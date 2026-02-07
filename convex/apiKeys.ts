@@ -1,4 +1,5 @@
 import { query, mutation } from "./_generated/server";
+import { components } from "./_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { usageAggregate } from "./usage";
@@ -21,9 +22,22 @@ async function hashKey(key: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function authenticateUser(ctx: { auth: { getUserIdentity: () => Promise<{ subject: string } | null> }; runQuery: Function }) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) throw new Error("Not authenticated");
+  const userId = identity.subject;
+  const user = await ctx.runQuery(components.betterAuth.adapter.findOne, {
+    model: "user",
+    where: [{ field: "_id", value: userId }],
+  });
+  if (!user) throw new Error("Account not found");
+  return userId;
+}
+
 export const listUserKeys = query({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    const userId = await authenticateUser(ctx);
     const keys = await ctx.db
       .query("apiKeys")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -42,10 +56,10 @@ export const listUserKeys = query({
 
 export const createKey = mutation({
   args: {
-    userId: v.string(),
     name: v.string(),
   },
-  handler: async (ctx, { userId, name }) => {
+  handler: async (ctx, { name }) => {
+    const userId = await authenticateUser(ctx);
     const rawKey = generateApiKey();
     const keyHash = await hashKey(rawKey);
     const keyPrefix = rawKey.slice(0, 12);
@@ -80,6 +94,9 @@ export const createKey = mutation({
 export const revokeKey = mutation({
   args: { keyId: v.id("apiKeys") },
   handler: async (ctx, { keyId }) => {
+    const userId = await authenticateUser(ctx);
+    const key = await ctx.db.get(keyId);
+    if (!key || key.userId !== userId) throw new Error("Key not found");
     await ctx.db.patch(keyId, {
       active: false,
       revokedAt: Date.now(),
@@ -90,6 +107,9 @@ export const revokeKey = mutation({
 export const reactivateKey = mutation({
   args: { keyId: v.id("apiKeys") },
   handler: async (ctx, { keyId }) => {
+    const userId = await authenticateUser(ctx);
+    const key = await ctx.db.get(keyId);
+    if (!key || key.userId !== userId) throw new Error("Key not found");
     await ctx.db.patch(keyId, {
       active: true,
       revokedAt: undefined,
@@ -100,6 +120,9 @@ export const reactivateKey = mutation({
 export const deleteKey = mutation({
   args: { keyId: v.id("apiKeys") },
   handler: async (ctx, { keyId }) => {
+    const userId = await authenticateUser(ctx);
+    const key = await ctx.db.get(keyId);
+    if (!key || key.userId !== userId) throw new Error("Key not found");
     await ctx.db.delete(keyId);
   },
 });
@@ -110,13 +133,17 @@ export const renameKey = mutation({
     name: v.string(),
   },
   handler: async (ctx, { keyId, name }) => {
+    const userId = await authenticateUser(ctx);
+    const key = await ctx.db.get(keyId);
+    if (!key || key.userId !== userId) throw new Error("Key not found");
     await ctx.db.patch(keyId, { name });
   },
 });
 
 export const getUserQuota = query({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    const userId = await authenticateUser(ctx);
     const quota = await ctx.db
       .query("quotas")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -141,10 +168,10 @@ export const getUserQuota = query({
 
 export const getUserRenders = query({
   args: {
-    userId: v.string(),
     limit: v.optional(v.number()),
   },
-  handler: async (ctx, { userId, limit }) => {
+  handler: async (ctx, { limit }) => {
+    const userId = await authenticateUser(ctx);
     const renders = await ctx.db
       .query("renders")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -169,12 +196,12 @@ export const getUserRenders = query({
 
 export const getUserRendersPaginated = query({
   args: {
-    userId: v.string(),
     paginationOpts: paginationOptsValidator,
     statusFilter: v.optional(v.union(v.literal("success"), v.literal("error"))),
     formatFilter: v.optional(v.string()),
   },
-  handler: async (ctx, { userId, paginationOpts, statusFilter, formatFilter }) => {
+  handler: async (ctx, { paginationOpts, statusFilter, formatFilter }) => {
+    const userId = await authenticateUser(ctx);
     let q = ctx.db
       .query("renders")
       .withIndex("by_userId", (q) => q.eq("userId", userId))

@@ -14,23 +14,55 @@ registerRoutes(http, components.stripe, {
     "checkout.session.completed": async (ctx, event) => {
       const session = event.data.object;
       if (session.mode === "subscription" && session.subscription) {
-        // Get subscription details from the event
-        // Note: We need to fetch subscription from Stripe component
-        const subscriptions = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
-          userId: (session.metadata?.userId as string) || "",
+        const stripeSubscriptionId = session.subscription as string;
+        const stripeCustomerId =
+          typeof session.customer === "string" ? session.customer.trim() : "";
+        if (!stripeCustomerId) {
+          throw new Error(
+            `checkout.session.completed missing stripeCustomerId for subscription ${stripeSubscriptionId}`
+          );
+        }
+        const userIdFromSessionMetadata =
+          typeof session.metadata?.userId === "string" ? session.metadata.userId.trim() : "";
+
+        const sub = await ctx.runQuery(components.stripe.public.getSubscription, {
+          stripeSubscriptionId,
         });
-        const sub = subscriptions.find(
-          (s: { stripeSubscriptionId: string }) => s.stripeSubscriptionId === session.subscription
-        );
+        if (!sub || !sub.priceId) {
+          throw new Error(
+            `Subscription ${stripeSubscriptionId} not synced yet while processing checkout.session.completed`
+          );
+        }
+
+        const userIdFromSubscription =
+          typeof sub?.userId === "string" ? sub.userId.trim() : "";
+        const userIdFromSubscriptionMetadata =
+          typeof sub?.metadata?.userId === "string" ? sub.metadata.userId.trim() : "";
+
+        let userId =
+          userIdFromSessionMetadata || userIdFromSubscription || userIdFromSubscriptionMetadata;
+
+        if (!userId && stripeCustomerId) {
+          const userIdFromCustomer = await ctx.runQuery(internal.stripe.getUserIdByStripeCustomerId, {
+            stripeCustomerId,
+          });
+          userId = userIdFromCustomer?.trim() ?? "";
+        }
+
+        if (!userId) {
+          throw new Error(
+            `Unable to resolve userId for checkout.session.completed: session=${session.id} subscription=${stripeSubscriptionId} customer=${stripeCustomerId}`
+          );
+        }
 
         await ctx.runMutation(internal.stripe.handleCheckoutCompleted, {
-          stripeSubscriptionId: session.subscription as string,
-          stripeCustomerId: session.customer as string,
-          userId: (session.metadata?.userId as string) || "",
-          priceId: sub?.priceId || "",
-          status: sub?.status || "active",
-          currentPeriodEnd: sub?.currentPeriodEnd || Date.now() + 30 * 24 * 60 * 60 * 1000,
-          cancelAtPeriodEnd: sub?.cancelAtPeriodEnd || false,
+          stripeSubscriptionId,
+          stripeCustomerId,
+          userId,
+          priceId: sub.priceId,
+          status: sub.status,
+          currentPeriodEnd: sub.currentPeriodEnd,
+          cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
         });
       }
     },

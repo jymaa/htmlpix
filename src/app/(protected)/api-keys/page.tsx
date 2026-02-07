@@ -24,7 +24,7 @@ export default function ApiKeysPage() {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
 
-  const apiKeys = useQuery(api.apiKeys.listUserKeys, userId ? { userId } : "skip");
+  const apiKeys = useQuery(api.apiKeys.listUserKeys, userId ? {} : "skip");
   const createKey = useMutation(api.apiKeys.createKey);
   const revokeKey = useMutation(api.apiKeys.revokeKey);
   const deleteKey = useMutation(api.apiKeys.deleteKey);
@@ -41,7 +41,7 @@ export default function ApiKeysPage() {
 
     setIsLoading(true);
     try {
-      const result = await createKey({ userId, name: newKeyName.trim() });
+      const result = await createKey({ name: newKeyName.trim() });
       setNewKeyValue(result.rawKey);
       setNewKeyName("");
       setIsCreateDialogOpen(false);

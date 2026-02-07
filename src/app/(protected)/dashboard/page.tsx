@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
@@ -28,20 +28,27 @@ export default function DashboardPage() {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
 
-  const quota = useQuery(api.apiKeys.getUserQuota, userId ? { userId } : "skip");
-  const apiKeys = useQuery(api.apiKeys.listUserKeys, userId ? { userId } : "skip");
-  const renders = useQuery(api.apiKeys.getUserRenders, userId ? { userId, limit: 10 } : "skip");
-  const onboardingStatus = useQuery(api.users.hasCompletedOnboarding, userId ? { userId } : "skip");
+  const quota = useQuery(api.apiKeys.getUserQuota, userId ? {} : "skip");
+  const apiKeys = useQuery(api.apiKeys.listUserKeys, userId ? {} : "skip");
+  const renders = useQuery(api.apiKeys.getUserRenders, userId ? { limit: 10 } : "skip");
+  const onboardingStatus = useQuery(api.users.hasCompletedOnboarding, userId ? {} : "skip");
 
   const [dismissed, setDismissed] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
-  // Show onboarding if user has no API keys and hasn't completed onboarding
-  const showOnboarding =
+  // Open onboarding once when the user qualifies, then keep it open until they complete it.
+  const shouldShowOnboarding =
     !dismissed &&
     apiKeys !== undefined &&
     onboardingStatus !== undefined &&
     apiKeys.length === 0 &&
     !onboardingStatus.completed;
+
+  useEffect(() => {
+    if (shouldShowOnboarding) {
+      setIsOnboardingOpen(true);
+    }
+  }, [shouldShowOnboarding]);
 
   const usagePercent = quota ? Math.round((quota.currentUsage / quota.monthlyLimit) * 100) : 0;
   const isFreePlan = quota?.plan === "free" || quota?.plan === "starter";
@@ -50,9 +57,13 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {userId && (
-        <OnboardingModal userId={userId} open={showOnboarding} onComplete={() => setDismissed(true)} />
-      )}
+      <OnboardingModal
+        open={isOnboardingOpen}
+        onComplete={() => {
+          setDismissed(true);
+          setIsOnboardingOpen(false);
+        }}
+      />
 
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>

@@ -43,7 +43,9 @@ async function flushRenders(): Promise<void> {
 
   try {
     const client = getConvexClient();
-    await client.mutation(api.sync.ingestRenders, { renders: batch });
+    const serverSecret = process.env.SERVER_SECRET;
+    if (!serverSecret) throw new Error("SERVER_SECRET environment variable is required");
+    await client.mutation(api.sync.ingestRenders, { serverSecret, renders: batch });
     console.log(`Reported ${batch.length} renders to Convex`);
   } catch (error) {
     console.error("Failed to report renders to Convex:", error);

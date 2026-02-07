@@ -138,7 +138,7 @@ export default function PlaygroundPage() {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
 
-  const apiKeys = useQuery(api.apiKeys.listUserKeys, userId ? { userId } : "skip");
+  const apiKeys = useQuery(api.apiKeys.listUserKeys, userId ? {} : "skip");
   const activeKey = apiKeys?.find((k) => k.active);
 
   const [html, setHtml] = useState(EXAMPLES.og.html);

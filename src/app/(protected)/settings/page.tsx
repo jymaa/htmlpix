@@ -52,12 +52,21 @@ const features = [
   "Email support",
 ];
 
+function normalizeEpochMillis(timestamp?: number | null): number | null {
+  if (typeof timestamp !== "number" || !Number.isFinite(timestamp) || timestamp <= 0) {
+    return null;
+  }
+
+  // Some providers expose Unix time in seconds; JS Date expects milliseconds.
+  return timestamp < 1_000_000_000_000 ? timestamp * 1000 : timestamp;
+}
+
 export default function SettingsPage() {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
 
-  const subscription = useQuery(api.stripe.getSubscription, userId ? { userId } : "skip");
-  const quota = useQuery(api.apiKeys.getUserQuota, userId ? { userId } : "skip");
+  const subscription = useQuery(api.stripe.getSubscription, userId ? {} : "skip");
+  const quota = useQuery(api.apiKeys.getUserQuota, userId ? {} : "skip");
 
   const createCheckout = useAction(api.stripe.createCheckoutSession);
   const createPortal = useAction(api.stripe.createPortalSession);
@@ -65,8 +74,13 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubscribe = async (priceId: string, planId: string) => {
-    setLoading(planId);
+  const handleSubscribe = async (priceId: string, loadingKey: string) => {
+    if (!priceId) {
+      setErrorMessage("This plan is currently unavailable. Please try again later.");
+      return;
+    }
+
+    setLoading(loadingKey);
     try {
       const baseUrl = window.location.origin;
       const { url } = await createCheckout({
@@ -86,8 +100,8 @@ export default function SettingsPage() {
     }
   };
 
-  const handleManageBilling = async () => {
-    setLoading("portal");
+  const handleManageBilling = async (loadingKey = "portal") => {
+    setLoading(loadingKey);
     try {
       const url = await createPortal({
         returnUrl: window.location.href,
@@ -107,14 +121,24 @@ export default function SettingsPage() {
 
   const usagePercent = quota ? Math.round((quota.currentUsage / quota.monthlyLimit) * 100) : 0;
   const isFreePlan = subscription?.plan === "free";
-  const hasSubscription = subscription?.stripeSubscriptionId || isFreePlan;
+  const hasPaidSubscription = Boolean(subscription?.stripeSubscriptionId) && !isFreePlan;
+  const hasSubscription = subscription != null && (Boolean(subscription.stripeSubscriptionId) || isFreePlan);
   const isActive = subscription?.stripeSubscriptionStatus === "active" || isFreePlan;
   const isCanceled = subscription?.stripeSubscriptionStatus === "canceled";
-  const periodEndDate = subscription?.currentPeriodEnd
-    ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
-    : null;
+  const normalizedPeriodEnd = normalizeEpochMillis(subscription?.currentPeriodEnd);
+  const periodEndDate = normalizedPeriodEnd ? new Date(normalizedPeriodEnd).toLocaleDateString() : null;
 
   const dataReady = subscription !== undefined && quota !== undefined;
+  const isLoadingAny = loading !== null;
+
+  const handlePlanChange = async (priceId: string, planId: string) => {
+    if (hasPaidSubscription) {
+      await handleManageBilling(planId);
+      return;
+    }
+
+    await handleSubscribe(priceId, planId);
+  };
 
   return (
     <>
@@ -191,7 +215,7 @@ export default function SettingsPage() {
                   <Skeleton className="h-8 w-24" />
                   <Skeleton className="h-4 w-40" />
                 </div>
-              ) : hasSubscription ? (
+              ) : hasSubscription && subscription ? (
                 <div className="space-y-3">
                   <div className="flex items-baseline gap-3">
                     <span className="font-[family-name:var(--font-bebas-neue)] text-3xl">
@@ -244,10 +268,10 @@ export default function SettingsPage() {
                       variant="outline"
                       size="sm"
                       className="font-mono text-xs tracking-wider uppercase"
-                      onClick={handleManageBilling}
-                      disabled={loading === "portal"}
+                      onClick={() => handleManageBilling("portal")}
+                      disabled={isLoadingAny}
                     >
-                      {loading === "portal" ? "Opening..." : "Manage Billing"}
+                      {isLoadingAny ? "Opening..." : "Manage Billing"}
                     </Button>
                   )}
                 </div>
@@ -328,14 +352,16 @@ export default function SettingsPage() {
                       plan.recommended && !isCurrentPlan ? "" : ""
                     }`}
                     variant={plan.recommended && !isCurrentPlan ? "default" : "outline"}
-                    disabled={isCurrentPlan || loading === plan.id}
-                    onClick={() => handleSubscribe(plan.priceId, plan.id)}
+                    disabled={!dataReady || isCurrentPlan || isLoadingAny}
+                    onClick={() => handlePlanChange(plan.priceId, plan.id)}
                   >
-                    {loading === plan.id
+                    {!dataReady
+                      ? "Loading..."
+                      : loading === plan.id
                       ? "Loading..."
                       : isCurrentPlan
                         ? "Current Plan"
-                        : hasSubscription && !isFreePlan
+                        : hasPaidSubscription
                           ? "Switch to " + plan.name
                           : "Get Started"}
                   </Button>

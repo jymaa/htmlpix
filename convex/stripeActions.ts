@@ -43,6 +43,7 @@ export const createCheckoutSession = action({
       mode: "subscription",
       successUrl: args.successUrl,
       cancelUrl: args.cancelUrl,
+      metadata: { userId },
       subscriptionMetadata: { userId },
     });
 
@@ -82,13 +83,29 @@ export const syncSubscription = action({
   handler: async (ctx, _args): Promise<boolean> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
+    const userId = identity.subject;
 
     // Check if user has any subscriptions synced
     const subscriptions = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
-      userId: identity.subject,
+      userId,
+    });
+    if (subscriptions.length === 0) return false;
+
+    const latestSubscription = subscriptions
+      .slice()
+      .sort((a, b) => b.currentPeriodEnd - a.currentPeriodEnd)[0];
+    if (!latestSubscription) return false;
+
+    await ctx.runMutation(internal.stripe.handleCheckoutCompleted, {
+      stripeSubscriptionId: latestSubscription.stripeSubscriptionId,
+      stripeCustomerId: latestSubscription.stripeCustomerId,
+      userId,
+      priceId: latestSubscription.priceId,
+      status: latestSubscription.status,
+      currentPeriodEnd: latestSubscription.currentPeriodEnd,
+      cancelAtPeriodEnd: latestSubscription.cancelAtPeriodEnd,
     });
 
-    // If user has subscriptions, they've completed checkout
-    return subscriptions.length > 0;
+    return true;
   },
 });

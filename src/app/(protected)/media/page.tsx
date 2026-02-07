@@ -42,7 +42,6 @@ export default function MediaPage() {
     api.apiKeys.getUserRendersPaginated,
     userId
       ? {
-          userId,
           statusFilter: statusFilter || undefined,
           formatFilter: formatFilter || undefined,
         }

@@ -4,9 +4,16 @@ import { v } from "convex/values";
 import { usageAggregate } from "./usage";
 import { workflow } from "./emailWorkflows";
 
+function validateServerSecret(secret: string) {
+  const expected = process.env.SERVER_SECRET;
+  if (!expected) throw new Error("SERVER_SECRET not configured");
+  if (secret !== expected) throw new Error("Invalid server secret");
+}
+
 export const getAuthData = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { serverSecret: v.string() },
+  handler: async (ctx, { serverSecret }) => {
+    validateServerSecret(serverSecret);
     const keys = await ctx.db
       .query("apiKeys")
       .filter((q) => q.eq(q.field("active"), true))
@@ -44,6 +51,7 @@ export const getAuthData = query({
 
 export const ingestRenders = mutation({
   args: {
+    serverSecret: v.string(),
     renders: v.array(
       v.object({
         externalId: v.string(),
@@ -59,7 +67,8 @@ export const ingestRenders = mutation({
       })
     ),
   },
-  handler: async (ctx, { renders }) => {
+  handler: async (ctx, { serverSecret, renders }) => {
+    validateServerSecret(serverSecret);
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;

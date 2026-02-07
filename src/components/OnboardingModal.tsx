@@ -19,14 +19,13 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
 interface OnboardingModalProps {
-  userId: string;
   open: boolean;
   onComplete: () => void;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.htmlpix.com";
 
-export function OnboardingModal({ userId, open, onComplete }: OnboardingModalProps) {
+export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [keyName, setKeyName] = useState("My First Key");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
@@ -42,7 +41,7 @@ export function OnboardingModal({ userId, open, onComplete }: OnboardingModalPro
 
     setLoading(true);
     try {
-      const result = await createKey({ userId, name: keyName });
+      const result = await createKey({ name: keyName });
       setCreatedKey(result.rawKey);
       setStep(3);
     } catch (error) {
@@ -62,7 +61,7 @@ export function OnboardingModal({ userId, open, onComplete }: OnboardingModalPro
 
   const handleComplete = async () => {
     try {
-      await completeOnboarding({ userId });
+      await completeOnboarding({});
     } catch (error) {
       console.error("Failed to mark onboarding complete:", error);
     }
