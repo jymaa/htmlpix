@@ -42,26 +42,28 @@ export function BlueprintSpinner({
         <div className="absolute top-0 bottom-0 left-1/2 w-px bg-[#1a1a1a]/10" />
         {/* Center dot */}
         <div
-          className={cn(
-            "absolute top-1/2 left-1/2 bg-[#ff4d00]",
-            dotSizes[size]
-          )}
+          className={cn("absolute top-1/2 left-1/2 bg-[#ff4d00]", dotSizes[size])}
           style={{ animation: "bpPulseDot 2s ease-in-out infinite" }}
         />
         {/* Corner ticks */}
-        <div className={cn("absolute -top-px -left-px border-t border-l border-[#ff4d00]", tickSizes[size])} />
-        <div className={cn("absolute -top-px -right-px border-t border-r border-[#ff4d00]", tickSizes[size])} />
-        <div className={cn("absolute -bottom-px -left-px border-b border-l border-[#ff4d00]", tickSizes[size])} />
-        <div className={cn("absolute -right-px -bottom-px border-r border-b border-[#ff4d00]", tickSizes[size])} />
+        <div
+          className={cn("absolute -top-px -left-px border-t border-l border-[#ff4d00]", tickSizes[size])}
+        />
+        <div
+          className={cn("absolute -top-px -right-px border-t border-r border-[#ff4d00]", tickSizes[size])}
+        />
+        <div
+          className={cn("absolute -bottom-px -left-px border-b border-l border-[#ff4d00]", tickSizes[size])}
+        />
+        <div
+          className={cn("absolute -right-px -bottom-px border-r border-b border-[#ff4d00]", tickSizes[size])}
+        />
       </div>
 
       {/* Scanline bar — only for md/lg */}
       {size !== "sm" && (
         <div
-          className={cn(
-            "relative overflow-hidden bg-[#1a1a1a]/5",
-            size === "lg" ? "h-1 w-48" : "h-0.5 w-16"
-          )}
+          className={cn("relative overflow-hidden bg-[#1a1a1a]/5", size === "lg" ? "h-1 w-48" : "h-0.5 w-16")}
         >
           <div
             className={cn(
@@ -77,9 +79,7 @@ export function BlueprintSpinner({
       {label && (
         <div className="flex items-center gap-2">
           <div className="h-px w-4 bg-[#ff4d00]/30" />
-          <span className="text-xs tracking-[0.2em] text-[#1a1a1a]/40 uppercase">
-            {label}
-          </span>
+          <span className="text-xs tracking-[0.2em] text-[#1a1a1a]/40 uppercase">{label}</span>
           <div className="h-px w-4 bg-[#ff4d00]/30" />
         </div>
       )}

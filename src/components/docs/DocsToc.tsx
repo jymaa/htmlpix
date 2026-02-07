@@ -26,7 +26,7 @@ export function DocsToc() {
         text: el.textContent?.replace("#", "").trim() || "",
         level: parseInt(el.tagName[1]),
       }));
-    setHeadings(items);
+    setHeadings(items); // eslint-disable-line react-hooks/set-state-in-effect -- syncing from DOM
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -48,17 +48,15 @@ export function DocsToc() {
   }
 
   return (
-    <aside className="hidden xl:block w-56 shrink-0">
+    <aside className="hidden w-56 shrink-0 xl:block">
       <div className="sticky top-20">
-        <h3 className="font-semibold mb-4 text-sm">On this page</h3>
+        <h3 className="mb-4 text-sm font-semibold">On this page</h3>
         <nav className="space-y-1">
           {headings.map((heading) => (
             <a
               key={heading.id}
               href={`#${heading.id}`}
-              className={`block text-sm transition-colors ${
-                heading.level === 3 ? "pl-3" : ""
-              } ${
+              className={`block text-sm transition-colors ${heading.level === 3 ? "pl-3" : ""} ${
                 activeId === heading.id
                   ? "text-primary font-medium"
                   : "text-muted-foreground hover:text-foreground"

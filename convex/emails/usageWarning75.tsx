@@ -1,4 +1,4 @@
-import { Heading, Text, Link, Section, Hr } from "@react-email/components";
+import { Heading, Text, Link, Hr } from "@react-email/components";
 import { BaseEmail, styles } from "./components/BaseEmail";
 import React from "react";
 

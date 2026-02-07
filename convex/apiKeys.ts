@@ -151,7 +151,19 @@ export const getUserRenders = query({
       .order("desc")
       .take(limit ?? 50);
 
-    return renders;
+    return Promise.all(
+      renders.map(async (render) => {
+        let imageUrl: string | undefined;
+        if (render.imageKey) {
+          try {
+            imageUrl = await r2.getUrl(render.imageKey);
+          } catch {
+            // Signed URL generation failed
+          }
+        }
+        return { ...render, imageUrl };
+      })
+    );
   },
 });
 

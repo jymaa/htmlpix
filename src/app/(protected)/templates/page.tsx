@@ -6,6 +6,7 @@ import { api as _api } from "../../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 
 // TODO: Remove cast after running `convex dev` to regenerate types
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const api = _api as any;
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -49,10 +50,7 @@ export default function TemplatesPage() {
   const userId = session?.user?.id;
   const router = useRouter();
 
-  const userTemplates = useQuery(
-    api.templates.listUserTemplates,
-    userId ? { userId } : "skip"
-  );
+  const userTemplates = useQuery(api.templates.listUserTemplates, userId ? { userId } : "skip");
   const starterTemplates = useQuery(api.templates.listStarterTemplates);
 
   const createTemplate = useMutation(api.templates.createTemplate);
@@ -73,7 +71,7 @@ export default function TemplatesPage() {
         userId,
         name: newName.trim(),
         description: newDesc.trim() || undefined,
-        html: "<div class=\"card\">\n  <h1>{{title}}</h1>\n  <p>{{subtitle}}</p>\n</div>",
+        html: '<div class="card">\n  <h1>{{title}}</h1>\n  <p>{{subtitle}}</p>\n</div>',
         css: ".card {\n  padding: 60px;\n  background: #1a1a1a;\n  color: #f5f0e8;\n  font-family: system-ui;\n}",
         variables: [
           { name: "title", type: "string" as const, defaultValue: "Hello World" },
@@ -121,9 +119,7 @@ export default function TemplatesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Templates</h1>
-          <p className="text-muted-foreground">
-            Reusable HTML/CSS templates with variable placeholders
-          </p>
+          <p className="text-muted-foreground">Reusable HTML/CSS templates with variable placeholders</p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
@@ -157,16 +153,10 @@ export default function TemplatesPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setCreateOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                onClick={handleCreate}
-                disabled={creating || !newName.trim()}
-              >
+              <Button onClick={handleCreate} disabled={creating || !newName.trim()}>
                 {creating ? "Creating..." : "Create"}
               </Button>
             </DialogFooter>
@@ -184,7 +174,7 @@ export default function TemplatesPage() {
       ) : userTemplates.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center border-2 border-dashed border-muted-foreground/30">
+            <div className="border-muted-foreground/30 mx-auto mb-4 flex h-16 w-16 items-center justify-center border-2 border-dashed">
               <svg
                 width="24"
                 height="24"
@@ -201,33 +191,25 @@ export default function TemplatesPage() {
               </svg>
             </div>
             <p className="mb-1 font-medium">No templates yet</p>
-            <p className="text-sm text-muted-foreground">
-              Create one or clone a starter template below.
-            </p>
+            <p className="text-muted-foreground text-sm">Create one or clone a starter template below.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {userTemplates.map((tmpl: Template) => (
-            <Link
-              key={tmpl._id}
-              href={`/templates/${tmpl._id}`}
-              className="group block"
-            >
-              <Card className="h-full transition-colors hover:border-foreground/30">
+            <Link key={tmpl._id} href={`/templates/${tmpl._id}`} className="group block">
+              <Card className="hover:border-foreground/30 h-full transition-colors">
                 <CardContent className="flex h-full flex-col justify-between p-4">
                   <div>
                     <div className="mb-2 flex items-start justify-between">
-                      <h3 className="font-medium leading-tight group-hover:underline">
-                        {tmpl.name}
-                      </h3>
+                      <h3 className="leading-tight font-medium group-hover:underline">{tmpl.name}</h3>
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           handleDelete(tmpl._id);
                         }}
-                        className="shrink-0 p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                        className="text-muted-foreground hover:text-destructive shrink-0 p-1 opacity-0 transition-opacity group-hover:opacity-100"
                         title="Delete template"
                       >
                         <svg
@@ -246,17 +228,12 @@ export default function TemplatesPage() {
                       </button>
                     </div>
                     {tmpl.description && (
-                      <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
-                        {tmpl.description}
-                      </p>
+                      <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">{tmpl.description}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2 pt-2">
                     {tmpl.format && (
-                      <Badge
-                        variant="outline"
-                        className="font-mono text-[10px] uppercase"
-                      >
+                      <Badge variant="outline" className="font-mono text-[10px] uppercase">
                         {tmpl.format}
                       </Badge>
                     )}
@@ -264,7 +241,7 @@ export default function TemplatesPage() {
                       {tmpl.variables.length} var
                       {tmpl.variables.length !== 1 ? "s" : ""}
                     </Badge>
-                    <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+                    <span className="text-muted-foreground ml-auto font-mono text-[10px]">
                       {formatDate(tmpl.updatedAt)}
                     </span>
                   </div>
@@ -280,9 +257,7 @@ export default function TemplatesPage() {
         <div className="space-y-4">
           <div>
             <h2 className="text-lg font-bold">Starter Templates</h2>
-            <p className="text-sm text-muted-foreground">
-              Clone these to get started quickly
-            </p>
+            <p className="text-muted-foreground text-sm">Clone these to get started quickly</p>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {starterTemplates.map((tmpl: Template) => (
@@ -291,25 +266,17 @@ export default function TemplatesPage() {
                   <div>
                     <h3 className="mb-1 font-medium">{tmpl.name}</h3>
                     {tmpl.description && (
-                      <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
-                        {tmpl.description}
-                      </p>
+                      <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">{tmpl.description}</p>
                     )}
                   </div>
                   <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center gap-2">
                       {tmpl.format && (
-                        <Badge
-                          variant="outline"
-                          className="font-mono text-[10px] uppercase"
-                        >
+                        <Badge variant="outline" className="font-mono text-[10px] uppercase">
                           {tmpl.format}
                         </Badge>
                       )}
-                      <Badge
-                        variant="secondary"
-                        className="font-mono text-[10px]"
-                      >
+                      <Badge variant="secondary" className="font-mono text-[10px]">
                         {tmpl.variables.length} var
                         {tmpl.variables.length !== 1 ? "s" : ""}
                       </Badge>

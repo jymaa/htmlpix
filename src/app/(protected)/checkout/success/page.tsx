@@ -15,19 +15,14 @@ export default function CheckoutSuccessPage() {
   const sessionId = searchParams.get("session_id");
 
   const syncSubscription = useAction(api.stripe.syncSubscription);
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [synced, setSynced] = useState(false);
+  const [status, setStatus] = useState<"loading" | "success" | "error">(sessionId ? "loading" : "error");
 
   useEffect(() => {
-    if (!sessionId) {
-      setStatus("error");
-      return;
-    }
+    if (!sessionId) return;
 
     const sync = async () => {
       try {
         await syncSubscription({ sessionId });
-        setSynced(true);
         setStatus("success");
       } catch (error) {
         console.error("Failed to sync subscription:", error);
@@ -54,9 +49,7 @@ export default function CheckoutSuccessPage() {
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Something went wrong</CardTitle>
-            <CardDescription>
-              We couldn&apos;t verify your checkout session.
-            </CardDescription>
+            <CardDescription>We couldn&apos;t verify your checkout session.</CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/settings">
@@ -73,25 +66,13 @@ export default function CheckoutSuccessPage() {
       <Card className="max-w-md text-center">
         <CardHeader>
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <svg
-              className="h-8 w-8 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
+            <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <CardTitle>Payment Successful!</CardTitle>
           <CardDescription>
-            {status === "loading"
-              ? "Setting up your subscription..."
-              : "Your subscription is now active."}
+            {status === "loading" ? "Setting up your subscription..." : "Your subscription is now active."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -99,9 +80,7 @@ export default function CheckoutSuccessPage() {
             <BlueprintSpinner size="md" label="Processing" />
           ) : (
             <>
-              <p className="text-sm text-muted-foreground">
-                Redirecting you to the dashboard...
-              </p>
+              <p className="text-muted-foreground text-sm">Redirecting you to the dashboard...</p>
               <Link href="/dashboard">
                 <Button>Go to Dashboard</Button>
               </Link>

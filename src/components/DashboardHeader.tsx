@@ -4,13 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -25,11 +19,11 @@ export function DashboardHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="border-b bg-background">
+    <header className="bg-background border-b">
       <nav className="container mx-auto flex items-center justify-between px-4 py-3">
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="relative flex h-8 w-8 items-center justify-center border-2 border-foreground">
+          <div className="border-foreground relative flex h-8 w-8 items-center justify-center border-2">
             <span className="text-sm font-bold">{"<>"}</span>
             <div className="absolute -top-1 -right-1 h-1.5 w-1.5 bg-[#ff4d00]" />
           </div>
@@ -42,10 +36,8 @@ export function DashboardHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className={`text-sm transition-colors hover:text-foreground ${
-                pathname === link.href
-                  ? "font-medium text-foreground"
-                  : "text-muted-foreground"
+              className={`hover:text-foreground text-sm transition-colors ${
+                pathname === link.href ? "text-foreground font-medium" : "text-muted-foreground"
               }`}
             >
               {link.label}
@@ -53,19 +45,17 @@ export function DashboardHeader() {
           ))}
 
           {/* Settings link */}
-          <div className="border-l border-border pl-4">
+          <div className="border-border border-l pl-4">
             <Link href="/settings">
               <Button
                 variant="ghost"
                 size="sm"
                 className={`gap-1.5 ${
-                  pathname === "/settings"
-                    ? "text-foreground"
-                    : "text-muted-foreground"
+                  pathname === "/settings" ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
                 <Settings className="h-4 w-4" />
-                <span className="hidden lg:inline text-sm">Settings</span>
+                <span className="hidden text-sm lg:inline">Settings</span>
               </Button>
             </Link>
           </div>
@@ -78,19 +68,15 @@ export function DashboardHeader() {
           </SheetTrigger>
           <SheetContent side="right">
             <SheetHeader>
-              <SheetTitle className="text-left font-bold tracking-wide">
-                HTMLPIX
-              </SheetTitle>
+              <SheetTitle className="text-left font-bold tracking-wide">HTMLPIX</SheetTitle>
             </SheetHeader>
             <nav className="mt-6 flex flex-col gap-1">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-foreground ${
-                    pathname === link.href
-                      ? "font-medium text-foreground bg-accent"
-                      : "text-muted-foreground"
+                  className={`hover:bg-accent hover:text-foreground rounded-md px-3 py-2.5 text-sm transition-colors ${
+                    pathname === link.href ? "text-foreground bg-accent font-medium" : "text-muted-foreground"
                   }`}
                 >
                   {link.label}
@@ -99,10 +85,8 @@ export function DashboardHeader() {
               <hr className="my-2" />
               <Link
                 href="/settings"
-                className={`flex items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-foreground ${
-                  pathname === "/settings"
-                    ? "font-medium text-foreground bg-accent"
-                    : "text-muted-foreground"
+                className={`hover:bg-accent hover:text-foreground flex items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors ${
+                  pathname === "/settings" ? "text-foreground bg-accent font-medium" : "text-muted-foreground"
                 }`}
               >
                 <Settings className="h-4 w-4" />

@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +35,6 @@ export default function ApiKeysPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCreateKey = async () => {
     if (!userId || !newKeyName.trim()) return;
@@ -67,12 +65,8 @@ export default function ApiKeysPage() {
     }
   };
 
-  const copyToClipboard = (text: string, id?: string) => {
+  const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    if (id) {
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    }
   };
 
   return (
@@ -127,11 +121,19 @@ export default function ApiKeysPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex items-center gap-2">
-              <code className="flex-1 rounded bg-muted p-3 font-mono text-sm">{newKeyValue}</code>
-              <Button variant="outline" size="sm" onClick={() => newKeyValue && copyToClipboard(newKeyValue)}>
+              <Input
+                readOnly
+                value={newKeyValue ?? ""}
+                className="flex-1 font-mono text-sm"
+                onFocus={(e) => e.target.select()}
+              />
+              <Button variant="outline" onClick={() => newKeyValue && copyToClipboard(newKeyValue)}>
                 Copy
               </Button>
             </div>
+            <p className="text-destructive text-sm font-medium">
+              This is the only time the full key will be shown. Store it somewhere safe.
+            </p>
           </div>
           <DialogFooter>
             <Button onClick={() => setIsKeyDialogOpen(false)}>Done</Button>
@@ -158,7 +160,7 @@ export default function ApiKeysPage() {
               {apiKeys.map((key) => (
                 <div
                   key={key._id}
-                  className="flex items-center justify-between border p-4 transition-colors hover:bg-muted/20"
+                  className="hover:bg-muted/20 flex items-center justify-between border p-4 transition-colors"
                 >
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2">
@@ -167,31 +169,8 @@ export default function ApiKeysPage() {
                         {key.active ? "Active" : "Revoked"}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      {/* Copyable key prefix */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => copyToClipboard(key.keyPrefix, key._id)}
-                            className="inline-flex items-center gap-1.5 font-mono transition-colors hover:text-foreground"
-                          >
-                            <code>{key.keyPrefix}...</code>
-                            {copiedId === key._id ? (
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            ) : (
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                              </svg>
-                            )}
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {copiedId === key._id ? "Copied!" : "Copy key prefix"}
-                        </TooltipContent>
-                      </Tooltip>
+                    <div className="text-muted-foreground flex items-center gap-3 text-sm">
+                      <code className="font-mono">{key.keyPrefix}...</code>
                       <span className="hidden sm:inline">
                         Created {new Date(key.createdAt).toLocaleDateString()}
                       </span>
@@ -231,14 +210,14 @@ export default function ApiKeysPage() {
         <CardContent className="space-y-4">
           <div>
             <h3 className="font-medium">Authentication</h3>
-            <p className="text-sm text-muted-foreground">Include your API key in the Authorization header:</p>
-            <pre className="mt-2 rounded bg-muted p-3 text-sm">
+            <p className="text-muted-foreground text-sm">Include your API key in the Authorization header:</p>
+            <pre className="bg-muted mt-2 rounded p-3 text-sm">
               <code>Authorization: Bearer hpx_your_api_key</code>
             </pre>
           </div>
           <div>
             <h3 className="font-medium">Example Request</h3>
-            <pre className="mt-2 overflow-x-auto rounded bg-muted p-3 text-sm">
+            <pre className="bg-muted mt-2 overflow-x-auto rounded p-3 text-sm">
               <code>{`curl -X POST https://api.htmlpix.com/render \\
   -H "Authorization: Bearer hpx_your_api_key" \\
   -H "Content-Type: application/json" \\

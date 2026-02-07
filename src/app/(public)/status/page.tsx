@@ -36,9 +36,7 @@ export default function StatusPage() {
         <div className="mx-auto max-w-3xl">
           {/* Section header */}
           <div className="mb-12 flex items-center gap-4 md:mb-16 md:gap-8">
-            <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
-              SYSTEM
-            </div>
+            <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">SYSTEM</div>
             <div className="h-px flex-grow bg-[#1a1a1a]/10" />
           </div>
 
@@ -50,8 +48,7 @@ export default function StatusPage() {
           <div className="mb-10 border-l-2 border-[#1a1a1a]/20 pl-6 md:mb-14 md:pl-8">
             <div className="absolute top-0 left-0 h-2 w-2 -translate-x-[5px] bg-[#ff4d00]" />
             <p className="max-w-xl text-base leading-relaxed text-[#1a1a1a]/60 md:text-lg">
-              Status monitoring coming soon. For real-time updates, check our
-              API health endpoints.
+              Status monitoring coming soon. For real-time updates, check our API health endpoints.
             </p>
           </div>
 
@@ -69,9 +66,7 @@ export default function StatusPage() {
                     <span className="text-[#ff4d00]">GET</span>{" "}
                     <span className="text-[#1a1a1a]">/healthz</span>
                   </div>
-                  <div className="text-xs text-[#1a1a1a]/40">
-                    Basic server health check
-                  </div>
+                  <div className="text-xs text-[#1a1a1a]/40">Basic server health check</div>
                 </div>
                 <Link
                   href="/healthz"
@@ -86,9 +81,7 @@ export default function StatusPage() {
                     <span className="text-[#ff4d00]">GET</span>{" "}
                     <span className="text-[#1a1a1a]">/readyz</span>
                   </div>
-                  <div className="text-xs text-[#1a1a1a]/40">
-                    Readiness check (browser pool status)
-                  </div>
+                  <div className="text-xs text-[#1a1a1a]/40">Readiness check (browser pool status)</div>
                 </div>
                 <Link
                   href="/readyz"

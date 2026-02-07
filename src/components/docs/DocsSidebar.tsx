@@ -4,13 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
   { href: "/docs", label: "Overview" },
@@ -59,12 +53,7 @@ export function DocsSidebar() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="sm" className="lg:hidden">
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -86,9 +75,9 @@ export function DocsSidebar() {
       </Sheet>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:block w-56 shrink-0">
+      <aside className="hidden w-56 shrink-0 lg:block">
         <div className="sticky top-20">
-          <h3 className="font-semibold mb-4 text-sm">Documentation</h3>
+          <h3 className="mb-4 text-sm font-semibold">Documentation</h3>
           <NavLinks />
         </div>
       </aside>

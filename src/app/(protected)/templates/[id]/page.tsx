@@ -6,20 +6,15 @@ import { api as _api } from "../../../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 
 // TODO: Remove cast after running `convex dev` to regenerate types
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const api = _api as any;
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,7 +28,6 @@ type Variable = {
 
 export default function TemplateEditorPage() {
   const params = useParams();
-  const router = useRouter();
   const templateId = params.id as Id<"templates">;
 
   const { data: session } = authClient.useSession();
@@ -91,16 +85,11 @@ export default function TemplateEditorPage() {
   }, [templateId, name, description, html, css, variables, width, height, format, updateTemplate]);
 
   const addVariable = () => {
-    setVariables((prev) => [
-      ...prev,
-      { name: "", type: "string", defaultValue: "" },
-    ]);
+    setVariables((prev) => [...prev, { name: "", type: "string", defaultValue: "" }]);
   };
 
   const updateVariable = (index: number, updates: Partial<Variable>) => {
-    setVariables((prev) =>
-      prev.map((v, i) => (i === index ? { ...v, ...updates } : v))
-    );
+    setVariables((prev) => prev.map((v, i) => (i === index ? { ...v, ...updates } : v)));
   };
 
   const removeVariable = (index: number) => {
@@ -162,18 +151,8 @@ export default function TemplateEditorPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link
-            href="/templates"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
+          <Link href="/templates" className="text-muted-foreground hover:text-foreground transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </Link>
@@ -189,7 +168,7 @@ export default function TemplateEditorPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={!isOwner}
-              className="block w-full bg-transparent text-sm text-muted-foreground focus:outline-none"
+              className="text-muted-foreground block w-full bg-transparent text-sm focus:outline-none"
               placeholder="Add a description..."
             />
           </div>
@@ -220,7 +199,7 @@ export default function TemplateEditorPage() {
                     onChange={(e) => setHtml(e.target.value)}
                     disabled={!isOwner}
                     spellCheck={false}
-                    className="h-[320px] w-full resize-none rounded-md border bg-muted/50 p-4 font-mono text-sm leading-relaxed text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="bg-muted/50 text-foreground focus:ring-ring h-[320px] w-full resize-none rounded-md border p-4 font-mono text-sm leading-relaxed focus:ring-2 focus:outline-none"
                     placeholder="<div>Your HTML here. Use {{variableName}} for placeholders.</div>"
                   />
                 </TabsContent>
@@ -230,7 +209,7 @@ export default function TemplateEditorPage() {
                     onChange={(e) => setCss(e.target.value)}
                     disabled={!isOwner}
                     spellCheck={false}
-                    className="h-[320px] w-full resize-none rounded-md border bg-muted/50 p-4 font-mono text-sm leading-relaxed text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="bg-muted/50 text-foreground focus:ring-ring h-[320px] w-full resize-none rounded-md border p-4 font-mono text-sm leading-relaxed focus:ring-2 focus:outline-none"
                     placeholder="div { padding: 40px; }"
                   />
                 </TabsContent>
@@ -241,9 +220,7 @@ export default function TemplateEditorPage() {
           {/* Render options */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">
-                Default Render Options
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Default Render Options</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4">
@@ -273,9 +250,7 @@ export default function TemplateEditorPage() {
                   <Label className="text-xs">Format</Label>
                   <Select
                     value={format}
-                    onValueChange={(v) =>
-                      setFormat(v as "png" | "jpeg" | "webp")
-                    }
+                    onValueChange={(v) => setFormat(v as "png" | "jpeg" | "webp")}
                     disabled={!isOwner}
                   >
                     <SelectTrigger>
@@ -299,16 +274,9 @@ export default function TemplateEditorPage() {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">
-                  Variables
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Variables</CardTitle>
                 {isOwner && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={addVariable}
-                    className="font-mono text-xs"
-                  >
+                  <Button variant="outline" size="sm" onClick={addVariable} className="font-mono text-xs">
                     + Add
                   </Button>
                 )}
@@ -316,36 +284,29 @@ export default function TemplateEditorPage() {
             </CardHeader>
             <CardContent>
               {variables.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   No variables defined. Use{" "}
-                  <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
-                    {"{{name}}"}
-                  </code>{" "}
-                  in your HTML/CSS and add them here.
+                  <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs">{"{{name}}"}</code> in
+                  your HTML/CSS and add them here.
                 </p>
               ) : (
                 <div className="space-y-3">
                   {variables.map((v, i) => (
-                    <div
-                      key={i}
-                      className="flex items-end gap-2 border-b border-dashed pb-3 last:border-0"
-                    >
+                    <div key={i} className="flex items-end gap-2 border-b border-dashed pb-3 last:border-0">
                       <div className="flex-1 space-y-1">
-                        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        <Label className="text-muted-foreground text-[10px] tracking-widest uppercase">
                           Name
                         </Label>
                         <Input
                           value={v.name}
-                          onChange={(e) =>
-                            updateVariable(i, { name: e.target.value })
-                          }
+                          onChange={(e) => updateVariable(i, { name: e.target.value })}
                           disabled={!isOwner}
                           placeholder="variableName"
                           className="font-mono text-sm"
                         />
                       </div>
                       <div className="w-24 space-y-1">
-                        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        <Label className="text-muted-foreground text-[10px] tracking-widest uppercase">
                           Type
                         </Label>
                         <Select
@@ -368,7 +329,7 @@ export default function TemplateEditorPage() {
                         </Select>
                       </div>
                       <div className="flex-1 space-y-1">
-                        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        <Label className="text-muted-foreground text-[10px] tracking-widest uppercase">
                           Default
                         </Label>
                         <Input
@@ -386,7 +347,7 @@ export default function TemplateEditorPage() {
                       {isOwner && (
                         <button
                           onClick={() => removeVariable(i)}
-                          className="shrink-0 p-2 text-muted-foreground hover:text-destructive"
+                          className="text-muted-foreground hover:text-destructive shrink-0 p-2"
                           title="Remove variable"
                         >
                           <svg
@@ -412,24 +373,17 @@ export default function TemplateEditorPage() {
           {/* API Usage snippet */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">
-                API Usage
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">API Usage</CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="overflow-auto rounded-md bg-muted p-4 font-mono text-xs leading-relaxed">
+              <pre className="bg-muted overflow-auto rounded-md p-4 font-mono text-xs leading-relaxed">
                 {`curl -X POST $API_URL/render \\
   -H "Authorization: Bearer YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
     "templateId": "${templateId}",
     "variables": {
-${variables
-  .map(
-    (v) =>
-      `      "${v.name}": "${v.defaultValue || "..."}"`
-  )
-  .join(",\n")}
+${variables.map((v) => `      "${v.name}": "${v.defaultValue || "..."}"`).join(",\n")}
     }
   }'`}
               </pre>
@@ -440,9 +394,7 @@ ${variables
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">
-                  Preview
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Preview</CardTitle>
                 <Badge variant="outline" className="font-mono text-[10px]">
                   {width}x{height}
                 </Badge>

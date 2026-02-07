@@ -9,7 +9,10 @@
     "start": "next start",
     "build": "next build",
     "build:server": "bun build server/server.ts --target=bun --outdir=server/dist --sourcemap",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\" \"convex/**/*.{ts,js}\" \"*.{json,js,mjs,ts,md}\""
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

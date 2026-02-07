@@ -16,7 +16,7 @@ const bebasNeue = Bebas_Neue({
 
 export const metadata: Metadata = {
   title: {
-    default: "HTMLPix - HTML to Image API",
+    default: `${process.env.NODE_ENV === "production" ? "" : "[DEV] "}HTMLPix - HTML to Image API`,
     template: "%s | HTMLPix",
   },
   description:
@@ -32,8 +32,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "HTMLPix - HTML to Image API",
-    description:
-      "Generate images from HTML/CSS with a single API call. Free tier included.",
+    description: "Generate images from HTML/CSS with a single API call. Free tier included.",
   },
 };
 

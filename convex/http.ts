@@ -16,10 +16,9 @@ registerRoutes(http, components.stripe, {
       if (session.mode === "subscription" && session.subscription) {
         // Get subscription details from the event
         // Note: We need to fetch subscription from Stripe component
-        const subscriptions = await ctx.runQuery(
-          components.stripe.public.listSubscriptionsByUserId,
-          { userId: (session.metadata?.userId as string) || "" }
-        );
+        const subscriptions = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+          userId: (session.metadata?.userId as string) || "",
+        });
         const sub = subscriptions.find(
           (s: { stripeSubscriptionId: string }) => s.stripeSubscriptionId === session.subscription
         );
@@ -66,13 +65,14 @@ registerRoutes(http, components.stripe, {
       });
     },
     "invoice.paid": async (ctx, event) => {
-      const invoice = event.data.object as { subscription?: string; lines: { data: Array<{ period: { end: number } }> } };
+      const invoice = event.data.object as {
+        subscription?: string;
+        lines: { data: Array<{ period: { end: number } }> };
+      };
       if (invoice.subscription) {
         await ctx.runMutation(internal.stripe.handleInvoicePaid, {
           stripeSubscriptionId: invoice.subscription as string,
-          periodEnd: invoice.lines.data[0]?.period.end
-            ? invoice.lines.data[0].period.end * 1000
-            : Date.now(),
+          periodEnd: invoice.lines.data[0]?.period.end ? invoice.lines.data[0].period.end * 1000 : Date.now(),
         });
       }
     },
@@ -109,10 +109,7 @@ http.route({
 
     if (success) {
       return new Response(
-        unsubscribePage(
-          `You've been unsubscribed from ${category.replace("_", " ")} emails.`,
-          true
-        ),
+        unsubscribePage(`You've been unsubscribed from ${category.replace("_", " ")} emails.`, true),
         { status: 200, headers: { "Content-Type": "text/html" } }
       );
     }

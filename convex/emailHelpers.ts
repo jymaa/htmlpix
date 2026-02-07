@@ -23,9 +23,7 @@ export const wasEmailSent = internalQuery({
   handler: async (ctx, { userId, emailType }): Promise<boolean> => {
     const event = await ctx.db
       .query("emailEvents")
-      .withIndex("by_userId_emailType", (q) =>
-        q.eq("userId", userId).eq("emailType", emailType)
-      )
+      .withIndex("by_userId_emailType", (q) => q.eq("userId", userId).eq("emailType", emailType))
       .first();
     return !!event;
   },
@@ -177,14 +175,10 @@ export const findInactiveUsers = internalQuery({
         // Check if we already sent a re-engagement email this month
         const reEngagementEvents = await ctx.db
           .query("emailEvents")
-          .withIndex("by_userId_emailType", (q) =>
-            q.eq("userId", userId).eq("emailType", "re_engagement")
-          )
+          .withIndex("by_userId_emailType", (q) => q.eq("userId", userId).eq("emailType", "re_engagement"))
           .collect();
 
-        const sentThisMonth = reEngagementEvents.some(
-          (e) => e.sentAt > oneMonthAgo
-        );
+        const sentThisMonth = reEngagementEvents.some((e) => e.sentAt > oneMonthAgo);
 
         if (!sentThisMonth) {
           inactiveUsers.push(userId);

@@ -7,11 +7,7 @@ interface CodeBlockProps {
   filename?: string;
 }
 
-export async function CodeBlock({
-  code,
-  language = "bash",
-  filename,
-}: CodeBlockProps) {
+export async function CodeBlock({ code, language = "bash", filename }: CodeBlockProps) {
   const html = await codeToHtml(code, {
     lang: language,
     theme: "github-dark",

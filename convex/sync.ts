@@ -99,9 +99,7 @@ export const ingestRenders = mutation({
       // Check for first render ever
       const firstRenderSent = await ctx.db
         .query("emailEvents")
-        .withIndex("by_userId_emailType", (q) =>
-          q.eq("userId", userId).eq("emailType", "first_render")
-        )
+        .withIndex("by_userId_emailType", (q) => q.eq("userId", userId).eq("emailType", "first_render"))
         .first();
 
       if (!firstRenderSent) {
@@ -112,7 +110,9 @@ export const ingestRenders = mutation({
           .filter((q) => q.eq(q.field("status"), "success"))
           .collect();
 
-        if (allRenders.length <= renders.filter((r) => r.userId === userId && r.status === "success").length) {
+        if (
+          allRenders.length <= renders.filter((r) => r.userId === userId && r.status === "success").length
+        ) {
           // These are their first renders ever
           await workflow.start(ctx, internal.emailWorkflows.firstRenderWorkflow, { userId });
         }
@@ -138,9 +138,7 @@ export const ingestRenders = mutation({
         const emailType100 = `usage_100_${year}_${month}`;
         const sent100 = await ctx.db
           .query("emailEvents")
-          .withIndex("by_userId_emailType", (q) =>
-            q.eq("userId", userId).eq("emailType", emailType100)
-          )
+          .withIndex("by_userId_emailType", (q) => q.eq("userId", userId).eq("emailType", emailType100))
           .first();
         if (!sent100) {
           await workflow.start(ctx, internal.emailWorkflows.usage100Workflow, { userId });
@@ -149,9 +147,7 @@ export const ingestRenders = mutation({
         const emailType75 = `usage_75_${year}_${month}`;
         const sent75 = await ctx.db
           .query("emailEvents")
-          .withIndex("by_userId_emailType", (q) =>
-            q.eq("userId", userId).eq("emailType", emailType75)
-          )
+          .withIndex("by_userId_emailType", (q) => q.eq("userId", userId).eq("emailType", emailType75))
           .first();
         if (!sent75) {
           await workflow.start(ctx, internal.emailWorkflows.usage75Workflow, { userId });

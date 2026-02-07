@@ -26,12 +26,14 @@ Dual-stack application: HTML-to-image rendering API + Next.js web dashboard.
 Bun HTTP server with Puppeteer for HTML→image conversion, Convex-synced auth/quota, in-memory + disk image cache, and a background upload queue.
 
 **Endpoints:**
+
 - `POST /render` - Render HTML to image (requires API key auth)
 - `GET /images/:id` - Fetch stored image
 - `GET /healthz` - Health check
 - `GET /readyz` - Readiness check (browser pool status)
 
 **Core modules:**
+
 - `server/server.ts` - HTTP routes, queue management, graceful shutdown
 - `server/render/browserPool.ts` - Puppeteer browser pool with semaphore concurrency
 - `server/render/render.ts` - HTML→screenshot with viewport, format, CSS/font injection
@@ -50,6 +52,7 @@ Bun HTTP server with Puppeteer for HTML→image conversion, Convex-synced auth/q
 Next.js 16 App Router with Convex backend and Better Auth.
 
 **Structure:**
+
 - `src/app/` - Next.js routes (public/protected route groups)
 - `src/components/ui/` - shadcn/ui components
 - `src/lib/auth-*.ts` - Better Auth client/server setup
@@ -58,6 +61,7 @@ Next.js 16 App Router with Convex backend and Better Auth.
 ### Key Environment Variables
 
 **Server:**
+
 - `PORT`, `BASE_URL` - Server binding + external base URL
 - `CONVEX_URL` - Convex backend endpoint for sync/actions (required)
 - `BROWSER_INSTANCES`, `RENDER_CONCURRENCY` - Puppeteer pool sizing
@@ -69,6 +73,7 @@ Next.js 16 App Router with Convex backend and Better Auth.
 - `UPLOAD_CONCURRENCY`, `UPLOAD_RETRY_*`, `LINK_RETRY_*` - Upload/link backoff tuning
 
 **Frontend/Convex:**
+
 - `NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL` - Convex endpoints
 - `NEXT_PUBLIC_SITE_URL`, `SITE_URL` - Base URLs for auth callbacks
 - `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` - Auth
@@ -84,9 +89,9 @@ Use Bun instead of Node.js for all operations.
 - Bun auto-loads .env - don't use dotenv
 
 **Built-in APIs (don't use npm alternatives):**
+
 - `Bun.serve()` - HTTP server (not express)
 - `Bun.file` - File I/O (prefer over node:fs)
-
 
 ## Common Pitfalls
 
@@ -95,6 +100,7 @@ Use Bun instead of Node.js for all operations.
 If you want to do someting that is user related with the schema, check convex/betterAuth this is where is located all the user related data.
 
 ### Convex Action use node
+
 If you add `"use node"`, the file can only define actions (no queries or mutations). Prefer web-safe APIs like `atob` + `Uint8Array` + `Blob`.
 
 If using more than the fetch api from node, you need to use the `use node` directive. If using use node, you can only define actions in that file.
@@ -104,7 +110,9 @@ If using more than the fetch api from node, you need to use the `use node` direc
 ```
 
 ### Convex Action Return Types
+
 When an action uses `ctx.runQuery` or `ctx.runMutation`, TypeScript can't infer the return type. Add explicit return type annotations:
+
 ```ts
 // BAD - causes "implicitly has type 'any'" error
 export const myAction = action({
@@ -121,13 +129,12 @@ export const myAction = action({
 });
 ```
 
-
-
 ## Deployment
 
 Blue-green deployment to VPS. See `deploy.md` for details.
 
 **Requirements for server changes:**
+
 - Must expose `/readyz` endpoint returning 200 when ready
 - Must respect `PORT` and `CACHE_PATH` env vars
 - Must have `start` script in `server/package.json`

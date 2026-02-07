@@ -73,17 +73,29 @@ export function PublicHeader() {
             </SheetHeader>
             <nav className="mt-6 flex flex-col gap-1 text-sm tracking-widest uppercase">
               <>
-                <Link href="#spec" className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]">
+                <Link
+                  href="#spec"
+                  className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]"
+                >
                   Specifications
                 </Link>
-                <Link href="#pricing" className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]">
+                <Link
+                  href="#pricing"
+                  className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]"
+                >
                   Pricing
                 </Link>
               </>
-              <Link href="/docs" className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]">
+              <Link
+                href="/docs"
+                className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]"
+              >
                 Docs
               </Link>
-              <Link href="/pricing" className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]">
+              <Link
+                href="/pricing"
+                className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]"
+              >
                 Pricing
               </Link>
               <div className="mt-3 px-3">

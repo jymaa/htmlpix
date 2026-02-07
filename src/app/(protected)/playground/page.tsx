@@ -9,20 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { BlueprintSpinner } from "@/components/ui/blueprint-spinner";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://api.htmlpix.com";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.htmlpix.com";
 
 const EXAMPLES: Record<string, { html: string; css: string; label: string }> = {
   og: {
@@ -145,10 +138,7 @@ export default function PlaygroundPage() {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
 
-  const apiKeys = useQuery(
-    api.apiKeys.listUserKeys,
-    userId ? { userId } : "skip"
-  );
+  const apiKeys = useQuery(api.apiKeys.listUserKeys, userId ? { userId } : "skip");
   const activeKey = apiKeys?.find((k) => k.active);
 
   const [html, setHtml] = useState(EXAMPLES.og.html);
@@ -196,8 +186,7 @@ export default function PlaygroundPage() {
         format,
       };
       if (format !== "png") body.quality = quality;
-      if (deviceScaleFactor !== 1)
-        body.deviceScaleFactor = deviceScaleFactor;
+      if (deviceScaleFactor !== 1) body.deviceScaleFactor = deviceScaleFactor;
 
       const res = await fetch(`${API_BASE_URL}/render`, {
         method: "POST",
@@ -298,9 +287,7 @@ print(data["url"])`;
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Playground</h1>
-          <p className="text-muted-foreground">
-            Test the HTMLPix API interactively
-          </p>
+          <p className="text-muted-foreground">Test the HTMLPix API interactively</p>
         </div>
         <div className="flex items-center gap-3">
           <Select onValueChange={handleSelectExample}>
@@ -315,11 +302,7 @@ print(data["url"])`;
               ))}
             </SelectContent>
           </Select>
-          <Button
-            onClick={handleRender}
-            disabled={rendering}
-            className="min-w-[100px]"
-          >
+          <Button onClick={handleRender} disabled={rendering} className="min-w-[100px]">
             {rendering ? (
               <span className="flex items-center gap-2">
                 <BlueprintSpinner size="sm" />
@@ -334,7 +317,7 @@ print(data["url"])`;
 
       {/* API Key Input */}
       <div className="flex items-center gap-3">
-        <Label className="shrink-0 text-sm text-muted-foreground">API Key</Label>
+        <Label className="text-muted-foreground shrink-0 text-sm">API Key</Label>
         <Input
           type="text"
           autoComplete="off"
@@ -345,9 +328,9 @@ print(data["url"])`;
           onChange={(e) => setApiKeyInput(e.target.value)}
           className="max-w-sm font-mono text-sm"
         />
-        <span className="text-xs text-muted-foreground">
+        <span className="text-muted-foreground text-xs">
           Find your key on the{" "}
-          <Link href="/api-keys" className="underline hover:text-foreground">
+          <Link href="/api-keys" className="hover:text-foreground underline">
             API Keys
           </Link>{" "}
           page
@@ -374,7 +357,7 @@ print(data["url"])`;
                     value={html}
                     onChange={(e) => setHtml(e.target.value)}
                     spellCheck={false}
-                    className="h-[320px] w-full resize-none rounded-md border bg-muted/50 p-4 font-mono text-sm leading-relaxed text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="bg-muted/50 text-foreground focus:ring-ring h-[320px] w-full resize-none rounded-md border p-4 font-mono text-sm leading-relaxed focus:ring-2 focus:outline-none"
                   />
                 </TabsContent>
                 <TabsContent value="css" className="mt-0">
@@ -382,7 +365,7 @@ print(data["url"])`;
                     value={css}
                     onChange={(e) => setCss(e.target.value)}
                     spellCheck={false}
-                    className="h-[320px] w-full resize-none rounded-md border bg-muted/50 p-4 font-mono text-sm leading-relaxed text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="bg-muted/50 text-foreground focus:ring-ring h-[320px] w-full resize-none rounded-md border p-4 font-mono text-sm leading-relaxed focus:ring-2 focus:outline-none"
                   />
                 </TabsContent>
               </CardContent>
@@ -392,9 +375,7 @@ print(data["url"])`;
           {/* Options */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">
-                Render Options
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Render Options</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -420,12 +401,7 @@ print(data["url"])`;
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs">Format</Label>
-                  <Select
-                    value={format}
-                    onValueChange={(v) =>
-                      setFormat(v as "png" | "jpeg" | "webp")
-                    }
-                  >
+                  <Select value={format} onValueChange={(v) => setFormat(v as "png" | "jpeg" | "webp")}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -456,9 +432,7 @@ print(data["url"])`;
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs">Quality</Label>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {quality}
-                    </span>
+                    <span className="text-muted-foreground font-mono text-xs">{quality}</span>
                   </div>
                   <Slider
                     value={[quality]}
@@ -494,7 +468,7 @@ print(data["url"])`;
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex min-h-[320px] items-center justify-center overflow-hidden rounded-md border bg-muted/30">
+              <div className="bg-muted/30 flex min-h-[320px] items-center justify-center overflow-hidden rounded-md border">
                 {rendering ? (
                   <BlueprintSpinner size="md" label="Rendering" />
                 ) : error ? (
@@ -502,16 +476,17 @@ print(data["url"])`;
                     <Badge variant="destructive" className="mb-2">
                       Error
                     </Badge>
-                    <p className="text-sm text-muted-foreground">{error}</p>
+                    <p className="text-muted-foreground text-sm">{error}</p>
                   </div>
                 ) : imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={imageUrl}
                     alt="Rendered output"
                     className="max-h-[400px] max-w-full object-contain"
                   />
                 ) : (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Click &ldquo;Render&rdquo; to see the output
                   </p>
                 )}
@@ -526,7 +501,7 @@ print(data["url"])`;
                 <CardTitle className="text-sm font-medium">Response</CardTitle>
               </CardHeader>
               <CardContent>
-                <pre className="max-h-[200px] overflow-auto rounded-md bg-muted p-4 font-mono text-xs leading-relaxed">
+                <pre className="bg-muted max-h-[200px] overflow-auto rounded-md p-4 font-mono text-xs leading-relaxed">
                   {JSON.stringify(response, null, 2)}
                 </pre>
               </CardContent>
@@ -536,9 +511,7 @@ print(data["url"])`;
           {/* Code snippets */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">
-                Code Snippets
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Code Snippets</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="curl">
@@ -548,7 +521,7 @@ print(data["url"])`;
                   <TabsTrigger value="python">Python</TabsTrigger>
                 </TabsList>
                 <TabsContent value="curl" className="relative mt-4">
-                  <pre className="max-h-[200px] overflow-auto rounded-md bg-muted p-4 font-mono text-xs leading-relaxed">
+                  <pre className="bg-muted max-h-[200px] overflow-auto rounded-md p-4 font-mono text-xs leading-relaxed">
                     {generateCurl()}
                   </pre>
                   <Button
@@ -561,7 +534,7 @@ print(data["url"])`;
                   </Button>
                 </TabsContent>
                 <TabsContent value="typescript" className="relative mt-4">
-                  <pre className="max-h-[200px] overflow-auto rounded-md bg-muted p-4 font-mono text-xs leading-relaxed">
+                  <pre className="bg-muted max-h-[200px] overflow-auto rounded-md p-4 font-mono text-xs leading-relaxed">
                     {generateTypeScript()}
                   </pre>
                   <Button
@@ -574,7 +547,7 @@ print(data["url"])`;
                   </Button>
                 </TabsContent>
                 <TabsContent value="python" className="relative mt-4">
-                  <pre className="max-h-[200px] overflow-auto rounded-md bg-muted p-4 font-mono text-xs leading-relaxed">
+                  <pre className="bg-muted max-h-[200px] overflow-auto rounded-md p-4 font-mono text-xs leading-relaxed">
                     {generatePython()}
                   </pre>
                   <Button

@@ -148,11 +148,8 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 {session?.user?.image ? (
-                  <img
-                    src={session.user.image}
-                    alt=""
-                    className="h-10 w-10 border object-cover"
-                  />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={session.user.image} alt="" className="h-10 w-10 border object-cover" />
                 ) : (
                   <div className="bg-muted flex h-10 w-10 items-center justify-center border">
                     <User className="text-muted-foreground h-4 w-4" />
@@ -353,7 +350,6 @@ export default function SettingsPage() {
             required.
           </p>
         </div>
-
       </div>
     </>
   );

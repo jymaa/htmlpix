@@ -25,7 +25,11 @@ export const uploadImage = action({
   ): Promise<{ key: string; url: string; linked: boolean }> => {
     const bytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
     const blob = new Blob([bytes], { type: contentType });
-    const key = await r2.store(ctx, blob, imageKey ? { key: imageKey, type: contentType } : { type: contentType });
+    const key = await r2.store(
+      ctx,
+      blob,
+      imageKey ? { key: imageKey, type: contentType } : { type: contentType }
+    );
 
     const linked: boolean = await ctx.runMutation(internal.images.linkToRender, {
       renderId,
@@ -89,7 +93,10 @@ export const getRenderByContentHash = internalQuery({
 
 export const checkCachedRender = action({
   args: { contentHash: v.string() },
-  handler: async (ctx, { contentHash }): Promise<{
+  handler: async (
+    ctx,
+    { contentHash }
+  ): Promise<{
     cached: boolean;
     externalId?: string;
     imageKey?: string;
@@ -126,19 +133,5 @@ export const deleteImage = action({
   args: { imageKey: v.string() },
   handler: async (ctx, { imageKey }) => {
     await r2.deleteObject(ctx, imageKey);
-  },
-});
-
-export const getImageUrls = action({
-  args: { imageKeys: v.array(v.string()) },
-  handler: async (_, { imageKeys }): Promise<Record<string, string>> => {
-    const result: Record<string, string> = {};
-    await Promise.all(
-      imageKeys.map(async (key) => {
-        const url = await r2.getUrl(key);
-        result[key] = url;
-      })
-    );
-    return result;
   },
 });

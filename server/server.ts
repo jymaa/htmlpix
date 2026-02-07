@@ -80,10 +80,9 @@ async function handleRender(req: Request): Promise<Response> {
         height?: number;
         format?: "png" | "jpeg" | "webp";
         isPublic: boolean;
-      } | null = await getConvexClient().query(
-        (api as any).templates.getTemplate,
-        { templateId: validated.templateId },
-      );
+      } | null = await getConvexClient().query((api as any).templates.getTemplate, {
+        templateId: validated.templateId,
+      });
       if (!template) {
         return jsonResponse({ code: "TEMPLATE_NOT_FOUND", message: "Template not found" }, 404);
       }
@@ -166,7 +165,10 @@ async function handleRender(req: Request): Promise<Response> {
   const htmlHash = validated.html ? hashHtml(validated.html) : hashHtml(validated.url || "");
 
   if (isRenderError(result)) {
-    logRender({ queueWaitMs: 0, renderMs: 0, screenshotMs: 0, bytesDownloaded: 0, blockedRequests: 0 }, false);
+    logRender(
+      { queueWaitMs: 0, renderMs: 0, screenshotMs: 0, bytesDownloaded: 0, blockedRequests: 0 },
+      false
+    );
 
     // Queue render report to Convex
     queueRenderReport({
@@ -221,22 +223,26 @@ async function handleRender(req: Request): Promise<Response> {
   // Return base64 response if requested
   if (validated.responseFormat === "base64") {
     const base64 = Buffer.from(result.buffer).toString("base64");
-    return jsonResponse({
-      id,
-      base64,
-      mimeType: result.contentType,
-    },
-    200,
-    { "Server-Timing": serverTiming });
+    return jsonResponse(
+      {
+        id,
+        base64,
+        mimeType: result.contentType,
+      },
+      200,
+      { "Server-Timing": serverTiming }
+    );
   }
 
-  return jsonResponse({
-    id,
-    url: `${BASE_URL}/images/${id}.${ext}`,
-    imageKey,
-  },
-  200,
-  { "Server-Timing": serverTiming });
+  return jsonResponse(
+    {
+      id,
+      url: `${BASE_URL}/images/${id}.${ext}`,
+      imageKey,
+    },
+    200,
+    { "Server-Timing": serverTiming }
+  );
 }
 
 function hashHtml(html: string): string {
@@ -261,20 +267,22 @@ function computeContentHash(request: {
 }): string {
   const hasher = new Bun.CryptoHasher("sha256");
   // Include all rendering parameters that affect output
-  hasher.update(JSON.stringify({
-    html: request.html,
-    url: request.url,
-    css: request.css,
-    googleFonts: request.googleFonts?.sort(),
-    selector: request.selector,
-    width: request.width || 1200,
-    height: request.height || 800,
-    deviceScaleFactor: request.deviceScaleFactor || 1,
-    format: request.format || "png",
-    quality: request.quality,
-    fullPage: request.fullPage || false,
-    background: request.background || "white",
-  }));
+  hasher.update(
+    JSON.stringify({
+      html: request.html,
+      url: request.url,
+      css: request.css,
+      googleFonts: request.googleFonts?.sort(),
+      selector: request.selector,
+      width: request.width || 1200,
+      height: request.height || 800,
+      deviceScaleFactor: request.deviceScaleFactor || 1,
+      format: request.format || "png",
+      quality: request.quality,
+      fullPage: request.fullPage || false,
+      background: request.background || "white",
+    })
+  );
   return hasher.digest("hex");
 }
 
@@ -362,7 +370,7 @@ function withCors(res: Response, origin?: string | null): Response {
   if (!CORS_ORIGIN) return res;
   const allowed = CORS_ORIGIN === "*" ? "*" : CORS_ORIGIN;
   if (allowed !== "*" && origin && !allowed.split(",").includes(origin)) return res;
-  res.headers.set("Access-Control-Allow-Origin", allowed === "*" ? "*" : (origin || allowed.split(",")[0]!));
+  res.headers.set("Access-Control-Allow-Origin", allowed === "*" ? "*" : origin || allowed.split(",")[0]!);
   res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.headers.set("Access-Control-Max-Age", "86400");

@@ -123,7 +123,15 @@ export const handleCheckoutCompleted = internalMutation({
     cancelAtPeriodEnd: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const { stripeSubscriptionId, stripeCustomerId, userId, priceId, status, currentPeriodEnd, cancelAtPeriodEnd } = args;
+    const {
+      stripeSubscriptionId,
+      stripeCustomerId,
+      userId,
+      priceId,
+      status,
+      currentPeriodEnd,
+      cancelAtPeriodEnd,
+    } = args;
     const { plan, limit } = getPlanFromPriceId(priceId);
 
     // Upsert quota

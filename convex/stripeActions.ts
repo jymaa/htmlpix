@@ -79,15 +79,14 @@ export const createPortalSession = action({
 export const syncSubscription = action({
   args: { sessionId: v.string() },
   returns: v.boolean(),
-  handler: async (ctx, { sessionId }): Promise<boolean> => {
+  handler: async (ctx, _args): Promise<boolean> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
     // Check if user has any subscriptions synced
-    const subscriptions = await ctx.runQuery(
-      components.stripe.public.listSubscriptionsByUserId,
-      { userId: identity.subject }
-    );
+    const subscriptions = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+      userId: identity.subject,
+    });
 
     // If user has subscriptions, they've completed checkout
     return subscriptions.length > 0;
