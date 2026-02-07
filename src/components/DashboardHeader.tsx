@@ -82,14 +82,14 @@ export function DashboardHeader() {
                 HTMLPIX
               </SheetTitle>
             </SheetHeader>
-            <nav className="mt-8 flex flex-col gap-4">
+            <nav className="mt-6 flex flex-col gap-1">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm transition-colors hover:text-foreground ${
+                  className={`rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-foreground ${
                     pathname === link.href
-                      ? "font-medium text-foreground"
+                      ? "font-medium text-foreground bg-accent"
                       : "text-muted-foreground"
                   }`}
                 >
@@ -99,9 +99,9 @@ export function DashboardHeader() {
               <hr className="my-2" />
               <Link
                 href="/settings"
-                className={`flex items-center gap-2 text-sm transition-colors hover:text-foreground ${
+                className={`flex items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-foreground ${
                   pathname === "/settings"
-                    ? "font-medium text-foreground"
+                    ? "font-medium text-foreground bg-accent"
                     : "text-muted-foreground"
                 }`}
               >

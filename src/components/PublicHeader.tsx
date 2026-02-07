@@ -71,27 +71,29 @@ export function PublicHeader() {
             <SheetHeader>
               <SheetTitle className="text-left font-bold tracking-wider">HTMLPIX</SheetTitle>
             </SheetHeader>
-            <nav className="mt-8 flex flex-col gap-6 text-sm tracking-widest uppercase">
+            <nav className="mt-6 flex flex-col gap-1 text-sm tracking-widest uppercase">
               <>
-                <Link href="#spec" className="text-[#1a1a1a]/70 transition-colors hover:text-[#ff4d00]">
+                <Link href="#spec" className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]">
                   Specifications
                 </Link>
-                <Link href="#pricing" className="text-[#1a1a1a]/70 transition-colors hover:text-[#ff4d00]">
+                <Link href="#pricing" className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]">
                   Pricing
                 </Link>
               </>
-              <Link href="/docs" className="text-[#1a1a1a]/70 transition-colors hover:text-[#ff4d00]">
+              <Link href="/docs" className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]">
                 Docs
               </Link>
-              <Link href="/pricing" className="text-[#1a1a1a]/70 transition-colors hover:text-[#ff4d00]">
+              <Link href="/pricing" className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]">
                 Pricing
               </Link>
-              <Link
-                href={session ? "/dashboard" : "/login"}
-                className="border-2 border-[#1a1a1a] px-5 py-3 text-center text-[#1a1a1a] transition-colors hover:bg-[#1a1a1a] hover:text-[#f5f0e8]"
-              >
-                {session ? "Dashboard" : "Sign In"} →
-              </Link>
+              <div className="mt-3 px-3">
+                <Link
+                  href={session ? "/dashboard" : "/login"}
+                  className="block border-2 border-[#1a1a1a] px-5 py-3 text-center text-[#1a1a1a] transition-colors hover:bg-[#1a1a1a] hover:text-[#f5f0e8]"
+                >
+                  {session ? "Dashboard" : "Sign In"} →
+                </Link>
+              </div>
             </nav>
           </SheetContent>
         </Sheet>

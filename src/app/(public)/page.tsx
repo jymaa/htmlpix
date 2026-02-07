@@ -46,8 +46,8 @@ export default function Home() {
               <div className="relative mb-8 border-l-2 border-[#1a1a1a]/20 pl-6 md:mb-12 md:pl-8">
                 <div className="absolute top-0 left-0 h-2 w-2 -translate-x-[5px] bg-[#ff4d00]" />
                 <p className="max-w-xl text-base leading-relaxed text-[#1a1a1a]/60 md:text-lg">
-                  Generate images from HTML/CSS with a single API call. OG images, social cards,
-                  receipts, certificates — at scale. Free tier included.
+                  Generate images from HTML/CSS with a single API call. OG images, social cards, receipts,
+                  certificates — at scale. Free tier included.
                 </p>
               </div>
 
@@ -73,9 +73,7 @@ export default function Home() {
                 href="/login"
                 className="group inline-flex items-center gap-3 bg-[#ff4d00] px-6 py-3 text-[#f5f0e8] transition-colors hover:bg-[#1a1a1a] md:gap-4 md:px-8 md:py-4"
               >
-                <span className="text-xs font-bold tracking-widest uppercase md:text-sm">
-                  Start Free
-                </span>
+                <span className="text-xs font-bold tracking-widest uppercase md:text-sm">Start Free</span>
                 <svg
                   className="h-4 w-4 transform transition-transform group-hover:translate-x-1 md:h-5 md:w-5"
                   fill="none"
@@ -372,9 +370,7 @@ export default function Home() {
                 <h3 className="mb-2 font-[family-name:var(--font-bebas-neue)] text-2xl tracking-wide text-[#f5f0e8]">
                   {useCase.title}
                 </h3>
-                <p className="text-sm leading-relaxed text-[#f5f0e8]/40">
-                  {useCase.desc}
-                </p>
+                <p className="text-sm leading-relaxed text-[#f5f0e8]/40">{useCase.desc}</p>
               </div>
             ))}
           </div>
@@ -702,7 +698,7 @@ export default function Home() {
             </div>
             <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
             <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide md:text-4xl">
-              Pricing Schedule
+              Pricing
             </h2>
             <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
           </div>

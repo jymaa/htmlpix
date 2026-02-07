@@ -7,6 +7,7 @@ import { api } from "../../../../../convex/_generated/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { BlueprintSpinner } from "@/components/ui/blueprint-spinner";
 
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
@@ -95,10 +96,7 @@ export default function CheckoutSuccessPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {status === "loading" ? (
-            <div className="flex items-center justify-center gap-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <span className="text-sm text-muted-foreground">Processing...</span>
-            </div>
+            <BlueprintSpinner size="md" label="Processing" />
           ) : (
             <>
               <p className="text-sm text-muted-foreground">

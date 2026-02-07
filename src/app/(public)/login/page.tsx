@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { BlueprintSpinner } from "@/components/ui/blueprint-spinner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -214,7 +215,7 @@ export default function LoginPage() {
                           className="group relative mb-2 flex w-full items-center justify-center gap-3 bg-[#ff4d00] px-6 py-4 font-bold tracking-wider text-white uppercase transition-all hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {isLoading === "google" ? (
-                            <div className="h-5 w-5 animate-spin border-2 border-white border-t-transparent" />
+                            <BlueprintSpinner size="sm" />
                           ) : (
                             <svg className="h-5 w-5" viewBox="0 0 24 24">
                               <path
@@ -275,7 +276,7 @@ export default function LoginPage() {
                             className="group relative flex w-full items-center justify-center gap-3 border-2 border-[#1a1a1a] bg-white px-6 py-4 font-bold tracking-wider uppercase transition-all hover:bg-[#1a1a1a] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {isLoading === "email" ? (
-                              <div className="h-5 w-5 animate-spin border-2 border-current border-t-transparent" />
+                              <BlueprintSpinner size="sm" />
                             ) : (
                               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path

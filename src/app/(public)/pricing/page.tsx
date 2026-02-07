@@ -44,13 +44,7 @@ const plans = [
   },
 ];
 
-const features = [
-  "All export formats",
-  "Custom viewports",
-  "Google Fonts",
-  "API access",
-  "Email support",
-];
+const features = ["All export formats", "Custom viewports", "Google Fonts", "API access", "Email support"];
 
 const faqs = [
   {
@@ -111,15 +105,12 @@ export default function PricingPage() {
         <div className="mx-auto max-w-7xl">
           {/* Section header */}
           <div className="mb-4 text-center">
-            <div className="mb-4 text-xs tracking-widest text-[#ff4d00] uppercase">
-              PRICING SCHEDULE
-            </div>
+            <div className="mb-4 text-xs tracking-widest text-[#ff4d00] uppercase">PRICING</div>
             <h1 className="mb-4 font-[family-name:var(--font-bebas-neue)] text-5xl tracking-wide md:text-7xl">
               Simple, Transparent Pricing
             </h1>
             <p className="mx-auto max-w-xl text-base leading-relaxed text-[#1a1a1a]/60 md:text-lg">
-              Start free, scale as you grow. Every plan includes full API access
-              and all export formats.
+              Start free, scale as you grow. Every plan includes full API access and all export formats.
             </p>
           </div>
 
@@ -147,17 +138,11 @@ export default function PricingPage() {
                   </div>
                 )}
 
-                <div
-                  className={`mb-2 text-xs ${plan.recommended ? "text-[#ff4d00]" : "text-[#1a1a1a]/30"}`}
-                >
+                <div className={`mb-2 text-xs ${plan.recommended ? "text-[#ff4d00]" : "text-[#1a1a1a]/30"}`}>
                   {plan.tier}
                 </div>
-                <h3 className="mb-1 font-[family-name:var(--font-bebas-neue)] text-3xl">
-                  {plan.name}
-                </h3>
-                <p
-                  className={`mb-6 text-sm ${plan.recommended ? "text-[#f5f0e8]/50" : "text-[#1a1a1a]/40"}`}
-                >
+                <h3 className="mb-1 font-[family-name:var(--font-bebas-neue)] text-3xl">{plan.name}</h3>
+                <p className={`mb-6 text-sm ${plan.recommended ? "text-[#f5f0e8]/50" : "text-[#1a1a1a]/40"}`}>
                   {plan.desc}
                 </p>
 
@@ -169,13 +154,7 @@ export default function PricingPage() {
                       {plan.price === 0 ? "Free" : `$${plan.price}`}
                     </span>
                     {plan.price > 0 && (
-                      <span
-                        className={
-                          plan.recommended
-                            ? "text-[#f5f0e8]/30"
-                            : "text-[#1a1a1a]/30"
-                        }
-                      >
+                      <span className={plan.recommended ? "text-[#f5f0e8]/30" : "text-[#1a1a1a]/30"}>
                         /month
                       </span>
                     )}
@@ -220,9 +199,7 @@ export default function PricingPage() {
         <div className="mx-auto max-w-3xl">
           {/* Section header */}
           <div className="mb-8 flex flex-col gap-4 md:mb-16 md:flex-row md:items-center md:gap-8">
-            <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
-              FAQ
-            </div>
+            <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">FAQ</div>
             <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
             <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide md:text-4xl">
               Common Questions
@@ -232,21 +209,14 @@ export default function PricingPage() {
 
           <div className="space-y-0">
             {faqs.map((faq, i) => (
-              <div
-                key={i}
-                className="border-t-2 border-[#1a1a1a]/10 py-8 last:border-b-2"
-              >
+              <div key={i} className="border-t-2 border-[#1a1a1a]/10 py-8 last:border-b-2">
                 <div className="mb-1 flex items-start gap-4">
-                  <span className="mt-1 text-xs text-[#1a1a1a]/20">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
+                  <span className="mt-1 text-xs text-[#1a1a1a]/20">{String(i + 1).padStart(2, "0")}</span>
                   <div>
                     <h3 className="mb-3 font-[family-name:var(--font-bebas-neue)] text-xl tracking-wide text-[#1a1a1a] md:text-2xl">
                       {faq.question}
                     </h3>
-                    <p className="text-sm leading-relaxed text-[#1a1a1a]/50">
-                      {faq.answer}
-                    </p>
+                    <p className="text-sm leading-relaxed text-[#1a1a1a]/50">{faq.answer}</p>
                   </div>
                 </div>
               </div>
@@ -262,20 +232,14 @@ export default function PricingPage() {
             READY TO BUILD?
           </h2>
           <p className="mx-auto mb-8 max-w-xl text-base text-white/70 md:mb-10 md:text-lg">
-            50 free renders per month. No credit card required. Get your API key
-            in under a minute.
+            50 free renders per month. No credit card required. Get your API key in under a minute.
           </p>
           <Link
             href="/login"
             className="inline-flex items-center gap-3 bg-white px-6 py-4 font-bold tracking-wider text-[#ff4d00] uppercase transition-colors hover:bg-[#1a1a1a] hover:text-white md:gap-4 md:px-10 md:py-5"
           >
             Start Free
-            <svg
-              className="h-4 w-4 md:h-5 md:w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -297,28 +261,16 @@ export default function PricingPage() {
             <span className="font-bold tracking-wider">HTMLPIX</span>
           </div>
           <div className="flex flex-wrap justify-center gap-4 text-xs tracking-widest text-[#1a1a1a]/30 uppercase md:gap-8">
-            <Link
-              href="/docs"
-              className="transition-colors hover:text-[#ff4d00]"
-            >
+            <Link href="/docs" className="transition-colors hover:text-[#ff4d00]">
               Docs
             </Link>
-            <Link
-              href="/pricing"
-              className="transition-colors hover:text-[#ff4d00]"
-            >
+            <Link href="/pricing" className="transition-colors hover:text-[#ff4d00]">
               Pricing
             </Link>
-            <Link
-              href="/status"
-              className="transition-colors hover:text-[#ff4d00]"
-            >
+            <Link href="/status" className="transition-colors hover:text-[#ff4d00]">
               Status
             </Link>
-            <Link
-              href="/login"
-              className="transition-colors hover:text-[#ff4d00]"
-            >
+            <Link href="/login" className="transition-colors hover:text-[#ff4d00]">
               Login
             </Link>
           </div>
