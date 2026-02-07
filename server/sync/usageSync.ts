@@ -8,6 +8,7 @@ interface PendingRender {
   userId: string;
   status: "success" | "error";
   htmlHash: string;
+  contentHash?: string;
   format: string;
   renderMs: number;
   imageKey?: string;

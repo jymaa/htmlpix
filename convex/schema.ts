@@ -16,7 +16,7 @@ export default defineSchema({
 
   quotas: defineTable({
     userId: v.string(),
-    plan: v.union(v.literal("starter"), v.literal("pro"), v.literal("scale")),
+    plan: v.union(v.literal("free"), v.literal("starter"), v.literal("pro"), v.literal("scale")),
     monthlyLimit: v.number(),
     stripeSubscriptionId: v.optional(v.string()),
     stripeSubscriptionStatus: v.optional(v.string()),
@@ -31,17 +31,60 @@ export default defineSchema({
     externalId: v.string(),
     status: v.union(v.literal("success"), v.literal("error")),
     htmlHash: v.string(),
+    contentHash: v.optional(v.string()),
     format: v.string(),
     renderMs: v.number(),
     imageKey: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_externalId", ["externalId"])
-    .index("by_userId", ["userId"]),
+    .index("by_userId", ["userId"])
+    .index("by_contentHash", ["contentHash"]),
+
+  templates: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    html: v.string(),
+    css: v.optional(v.string()),
+    variables: v.array(
+      v.object({
+        name: v.string(),
+        type: v.union(v.literal("string"), v.literal("number"), v.literal("url")),
+        defaultValue: v.optional(v.string()),
+      })
+    ),
+    width: v.optional(v.number()),
+    height: v.optional(v.number()),
+    format: v.optional(v.union(v.literal("png"), v.literal("jpeg"), v.literal("webp"))),
+    isPublic: v.boolean(),
+    isStarter: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_isPublic", ["isPublic"]),
 
   usageMonthly: defineTable({
     userId: v.string(),
     year: v.number(),
     month: v.number(),
   }).index("by_userId_year_month", ["userId", "year", "month"]),
+
+  emailPreferences: defineTable({
+    userId: v.string(),
+    unsubscribedCategories: v.array(v.string()),
+    unsubscribeToken: v.string(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_unsubscribeToken", ["unsubscribeToken"]),
+
+  emailEvents: defineTable({
+    userId: v.string(),
+    emailType: v.string(),
+    sentAt: v.number(),
+  })
+    .index("by_userId_emailType", ["userId", "emailType"])
+    .index("by_userId", ["userId"]),
 });

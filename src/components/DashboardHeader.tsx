@@ -2,16 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Settings, LogOut, ChevronDown } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { Menu, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -23,16 +15,14 @@ import {
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/api-keys", label: "API Keys" },
+  { href: "/playground", label: "Playground" },
+  { href: "/media", label: "Media" },
+  { href: "/templates", label: "Templates" },
   { href: "/docs", label: "Docs" },
 ];
 
 export function DashboardHeader() {
-  const { data: session } = authClient.useSession();
   const pathname = usePathname();
-
-  const handleSignOut = () => {
-    authClient.signOut();
-  };
 
   return (
     <header className="border-b bg-background">
@@ -62,30 +52,23 @@ export function DashboardHeader() {
             </Link>
           ))}
 
-          {/* User dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2">
-                <span className="max-w-[150px] truncate text-sm">
-                  {session?.user?.email ?? "Account"}
-                </span>
-                <ChevronDown className="h-4 w-4" />
+          {/* Settings link */}
+          <div className="border-l border-border pl-4">
+            <Link href="/settings">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`gap-1.5 ${
+                  pathname === "/settings"
+                    ? "text-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
+                <Settings className="h-4 w-4" />
+                <span className="hidden lg:inline text-sm">Settings</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem asChild>
-                <Link href="/settings" className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </Link>
+          </div>
         </div>
 
         {/* Mobile nav */}
@@ -116,18 +99,15 @@ export function DashboardHeader() {
               <hr className="my-2" />
               <Link
                 href="/settings"
-                className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className={`flex items-center gap-2 text-sm transition-colors hover:text-foreground ${
+                  pathname === "/settings"
+                    ? "font-medium text-foreground"
+                    : "text-muted-foreground"
+                }`}
               >
                 <Settings className="h-4 w-4" />
                 Settings
               </Link>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 text-sm text-destructive transition-colors hover:text-destructive/80"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </button>
             </nav>
           </SheetContent>
         </Sheet>

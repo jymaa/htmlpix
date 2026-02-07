@@ -12,12 +12,12 @@ interface MagicLinkEmailProps {
 export default function MagicLinkEmail({ url, brandName, brandTagline, brandLogoUrl }: MagicLinkEmailProps) {
   return (
     <BaseEmail
-      previewText="Connexion avec ce lien magique"
+      previewText="Connect with this magic link"
       brandName={brandName}
       brandTagline={brandTagline}
       brandLogoUrl={brandLogoUrl}
     >
-      <Heading style={styles.h1}>Connexion</Heading>
+      <Heading style={styles.h1}>Connect</Heading>
       <Link
         href={url}
         target="_blank"
@@ -27,7 +27,7 @@ export default function MagicLinkEmail({ url, brandName, brandTagline, brandLogo
           marginBottom: "16px",
         }}
       >
-        Cliquez ici pour vous connecter avec ce lien magique
+        Click here to connect with this magic link
       </Link>
       <Text
         style={{
@@ -37,7 +37,7 @@ export default function MagicLinkEmail({ url, brandName, brandTagline, brandLogo
           marginBottom: "16px",
         }}
       >
-        Si vous n&apos;avez pas essayé de vous connecter, vous pouvez ignorer cet email.
+        If you did not try to connect, you can ignore this email.
       </Text>
     </BaseEmail>
   );

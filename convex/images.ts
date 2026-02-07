@@ -76,6 +76,36 @@ export const getRenderByExternalId = internalQuery({
   },
 });
 
+export const getRenderByContentHash = internalQuery({
+  args: { contentHash: v.string() },
+  handler: async (ctx, { contentHash }) => {
+    return await ctx.db
+      .query("renders")
+      .withIndex("by_contentHash", (q) => q.eq("contentHash", contentHash))
+      .filter((q) => q.eq(q.field("status"), "success"))
+      .first();
+  },
+});
+
+export const checkCachedRender = action({
+  args: { contentHash: v.string() },
+  handler: async (ctx, { contentHash }): Promise<{
+    cached: boolean;
+    externalId?: string;
+    imageKey?: string;
+  }> => {
+    const render = await ctx.runQuery(internal.images.getRenderByContentHash, { contentHash });
+    if (!render?.imageKey) {
+      return { cached: false };
+    }
+    return {
+      cached: true,
+      externalId: render.externalId,
+      imageKey: render.imageKey,
+    };
+  },
+});
+
 export const getImageUrl = action({
   args: { imageKey: v.string() },
   handler: async (_, { imageKey }) => {
@@ -96,5 +126,19 @@ export const deleteImage = action({
   args: { imageKey: v.string() },
   handler: async (ctx, { imageKey }) => {
     await r2.deleteObject(ctx, imageKey);
+  },
+});
+
+export const getImageUrls = action({
+  args: { imageKeys: v.array(v.string()) },
+  handler: async (_, { imageKeys }): Promise<Record<string, string>> => {
+    const result: Record<string, string> = {};
+    await Promise.all(
+      imageKeys.map(async (key) => {
+        const url = await r2.getUrl(key);
+        result[key] = url;
+      })
+    );
+    return result;
   },
 });

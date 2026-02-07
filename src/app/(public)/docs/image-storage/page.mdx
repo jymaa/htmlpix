@@ -1,0 +1,86 @@
+export const metadata = {
+  title: "Image Storage",
+  description: "Learn how HTMLPix stores, retrieves, and caches rendered images."
+}
+
+# Image Storage
+
+## Overview
+
+Every successful render produces an image that is returned in the response body AND stored for later retrieval via the `/images/:id` endpoint. This means you get the image immediately in your render response, and you can also fetch it again later using its unique ID.
+
+## How It Works
+
+1. **You call `POST /render`** with your HTML, CSS, and rendering options.
+2. **The response includes the image** -- either as a URL pointing to the stored image or as inline base64 data (depending on your `responseFormat` setting).
+3. **The image is stored server-side** and assigned a unique ID. This ID is available in the JSON response body as the `id` field.
+4. **Retrieve it later** via `GET /images/:id` whenever you need the image again.
+
+Example render response:
+
+```json
+{
+  "id": "abc123",
+  "url": "https://api.htmlpix.com/images/abc123.png",
+  "imageKey": "abc123.png"
+}
+```
+
+The `id` field is what you use to retrieve the image later.
+
+## Caching
+
+Identical requests (same HTML, CSS, viewport, format, and other parameters) may return a cached result instead of re-rendering. This provides two benefits:
+
+- **Faster responses** since no browser rendering is needed.
+- **Lower quota usage** since cached results don't count as new renders.
+
+Cache lookups are based on a content hash of your inputs. If any parameter changes, it is treated as a new render. You can disable caching by setting `cache: false` in your request body if you need a fresh render every time.
+
+When a cached result is returned, the response includes `cached: true`:
+
+```json
+{
+  "id": "abc123",
+  "url": "https://api.htmlpix.com/images/abc123.png",
+  "imageKey": "abc123.png",
+  "cached": true
+}
+```
+
+## Image Retention
+
+- **Disk cache**: Rendered images are stored temporarily on the server's disk for fast retrieval.
+- **Persistent storage**: Images are uploaded to persistent storage in the background for longer-term retrieval.
+- **Retention period**: The exact retention period depends on your plan. Check your plan details for specifics.
+
+Images that have expired from storage will return a 404 when accessed via `GET /images/:id`.
+
+## Retrieving Images
+
+Fetch a stored image by its ID:
+
+```
+GET /images/:id
+```
+
+### Request
+
+Include your API key in the `Authorization` header:
+
+```bash
+curl https://api.htmlpix.com/images/abc123.png \
+  -H "Authorization: Bearer hpx_your_api_key"
+```
+
+### Response
+
+- Returns the image binary with the appropriate `Content-Type` header (e.g., `image/png`, `image/jpeg`, `image/webp`).
+- Returns `404` if the image has expired or does not exist.
+
+## Best Practices
+
+- **Store images in your own storage** if you need permanent access. Download the image from the response or the `/images/:id` endpoint and upload it to your own S3 bucket, CDN, or file storage.
+- **Use caching for deduplication.** If you render the same content repeatedly, the content hash ensures you get a cached result without wasting quota.
+- **Cache image URLs in your application.** Save the returned `url` or `id` so you can reference the image without making another render call.
+- **Handle expiration gracefully.** If a `GET /images/:id` request returns 404, re-render the image with the original parameters.

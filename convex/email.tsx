@@ -6,7 +6,7 @@ import { Resend } from "@convex-dev/resend";
 import { components } from "./_generated/api";
 import { ActionCtx } from "./_generated/server";
 
-const sendEmail = async (
+export const sendEmailHelper = async (
   ctx: ActionCtx,
   {
     to,
@@ -22,7 +22,7 @@ const sendEmail = async (
     testMode: false,
   });
   await resend.sendEmail(ctx, {
-    from: "No-reply <no-reply@htmlpix.com>",
+    from: "HTMLPix <no-reply@htmlpix.com>",
     to,
     subject,
     html,
@@ -39,9 +39,9 @@ export const sendMagicLink = async (
     url: string;
   }
 ) => {
-  await sendEmail(ctx, {
+  await sendEmailHelper(ctx, {
     to,
-    subject: "Connexion à votre compte",
+    subject: "Sign in to your account",
     html: await render(<MagicLinkEmail url={url} brandName="HTMLPix" brandTagline="HTMLPix" />),
   });
 };

@@ -3,10 +3,19 @@
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 
@@ -35,6 +44,14 @@ const PLANS = [
   },
 ];
 
+const features = [
+  "All export formats (PNG, JPEG, WebP)",
+  "Custom viewports up to 4096px",
+  "Google Fonts support",
+  "API access",
+  "Email support",
+];
+
 export default function SettingsPage() {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
@@ -46,13 +63,9 @@ export default function SettingsPage() {
   const createPortal = useAction(api.stripe.createPortalSession);
 
   const [loading, setLoading] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubscribe = async (priceId: string, planId: string) => {
-    if (!priceId) {
-      alert("Price ID not configured. Please set NEXT_PUBLIC_STRIPE_*_PRICE_ID environment variables.");
-      return;
-    }
-
     setLoading(planId);
     try {
       const baseUrl = window.location.origin;
@@ -67,7 +80,7 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error("Failed to create checkout session:", error);
-      alert("Failed to start checkout. Please try again.");
+      setErrorMessage("Failed to start checkout. Please try again.");
     } finally {
       setLoading(null);
     }
@@ -82,7 +95,7 @@ export default function SettingsPage() {
       window.location.href = url;
     } catch (error) {
       console.error("Failed to create portal session:", error);
-      alert("Failed to open billing portal. Please try again.");
+      setErrorMessage("Failed to open billing portal. Please try again.");
     } finally {
       setLoading(null);
     }
@@ -93,144 +106,206 @@ export default function SettingsPage() {
   };
 
   const usagePercent = quota ? Math.round((quota.currentUsage / quota.monthlyLimit) * 100) : 0;
-  const hasSubscription = subscription?.stripeSubscriptionId;
-  const isActive = subscription?.stripeSubscriptionStatus === "active";
+  const isFreePlan = subscription?.plan === "free";
+  const hasSubscription = subscription?.stripeSubscriptionId || isFreePlan;
+  const isActive = subscription?.stripeSubscriptionStatus === "active" || isFreePlan;
   const isCanceled = subscription?.stripeSubscriptionStatus === "canceled";
   const periodEndDate = subscription?.currentPeriodEnd
     ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
     : null;
 
+  const dataReady = subscription !== undefined && quota !== undefined;
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account and subscription</p>
-      </div>
+    <>
+      <AlertDialog open={!!errorMessage} onOpenChange={() => setErrorMessage(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Error</AlertDialogTitle>
+            <AlertDialogDescription>{errorMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorMessage(null)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold">Settings</h1>
+          <p className="text-muted-foreground">Manage your account, billing, and subscription</p>
+        </div>
 
-      {/* Account Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Account</CardTitle>
-          <CardDescription>Your account information</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <div className="text-sm font-medium text-muted-foreground">Email</div>
-            <div className="text-sm">{session?.user?.email ?? "—"}</div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Current Plan Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Billing</CardTitle>
-          <CardDescription>Your active subscription details</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {subscription === undefined || quota === undefined ? (
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-32" />
-              <Skeleton className="h-4 w-48" />
-            </div>
-          ) : hasSubscription ? (
-            <>
-              <div className="flex items-center gap-4">
-                <Badge variant={isActive ? "default" : isCanceled ? "secondary" : "destructive"}>
-                  {subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1)}
-                </Badge>
-                <Badge variant={isActive ? "outline" : "destructive"}>
-                  {isActive ? "Active" : isCanceled ? "Canceled" : subscription.stripeSubscriptionStatus}
-                </Badge>
+        {/* Account + Billing row */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Account */}
+          <Card className="relative overflow-hidden">
+            <div className="border-primary/20 absolute top-0 right-0 h-8 w-8 border-r-2 border-b-2" />
+            <CardHeader className="pb-2">
+              <CardDescription className="font-mono text-[10px] tracking-widest uppercase">
+                Account
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <div className="text-muted-foreground font-mono text-[10px] tracking-widest uppercase">
+                  Email
+                </div>
+                <div className="mt-0.5 text-sm font-medium">{session?.user?.email ?? "—"}</div>
               </div>
+            </CardContent>
+          </Card>
 
-              {subscription.cancelAtPeriodEnd && (
-                <p className="text-sm text-amber-600">
-                  Your subscription will end on {periodEndDate}. You will retain access until then.
-                </p>
-              )}
+          {/* Current Plan summary */}
+          <Card className="relative overflow-hidden">
+            <div className="border-primary/20 absolute top-0 right-0 h-8 w-8 border-r-2 border-b-2" />
+            <CardHeader className="pb-2">
+              <CardDescription className="font-mono text-[10px] tracking-widest uppercase">
+                Current Plan
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!dataReady ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-4 w-40" />
+                </div>
+              ) : hasSubscription ? (
+                <div className="space-y-3">
+                  <div className="flex items-baseline gap-3">
+                    <span className="font-[family-name:var(--font-bebas-neue)] text-3xl">
+                      {subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1)}
+                    </span>
+                    <Badge
+                      variant={isActive ? "outline" : isCanceled ? "secondary" : "destructive"}
+                      className="text-[10px]"
+                    >
+                      {isActive ? "Active" : isCanceled ? "Canceled" : subscription.stripeSubscriptionStatus}
+                    </Badge>
+                  </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Monthly Usage</span>
-                  <span>
-                    {quota?.currentUsage.toLocaleString()} / {quota?.monthlyLimit.toLocaleString()} renders
+                  {/* Usage bar */}
+                  <div>
+                    <div className="text-muted-foreground flex justify-between font-mono text-[10px] tracking-widest uppercase">
+                      <span>Usage</span>
+                      <span>
+                        {quota?.currentUsage.toLocaleString()} / {quota?.monthlyLimit.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="bg-border mt-1.5 h-1.5 w-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 ${
+                          usagePercent > 90
+                            ? "bg-destructive"
+                            : usagePercent > 70
+                              ? "bg-amber-500"
+                              : "bg-primary"
+                        }`}
+                        style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {subscription.cancelAtPeriodEnd && (
+                    <p className="text-sm text-amber-600">
+                      Ends {periodEndDate} — you retain access until then.
+                    </p>
+                  )}
+
+                  {periodEndDate && !subscription.cancelAtPeriodEnd && !isFreePlan && (
+                    <p className="text-muted-foreground font-mono text-[10px]">
+                      Next billing: {periodEndDate}
+                    </p>
+                  )}
+
+                  {!isFreePlan && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="font-mono text-xs tracking-wider uppercase"
+                      onClick={handleManageBilling}
+                      disabled={loading === "portal"}
+                    >
+                      {loading === "portal" ? "Opening..." : "Manage Billing"}
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <span className="text-muted-foreground font-[family-name:var(--font-bebas-neue)] text-3xl">
+                    No Plan
                   </span>
+                  <p className="text-muted-foreground mt-1 font-mono text-xs">
+                    Choose a plan below to get started.
+                  </p>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                  <div
-                    className={`h-full transition-all ${usagePercent > 80 ? "bg-destructive" : "bg-primary"}`}
-                    style={{ width: `${Math.min(usagePercent, 100)}%` }}
-                  />
-                </div>
-              </div>
-
-              {periodEndDate && !subscription.cancelAtPeriodEnd && (
-                <p className="text-sm text-muted-foreground">
-                  Next billing date: {periodEndDate}
-                </p>
               )}
+            </CardContent>
+          </Card>
+        </div>
 
-              <Button onClick={handleManageBilling} disabled={loading === "portal"}>
-                {loading === "portal" ? "Opening..." : "Manage Billing"}
-              </Button>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">
-                You don&apos;t have an active subscription yet.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Choose a plan below to get started.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* Plans */}
+        <div>
+          <div className="mb-6 flex items-center gap-4">
+            <h2 className="font-[family-name:var(--font-bebas-neue)] text-2xl tracking-wide">
+              {hasSubscription ? "Change Plan" : "Choose a Plan"}
+            </h2>
+            <div className="bg-border h-px flex-grow" />
+          </div>
 
-      {/* Plans */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">
-          {hasSubscription ? "Change Plan" : "Choose a Plan"}
-        </h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          {PLANS.map((plan) => {
-            const isCurrentPlan = subscription?.plan === plan.id;
+          <div className="grid gap-4 md:grid-cols-3">
+            {PLANS.map((plan) => {
+              const isCurrentPlan = subscription?.plan === plan.id;
 
-            return (
-              <Card
-                key={plan.id}
-                className={`relative ${plan.recommended ? "border-primary" : ""} ${isCurrentPlan ? "ring-2 ring-primary" : ""}`}
-              >
-                {plan.recommended && (
-                  <div className="absolute -top-3 left-4 bg-primary px-2 py-1 text-xs font-medium text-primary-foreground rounded">
-                    Recommended
+              return (
+                <div
+                  key={plan.id}
+                  className={`relative border-2 p-6 transition-all hover:-translate-y-0.5 ${
+                    plan.recommended
+                      ? "border-primary"
+                      : isCurrentPlan
+                        ? "border-foreground"
+                        : "border-border"
+                  }`}
+                >
+                  {plan.recommended && !isCurrentPlan && (
+                    <div className="bg-primary absolute -top-3 left-6 px-3 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">
+                      Popular
+                    </div>
+                  )}
+                  {isCurrentPlan && (
+                    <div className="bg-foreground text-background absolute -top-3 left-6 px-3 py-0.5 text-[10px] font-bold tracking-wider uppercase">
+                      Current
+                    </div>
+                  )}
+
+                  <h3 className="font-[family-name:var(--font-bebas-neue)] text-2xl">{plan.name}</h3>
+                  <p className="text-muted-foreground mt-0.5 font-mono text-xs">
+                    {plan.renders.toLocaleString()} renders/month
+                  </p>
+
+                  <div className="border-border/50 mt-4 border-t pt-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-primary font-[family-name:var(--font-bebas-neue)] text-4xl">
+                        ${plan.price}
+                      </span>
+                      <span className="text-muted-foreground font-mono text-xs">/mo</span>
+                    </div>
                   </div>
-                )}
-                {isCurrentPlan && (
-                  <div className="absolute -top-3 right-4 bg-secondary px-2 py-1 text-xs font-medium rounded">
-                    Current Plan
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle>{plan.name}</CardTitle>
-                  <CardDescription>{plan.renders.toLocaleString()} renders/month</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <span className="text-3xl font-bold">${plan.price}</span>
-                    <span className="text-muted-foreground">/month</span>
-                  </div>
-                  <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                    <li>All export formats (PNG, JPEG, WebP)</li>
-                    <li>Custom viewports up to 4096px</li>
-                    <li>Google Fonts support</li>
-                    <li>API access</li>
-                    <li>Email support</li>
+
+                  <ul className="mt-4 space-y-2">
+                    {features.map((f) => (
+                      <li key={f} className="text-muted-foreground flex items-center gap-2 text-sm">
+                        <div className="bg-primary h-1 w-1" />
+                        {f}
+                      </li>
+                    ))}
                   </ul>
+
                   <Button
-                    className="w-full"
-                    variant={plan.recommended ? "default" : "outline"}
+                    className={`mt-6 w-full font-mono text-xs tracking-widest uppercase ${
+                      plan.recommended && !isCurrentPlan ? "" : ""
+                    }`}
+                    variant={plan.recommended && !isCurrentPlan ? "default" : "outline"}
                     disabled={isCurrentPlan || loading === plan.id}
                     onClick={() => handleSubscribe(plan.priceId, plan.id)}
                   >
@@ -238,30 +313,36 @@ export default function SettingsPage() {
                       ? "Loading..."
                       : isCurrentPlan
                         ? "Current Plan"
-                        : hasSubscription
+                        : hasSubscription && !isFreePlan
                           ? "Switch to " + plan.name
                           : "Get Started"}
                   </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Free tier note */}
+          <p className="text-muted-foreground mt-4 font-mono text-[10px]">
+            Free tier (50 renders/mo) is auto-provisioned when you create your first API key. No card
+            required.
+          </p>
+        </div>
+
+        {/* Sign Out */}
+        <div className="border-border/50 border-t pt-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">Sign Out</h3>
+              <p className="text-muted-foreground text-sm">Sign out of your account on this device</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </div>
-
-      {/* Sign Out */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sign Out</CardTitle>
-          <CardDescription>Sign out of your account on this device</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="destructive" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    </>
   );
 }

@@ -9,6 +9,8 @@ export interface BaseEmailProps {
   brandName?: string;
   brandTagline?: string;
   brandLogoUrl?: string;
+  unsubscribeUrl?: string;
+  emailCategory?: string;
 }
 
 export const styles = {
@@ -30,7 +32,7 @@ export const styles = {
     padding: "0",
   },
   link: {
-    color: "#2754C5",
+    color: "#ff4d00",
     fontFamily:
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
     fontSize: "14px",
@@ -68,9 +70,11 @@ export function BaseEmail({
   previewText,
   footerLinks = [],
   footerText,
-  brandName = "Apneos",
-  brandTagline = "Apneos",
+  brandName = "HTMLPix",
+  brandTagline = "HTML to image API",
   brandLogoUrl,
+  unsubscribeUrl,
+  emailCategory,
 }: BaseEmailProps) {
   return (
     <Html>
@@ -95,6 +99,14 @@ export function BaseEmail({
             {footerText || (
               <>
                 {brandName}, {brandTagline.toLowerCase()}
+              </>
+            )}
+            {unsubscribeUrl && emailCategory && emailCategory !== "transactional" && (
+              <>
+                <br />
+                <Link href={unsubscribeUrl} target="_blank" style={{ ...styles.link, color: "#898989", fontSize: "11px" }}>
+                  Unsubscribe from {emailCategory.replace("_", " ")} emails
+                </Link>
               </>
             )}
           </Text>

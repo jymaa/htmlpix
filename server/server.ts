@@ -13,6 +13,7 @@ const PORT = parseInt(process.env.PORT || "3201", 10);
 const IS_DEV = process.env.NODE_ENV !== "production";
 const MAX_QUEUE_LENGTH = parseInt(process.env.MAX_QUEUE_LENGTH || "50", 10);
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const CORS_ORIGIN = process.env.CORS_ORIGIN || (IS_DEV ? "*" : "");
 
 function jsonResponse(data: object, status = 200, headers?: HeadersInit): Response {
   const responseHeaders = new Headers(headers);
@@ -67,9 +68,102 @@ async function handleRender(req: Request): Promise<Response> {
     return jsonResponse(validated, 400);
   }
 
+  // Template resolution: fetch template from Convex and interpolate variables
+  if (validated.templateId) {
+    try {
+      const template: {
+        userId: string;
+        html: string;
+        css?: string;
+        variables: { name: string; defaultValue?: string }[];
+        width?: number;
+        height?: number;
+        format?: "png" | "jpeg" | "webp";
+        isPublic: boolean;
+      } | null = await getConvexClient().query(
+        (api as any).templates.getTemplate,
+        { templateId: validated.templateId },
+      );
+      if (!template) {
+        return jsonResponse({ code: "TEMPLATE_NOT_FOUND", message: "Template not found" }, 404);
+      }
+      // Check access: template must be public or owned by the user
+      if (!template.isPublic && template.userId !== auth.apiKey.userId) {
+        return jsonResponse({ code: "TEMPLATE_NOT_FOUND", message: "Template not found" }, 404);
+      }
+
+      // Interpolate variables into HTML and CSS
+      let html = template.html;
+      let css = template.css || "";
+      const vars = validated.variables || {};
+
+      // Apply defaults for missing variables then interpolate
+      for (const tmplVar of template.variables) {
+        const value = vars[tmplVar.name] ?? tmplVar.defaultValue ?? "";
+        const placeholder = `{{${tmplVar.name}}}`;
+        html = html.split(placeholder).join(String(value));
+        css = css.split(placeholder).join(String(value));
+      }
+
+      validated.html = html;
+      validated.css = css || undefined;
+      // Apply template defaults for width/height/format if not overridden
+      if (!validated.width && template.width) validated.width = template.width;
+      if (!validated.height && template.height) validated.height = template.height;
+      if (!validated.format && template.format) validated.format = template.format;
+    } catch (error) {
+      console.error("Template fetch failed:", error);
+      return jsonResponse({ code: "TEMPLATE_ERROR", message: "Failed to fetch template" }, 500);
+    }
+  }
+
+  // Compute content hash for duplicate detection
+  const contentHash = computeContentHash(validated);
+  const enableCache = validated.cache !== false; // Default to true
+
+  // Check for cached render if caching enabled
+  if (enableCache) {
+    try {
+      const cached = await getConvexClient().action(api.images.checkCachedRender, { contentHash });
+      if (cached.cached && cached.externalId && cached.imageKey) {
+        const ext = validated.format || "png";
+
+        // Return cached result
+        if (validated.responseFormat === "base64") {
+          // Fetch the image and return as base64
+          const imageData = await diskImageStore.get(cached.externalId, ext);
+          if (imageData) {
+            const fileBuffer = await Bun.file(imageData.path).arrayBuffer();
+            const base64 = Buffer.from(fileBuffer).toString("base64");
+            return jsonResponse({
+              id: cached.externalId,
+              base64,
+              mimeType: imageData.contentType,
+              cached: true,
+            });
+          }
+          // If not in disk cache, redirect to URL
+        }
+
+        return jsonResponse({
+          id: cached.externalId,
+          url: `${BASE_URL}/images/${cached.externalId}.${ext}`,
+          imageKey: cached.imageKey,
+          cached: true,
+        });
+      }
+    } catch (error) {
+      // If cache check fails, proceed with render
+      console.error("Cache check failed:", error);
+    }
+  }
+
   // Render
   const result = await render(validated);
   const id = generateImageId();
+
+  // Compute htmlHash for backwards compat (use html or url)
+  const htmlHash = validated.html ? hashHtml(validated.html) : hashHtml(validated.url || "");
 
   if (isRenderError(result)) {
     logRender({ queueWaitMs: 0, renderMs: 0, screenshotMs: 0, bytesDownloaded: 0, blockedRequests: 0 }, false);
@@ -80,7 +174,8 @@ async function handleRender(req: Request): Promise<Response> {
       apiKeyId: auth.apiKey.id,
       userId: auth.apiKey.userId,
       status: "error",
-      htmlHash: hashHtml(validated.html),
+      htmlHash,
+      contentHash,
       format: validated.format || "png",
       renderMs: 0,
       createdAt: Date.now(),
@@ -114,11 +209,26 @@ async function handleRender(req: Request): Promise<Response> {
     apiKeyId: auth.apiKey.id,
     userId: auth.apiKey.userId,
     status: "success",
-    htmlHash: hashHtml(validated.html),
+    htmlHash,
+    contentHash,
     format: validated.format || "png",
     renderMs: result.stats.renderMs,
     createdAt: Date.now(),
   });
+
+  const serverTiming = `queueWait;dur=${result.stats.queueWaitMs}, render;dur=${result.stats.renderMs}, screenshot;dur=${result.stats.screenshotMs}, uploadQueue;dur=${uploadQueueMs}`;
+
+  // Return base64 response if requested
+  if (validated.responseFormat === "base64") {
+    const base64 = Buffer.from(result.buffer).toString("base64");
+    return jsonResponse({
+      id,
+      base64,
+      mimeType: result.contentType,
+    },
+    200,
+    { "Server-Timing": serverTiming });
+  }
 
   return jsonResponse({
     id,
@@ -126,14 +236,45 @@ async function handleRender(req: Request): Promise<Response> {
     imageKey,
   },
   200,
-  {
-    "Server-Timing": `queueWait;dur=${result.stats.queueWaitMs}, render;dur=${result.stats.renderMs}, screenshot;dur=${result.stats.screenshotMs}, uploadQueue;dur=${uploadQueueMs}`,
-  });
+  { "Server-Timing": serverTiming });
 }
 
 function hashHtml(html: string): string {
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(html);
+  return hasher.digest("hex");
+}
+
+function computeContentHash(request: {
+  html?: string;
+  url?: string;
+  css?: string;
+  googleFonts?: string[];
+  selector?: string;
+  width?: number;
+  height?: number;
+  deviceScaleFactor?: number;
+  format?: string;
+  quality?: number;
+  fullPage?: boolean;
+  background?: string;
+}): string {
+  const hasher = new Bun.CryptoHasher("sha256");
+  // Include all rendering parameters that affect output
+  hasher.update(JSON.stringify({
+    html: request.html,
+    url: request.url,
+    css: request.css,
+    googleFonts: request.googleFonts?.sort(),
+    selector: request.selector,
+    width: request.width || 1200,
+    height: request.height || 800,
+    deviceScaleFactor: request.deviceScaleFactor || 1,
+    format: request.format || "png",
+    quality: request.quality,
+    fullPage: request.fullPage || false,
+    background: request.background || "white",
+  }));
   return hasher.digest("hex");
 }
 
@@ -217,10 +358,27 @@ async function handleReadyz(): Promise<Response> {
   );
 }
 
+function withCors(res: Response, origin?: string | null): Response {
+  if (!CORS_ORIGIN) return res;
+  const allowed = CORS_ORIGIN === "*" ? "*" : CORS_ORIGIN;
+  if (allowed !== "*" && origin && !allowed.split(",").includes(origin)) return res;
+  res.headers.set("Access-Control-Allow-Origin", allowed === "*" ? "*" : (origin || allowed.split(",")[0]!));
+  res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.headers.set("Access-Control-Max-Age", "86400");
+  return res;
+}
+
 async function handleRequest(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const path = url.pathname;
   const method = req.method;
+  const origin = req.headers.get("Origin");
+
+  // CORS preflight
+  if (method === "OPTIONS" && CORS_ORIGIN) {
+    return withCors(new Response(null, { status: 204 }), origin);
+  }
 
   // Dev testing interface (dev mode only)
   if (IS_DEV && path === "/dev" && method === "GET") {
@@ -231,24 +389,24 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   if (path === "/render" && method === "POST") {
-    return handleRender(req);
+    return withCors(await handleRender(req), origin);
   }
 
   // GET /images/:id
   const imageMatch = path.match(/^\/images\/([^/]+)$/);
   if (imageMatch && method === "GET") {
-    return handleGetImage(imageMatch[1] || "");
+    return withCors(await handleGetImage(imageMatch[1] || ""), origin);
   }
 
   if (path === "/healthz" && method === "GET") {
-    return handleHealthz();
+    return withCors(await handleHealthz(), origin);
   }
 
   if (path === "/readyz" && method === "GET") {
-    return handleReadyz();
+    return withCors(await handleReadyz(), origin);
   }
 
-  return jsonResponse({ code: "NOT_FOUND", message: "Endpoint not found" }, 404);
+  return withCors(jsonResponse({ code: "NOT_FOUND", message: "Endpoint not found" }, 404), origin);
 }
 
 // Initialize browser pool and start server

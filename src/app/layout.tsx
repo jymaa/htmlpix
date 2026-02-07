@@ -15,8 +15,26 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "HTMLPix",
-  description: "HTML to Image API",
+  title: {
+    default: "HTMLPix - HTML to Image API",
+    template: "%s | HTMLPix",
+  },
+  description:
+    "Generate images from HTML/CSS with a single API call. OG images, social cards, receipts, certificates — at scale. Free tier included.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://htmlpix.com"),
+  openGraph: {
+    type: "website",
+    siteName: "HTMLPix",
+    title: "HTMLPix - HTML to Image API",
+    description:
+      "Generate images from HTML/CSS with a single API call. OG images, social cards, receipts, certificates — at scale.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HTMLPix - HTML to Image API",
+    description:
+      "Generate images from HTML/CSS with a single API call. Free tier included.",
+  },
 };
 
 export default function RootLayout({

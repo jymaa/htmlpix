@@ -15,7 +15,7 @@ export interface CachedApiKey {
 export interface CachedQuota {
   _id: Id<"quotas">;
   userId: string;
-  plan: "starter" | "pro" | "scale";
+  plan: "free" | "starter" | "pro" | "scale";
   monthlyLimit: number;
   currentUsage: number;
   stripeSubscriptionStatus?: string;

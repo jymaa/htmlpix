@@ -1,0 +1,50 @@
+export const metadata = {
+  title: "Rate Limits",
+  description: "Understand HTMLPix API rate limits, quotas, and how to handle limit errors."
+}
+
+# Rate Limits
+
+## Overview
+
+HTMLPix uses monthly render quotas rather than per-second rate limits. Your plan determines how many renders you can make per calendar month.
+
+## Plan Limits
+
+| Plan | Renders / Month |
+|------|-----------------|
+| Free | 50 |
+| Starter | 1,000 |
+| Pro | 3,000 |
+| Scale | 10,000 |
+
+## How Limits Work
+
+- **Only successful renders count** toward your quota. Failed renders (4xx/5xx responses) do not consume any quota.
+- **Usage resets** at the start of each calendar month at midnight UTC.
+- **Check your current usage** anytime via the dashboard.
+
+## Handling Quota Exceeded (429)
+
+When you exceed your monthly quota, the API returns a `429 Too Many Requests` response with the error code `QUOTA_EXCEEDED`:
+
+```json
+{
+  "code": "QUOTA_EXCEEDED",
+  "message": "Monthly quota of 1000 renders exceeded"
+}
+```
+
+### What to do
+
+- **Upgrade your plan** from the dashboard to immediately increase your quota.
+- **Wait for the monthly reset** if you don't need additional renders right away. Your quota resets on the 1st of the next month at midnight UTC.
+
+## Concurrent Requests
+
+There is no hard per-second rate limit. However, very high burst traffic may be queued on the server side. For best results, limit concurrent requests to **10-20** at a time.
+
+## Monitoring Usage
+
+- **Dashboard** -- View real-time render counts and remaining quota on your dashboard.
+- **Response header** -- Inspect the `X-Usage-Remaining` header on API responses to programmatically track how many renders you have left.

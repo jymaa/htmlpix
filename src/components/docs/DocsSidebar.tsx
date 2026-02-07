@@ -18,6 +18,8 @@ const navItems = [
   { href: "/docs/authentication", label: "Authentication" },
   { href: "/docs/endpoints", label: "Endpoints" },
   { href: "/docs/examples", label: "Examples" },
+  { href: "/docs/rate-limits", label: "Rate Limits" },
+  { href: "/docs/image-storage", label: "Image Storage" },
   { href: "/docs/errors", label: "Errors" },
   { href: "/docs/faq", label: "FAQ" },
 ];

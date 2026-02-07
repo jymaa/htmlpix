@@ -46,8 +46,8 @@ export default function Home() {
               <div className="relative mb-8 border-l-2 border-[#1a1a1a]/20 pl-6 md:mb-12 md:pl-8">
                 <div className="absolute top-0 left-0 h-2 w-2 -translate-x-[5px] bg-[#ff4d00]" />
                 <p className="max-w-xl text-base leading-relaxed text-[#1a1a1a]/60 md:text-lg">
-                  Precision rendering API for developers. Transform your HTML and CSS markup into
-                  pixel-perfect image assets with sub-200ms latency.
+                  Generate images from HTML/CSS with a single API call. OG images, social cards,
+                  receipts, certificates — at scale. Free tier included.
                 </p>
               </div>
 
@@ -74,7 +74,7 @@ export default function Home() {
                 className="group inline-flex items-center gap-3 bg-[#ff4d00] px-6 py-3 text-[#f5f0e8] transition-colors hover:bg-[#1a1a1a] md:gap-4 md:px-8 md:py-4"
               >
                 <span className="text-xs font-bold tracking-widest uppercase md:text-sm">
-                  Request API Access
+                  Start Free
                 </span>
                 <svg
                   className="h-4 w-4 transform transition-transform group-hover:translate-x-1 md:h-5 md:w-5"
@@ -312,6 +312,75 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {/* Use Cases */}
+      <section className="relative z-10 bg-[#1a1a1a] px-4 py-16 md:px-8 md:py-32">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 flex flex-col gap-4 md:mb-16 md:flex-row md:items-center md:gap-8">
+            <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
+              USE CASES
+            </div>
+            <div className="hidden h-px flex-grow bg-[#f5f0e8]/10 md:block" />
+            <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide text-[#f5f0e8] md:text-4xl">
+              What Will You Build?
+            </h2>
+            <div className="hidden h-px flex-grow bg-[#f5f0e8]/10 md:block" />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
+            {[
+              {
+                title: "OG Images",
+                desc: "Dynamic Open Graph images for every page. Boost click-through rates on social media with unique, branded previews.",
+                tag: "SEO",
+              },
+              {
+                title: "Social Cards",
+                desc: "Auto-generate Twitter/X cards, LinkedIn previews, and Discord embeds from your app data in real-time.",
+                tag: "SOCIAL",
+              },
+              {
+                title: "Receipts & Invoices",
+                desc: "Pixel-perfect PDF-quality receipts rendered from HTML templates. Email-ready, print-ready.",
+                tag: "COMMERCE",
+              },
+              {
+                title: "Certificates",
+                desc: "Generate personalized certificates, diplomas, and awards at scale with dynamic data injection.",
+                tag: "EDUCATION",
+              },
+              {
+                title: "Email Headers",
+                desc: "Dynamic email banner images that bypass rendering inconsistencies across email clients.",
+                tag: "MARKETING",
+              },
+              {
+                title: "Dynamic Banners",
+                desc: "Real-time promotional banners, countdown timers, and personalized hero images for any platform.",
+                tag: "ADS",
+              },
+            ].map((useCase, i) => (
+              <div
+                key={i}
+                className="group border border-[#f5f0e8]/10 p-6 transition-colors hover:border-[#ff4d00]/50"
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-[10px] font-bold tracking-wider text-[#ff4d00] uppercase">
+                    {useCase.tag}
+                  </span>
+                  <div className="h-1.5 w-1.5 bg-[#f5f0e8]/10 transition-colors group-hover:bg-[#ff4d00]" />
+                </div>
+                <h3 className="mb-2 font-[family-name:var(--font-bebas-neue)] text-2xl tracking-wide text-[#f5f0e8]">
+                  {useCase.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-[#f5f0e8]/40">
+                  {useCase.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Code Example */}
       <section className="relative z-10 overflow-hidden bg-[#0d0d0d] px-4 py-16 md:px-8 md:py-32">
         {/* Ambient glow effect */}
@@ -638,8 +707,16 @@ export default function Home() {
             <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-4">
             {[
+              {
+                tier: "TIER-0",
+                name: "Free",
+                planId: "free",
+                price: 0,
+                renders: "50",
+                desc: "Try it out — no credit card required",
+              },
               {
                 tier: "TIER-A",
                 name: "Starter",
@@ -695,11 +772,13 @@ export default function Home() {
                     <span
                       className={`font-[family-name:var(--font-bebas-neue)] text-6xl ${plan.recommended ? "text-[#ff4d00]" : "text-[#ff4d00]"}`}
                     >
-                      ${plan.price}
+                      {plan.price === 0 ? "Free" : `$${plan.price}`}
                     </span>
-                    <span className={plan.recommended ? "text-[#f5f0e8]/30" : "text-[#1a1a1a]/30"}>
-                      /month
-                    </span>
+                    {plan.price > 0 && (
+                      <span className={plan.recommended ? "text-[#f5f0e8]/30" : "text-[#1a1a1a]/30"}>
+                        /month
+                      </span>
+                    )}
                   </div>
                   <div
                     className={`mt-2 text-sm ${plan.recommended ? "text-[#f5f0e8]/50" : "text-[#1a1a1a]/50"}`}
@@ -734,7 +813,7 @@ export default function Home() {
                       : "bg-[#1a1a1a] text-[#f5f0e8] hover:bg-[#ff4d00]"
                   }`}
                 >
-                  Select {plan.name}
+                  {plan.price === 0 ? "Start Free" : `Select ${plan.name}`}
                 </Link>
               </div>
             ))}
@@ -748,13 +827,13 @@ export default function Home() {
             READY TO BUILD?
           </h2>
           <p className="mx-auto mb-8 max-w-xl text-base text-white/70 md:mb-10 md:text-lg">
-            Get your API key and start rendering images in minutes. Full documentation included.
+            50 free renders per month. No credit card required. Get your API key in under a minute.
           </p>
           <Link
             href="/login"
             className="inline-flex items-center gap-3 bg-white px-6 py-4 font-bold tracking-wider text-[#ff4d00] uppercase transition-colors hover:bg-[#1a1a1a] hover:text-white md:gap-4 md:px-10 md:py-5"
           >
-            Access API Documentation
+            Start Free
             <svg className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -775,15 +854,21 @@ export default function Home() {
             </div>
             <span className="font-bold tracking-wider">HTMLPIX</span>
           </div>
-          <div className="flex gap-4 text-xs tracking-widest text-[#1a1a1a]/30 uppercase md:gap-8">
+          <div className="flex flex-wrap justify-center gap-4 text-xs tracking-widest text-[#1a1a1a]/30 uppercase md:gap-8">
             <Link href="/docs" className="transition-colors hover:text-[#ff4d00]">
-              Documentation
+              Docs
             </Link>
-            <Link href="#" className="transition-colors hover:text-[#ff4d00]">
+            <Link href="/#pricing" className="transition-colors hover:text-[#ff4d00]">
+              Pricing
+            </Link>
+            <Link href="/status" className="transition-colors hover:text-[#ff4d00]">
               Status
             </Link>
+            <Link href="/login" className="transition-colors hover:text-[#ff4d00]">
+              Login
+            </Link>
           </div>
-          <span className="text-xs text-[#1a1a1a]/20">© 2025 HTMLPix</span>
+          <span className="text-xs text-[#1a1a1a]/20">© 2026 HTMLPix</span>
         </div>
       </footer>
     </div>

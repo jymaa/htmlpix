@@ -24,7 +24,12 @@
       "Bash(npm view:*)",
       "WebFetch(domain:labs.convex.dev)",
       "Bash(bunx --bun shadcn@latest add:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "WebFetch(domain:docs.htmlcsstoimage.com)",
+      "WebFetch(domain:htmlcsstoimage.com)",
+      "WebFetch(domain:pictify.io)",
+      "Bash(npx tsc:*)",
+      "Bash(bun install:*)"
     ]
   }
 }

@@ -10,7 +10,7 @@ export function PublicHeader() {
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 bg-[#f5f0e8]/80 font-[family-name:var(--font-space-mono)] backdrop-blur-xl">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-8 py-6 md:px-0">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-8 py-6">
         <Link href="/" className="group flex items-center gap-3">
           <div className="relative flex h-10 w-10 items-center justify-center border-2 border-[#1a1a1a]">
             <span className="font-bold text-[#1a1a1a]">{"<>"}</span>
@@ -48,6 +48,13 @@ export function PublicHeader() {
             Docs
           </Link>
           <Link
+            href="/pricing"
+            className="flex items-center gap-2 text-[#1a1a1a]/50 transition-colors hover:text-[#ff4d00]"
+          >
+            <span className="h-1 w-1 bg-current" />
+            Pricing
+          </Link>
+          <Link
             href={session ? "/dashboard" : "/login"}
             className="border-2 border-[#1a1a1a] px-4 py-2 text-[#1a1a1a] transition-colors hover:bg-[#1a1a1a] hover:text-[#f5f0e8] md:px-5"
           >
@@ -75,6 +82,9 @@ export function PublicHeader() {
               </>
               <Link href="/docs" className="text-[#1a1a1a]/70 transition-colors hover:text-[#ff4d00]">
                 Docs
+              </Link>
+              <Link href="/pricing" className="text-[#1a1a1a]/70 transition-colors hover:text-[#ff4d00]">
+                Pricing
               </Link>
               <Link
                 href={session ? "/dashboard" : "/login"}

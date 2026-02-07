@@ -1,4 +1,4 @@
-import type { Page, ScreenshotOptions } from "puppeteer";
+import type { Page, ScreenshotOptions, BoundingBox } from "puppeteer";
 import { browserPool } from "./browserPool";
 import { injectGoogleFonts } from "./googleFonts";
 import { createRequestInterceptor, updateBytesDownloaded, type RequestStats } from "./requestPolicy";
@@ -27,38 +27,38 @@ export interface RenderError {
   message: string;
 }
 
-function buildHtml(request: RenderRequest, useTransparentBackground: boolean): string {
-  let html = request.html;
+function buildHtml(html: string, request: RenderRequest, useTransparentBackground: boolean): string {
+  let result = html;
 
   // Inject default white background unless transparent is requested
   // This prevents grey/dark backgrounds in headless Chrome
   if (!useTransparentBackground) {
     const defaultBgStyle = `<style>html, body { background-color: white; }</style>`;
-    const headCloseIndex = html.toLowerCase().indexOf("</head>");
+    const headCloseIndex = result.toLowerCase().indexOf("</head>");
     if (headCloseIndex !== -1) {
-      html = html.slice(0, headCloseIndex) + defaultBgStyle + "\n" + html.slice(headCloseIndex);
+      result = result.slice(0, headCloseIndex) + defaultBgStyle + "\n" + result.slice(headCloseIndex);
     } else {
-      html = defaultBgStyle + "\n" + html;
+      result = defaultBgStyle + "\n" + result;
     }
   }
 
   // Inject CSS if provided (after default bg so user CSS can override)
   if (request.css) {
     const styleTag = `<style>${request.css}</style>`;
-    const headCloseIndex = html.toLowerCase().indexOf("</head>");
+    const headCloseIndex = result.toLowerCase().indexOf("</head>");
     if (headCloseIndex !== -1) {
-      html = html.slice(0, headCloseIndex) + styleTag + "\n" + html.slice(headCloseIndex);
+      result = result.slice(0, headCloseIndex) + styleTag + "\n" + result.slice(headCloseIndex);
     } else {
-      html = styleTag + "\n" + html;
+      result = styleTag + "\n" + result;
     }
   }
 
   // Inject Google Fonts
   if (request.googleFonts && request.googleFonts.length > 0) {
-    html = injectGoogleFonts(html, request.googleFonts);
+    result = injectGoogleFonts(result, request.googleFonts);
   }
 
-  return html;
+  return result;
 }
 
 export async function render(request: RenderRequest): Promise<RenderResult | RenderError> {
@@ -87,7 +87,8 @@ export async function render(request: RenderRequest): Promise<RenderResult | Ren
 
     // Set up request interception
     const useGoogleFonts = (request.googleFonts && request.googleFonts.length > 0) || false;
-    const { handler } = createRequestInterceptor(useGoogleFonts);
+    const allowAllDomains = !!request.url; // Allow all domains in URL mode
+    const { handler } = createRequestInterceptor(useGoogleFonts, allowAllDomains);
 
     await page.setRequestInterception(true);
     page.on("request", (req) => handler(req, requestStats));
@@ -97,15 +98,24 @@ export async function render(request: RenderRequest): Promise<RenderResult | Ren
       updateBytesDownloaded(requestStats, contentLength);
     });
 
-    // Build and set content
     const useTransparentBackground = request.background === "transparent";
-    const html = buildHtml(request, useTransparentBackground);
     const timeoutMs = request.timeoutMs || DEFAULT_TIMEOUT_MS;
 
-    await page.setContent(html, {
-      waitUntil: "load",
-      timeout: timeoutMs,
-    });
+    // Either navigate to URL or set HTML content
+    if (request.url) {
+      // URL mode: navigate to the URL
+      await page.goto(request.url, {
+        waitUntil: "load",
+        timeout: timeoutMs,
+      });
+    } else if (request.html) {
+      // HTML mode: set content directly
+      const html = buildHtml(request.html, request, useTransparentBackground);
+      await page.setContent(html, {
+        waitUntil: "load",
+        timeout: timeoutMs,
+      });
+    }
 
     // Wait for all images to be fully loaded (both <img> and CSS background-image)
     const waitForAssets = page.evaluate(`
@@ -179,6 +189,28 @@ export async function render(request: RenderRequest): Promise<RenderResult | Ren
 
     if ((format === "jpeg" || format === "webp") && request.quality !== undefined) {
       screenshotOptions.quality = request.quality;
+    }
+
+    // Handle DOM selector targeting
+    if (request.selector) {
+      const element = await page.$(request.selector);
+      if (!element) {
+        return {
+          code: "SELECTOR_NOT_FOUND",
+          message: `Element not found for selector: ${request.selector}`,
+        };
+      }
+      const boundingBox = await element.boundingBox();
+      if (boundingBox) {
+        screenshotOptions.clip = {
+          x: boundingBox.x,
+          y: boundingBox.y,
+          width: boundingBox.width,
+          height: boundingBox.height,
+        };
+        // When using clip, fullPage should be false
+        screenshotOptions.fullPage = false;
+      }
     }
 
     const buffer = await page.screenshot(screenshotOptions);

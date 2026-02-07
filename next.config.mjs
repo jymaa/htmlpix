@@ -12,6 +12,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "impressive-cod-713.convex.cloud",
       },
+      {
+        protocol: "https",
+        hostname: "dev-asia.504fe3e01303e85e7c073450f63e27cb.r2.cloudflarestorage.com",
+      },
     ],
   },
 };

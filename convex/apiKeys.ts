@@ -1,6 +1,8 @@
 import { query, mutation } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { usageAggregate } from "./usage";
+import { r2 } from "./images";
 
 function generateApiKey(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -48,8 +50,19 @@ export const createKey = mutation({
     const keyHash = await hashKey(rawKey);
     const keyPrefix = rawKey.slice(0, 12);
 
-    // Note: Quota is now created via Stripe subscription flow
-    // Users need an active subscription to use the API
+    // Auto-provision free quota if user has no quota yet
+    const existingQuota = await ctx.db
+      .query("quotas")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!existingQuota) {
+      await ctx.db.insert("quotas", {
+        userId,
+        plan: "free",
+        monthlyLimit: 50,
+      });
+    }
 
     const keyId = await ctx.db.insert("apiKeys", {
       userId,
@@ -139,5 +152,45 @@ export const getUserRenders = query({
       .take(limit ?? 50);
 
     return renders;
+  },
+});
+
+export const getUserRendersPaginated = query({
+  args: {
+    userId: v.string(),
+    paginationOpts: paginationOptsValidator,
+    statusFilter: v.optional(v.union(v.literal("success"), v.literal("error"))),
+    formatFilter: v.optional(v.string()),
+  },
+  handler: async (ctx, { userId, paginationOpts, statusFilter, formatFilter }) => {
+    let q = ctx.db
+      .query("renders")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .order("desc");
+
+    if (statusFilter) {
+      q = q.filter((f) => f.eq(f.field("status"), statusFilter));
+    }
+    if (formatFilter) {
+      q = q.filter((f) => f.eq(f.field("format"), formatFilter));
+    }
+
+    const result = await q.paginate(paginationOpts);
+
+    const page = await Promise.all(
+      result.page.map(async (render) => {
+        let imageUrl: string | undefined;
+        if (render.imageKey) {
+          try {
+            imageUrl = await r2.getUrl(render.imageKey);
+          } catch {
+            // Signed URL generation failed — leave undefined
+          }
+        }
+        return { ...render, imageUrl };
+      })
+    );
+
+    return { ...result, page };
   },
 });

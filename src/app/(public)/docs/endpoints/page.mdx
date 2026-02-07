@@ -1,24 +1,115 @@
+export const metadata = {
+  title: "Endpoints",
+  description: "Complete HTMLPix API endpoint reference. POST /render for HTML-to-image conversion, GET /images/:id for retrieval."
+}
+
 # Endpoints
 
 ## POST /render
 
-Render HTML to an image.
+Render HTML or a URL to an image.
 
 ### Request Body
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `html` | string | Yes | HTML content to render (max 500KB) |
+| `html` | string | Yes* | HTML content to render (max 500KB) |
+| `url` | string | Yes* | URL to screenshot (max 2048 chars) |
 | `css` | string | No | CSS styles to inject (max 200KB) |
-| `width` | number | No | Viewport width in pixels (1-4096, default: 800) |
-| `height` | number | No | Viewport height in pixels (1-4096, default: 600) |
+| `selector` | string | No | CSS selector to capture specific element |
+| `width` | number | No | Viewport width in pixels (1-4096, default: 1200) |
+| `height` | number | No | Viewport height in pixels (1-4096, default: 800) |
 | `format` | string | No | "png", "jpeg", or "webp" (default: "png") |
 | `quality` | number | No | Image quality 0-100 (for jpeg/webp) |
 | `deviceScaleFactor` | number | No | Device scale factor 0.5-4 (default: 1) |
 | `fullPage` | boolean | No | Capture full scrollable page |
 | `background` | string | No | "transparent" or "white" (default: "white") |
 | `googleFonts` | string[] | No | Google Fonts to load (max 20) |
-| `timeoutMs` | number | No | Render timeout 100-60000ms (default: 30000) |
+| `timeoutMs` | number | No | Render timeout 100-60000ms (default: 5000) |
+| `responseFormat` | string | No | "url" or "base64" (default: "url") |
+| `cache` | boolean | No | Enable duplicate detection cache (default: true) |
+
+| `templateId` | string | Yes* | Render a saved template by ID |
+| `variables` | object | No | Key-value pairs for template placeholders |
+
+*Exactly one of `html`, `url`, or `templateId` is required.
+
+### URL Screenshots
+
+Capture a screenshot of any public URL:
+
+```json
+{
+  "url": "https://example.com",
+  "width": 1280,
+  "height": 720
+}
+```
+
+### DOM Selector Targeting
+
+Screenshot a specific element using a CSS selector:
+
+```json
+{
+  "html": "<div id='card'>...</div>",
+  "selector": "#card"
+}
+```
+
+The selector can be used with both HTML and URL modes.
+
+### Base64 Response
+
+Get the image data directly in the response instead of a URL:
+
+```json
+{
+  "html": "<h1>Hello</h1>",
+  "responseFormat": "base64"
+}
+```
+
+Response:
+```json
+{
+  "id": "abc123",
+  "base64": "iVBORw0KGgo...",
+  "mimeType": "image/png"
+}
+```
+
+### Template Rendering
+
+Render a saved template with dynamic variables:
+
+```json
+{
+  "templateId": "your_template_id",
+  "variables": {
+    "title": "My Blog Post",
+    "author": "Jane Smith",
+    "date": "Jan 2026"
+  }
+}
+```
+
+Templates use `{{variableName}}` placeholders in HTML/CSS that get replaced with the provided values. Create and manage templates in the [dashboard](/templates).
+
+### Duplicate Detection
+
+By default, identical render requests return cached results. This saves compute and provides faster responses. Disable with `cache: false` if you need fresh renders.
+
+When a cached result is returned, the response includes `cached: true`:
+
+```json
+{
+  "id": "abc123",
+  "url": "https://...",
+  "imageKey": "abc123.png",
+  "cached": true
+}
+```
 
 ## GET /images/:id
 

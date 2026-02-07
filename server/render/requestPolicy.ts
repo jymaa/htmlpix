@@ -31,7 +31,8 @@ export interface RequestStats {
 }
 
 export function createRequestInterceptor(
-  useGoogleFonts: boolean
+  useGoogleFonts: boolean,
+  allowAllDomains = false
 ): {
   handler: (request: HTTPRequest, stats: RequestStats) => Promise<void>;
   stats: RequestStats;
@@ -65,12 +66,17 @@ export function createRequestInterceptor(
         return;
       }
 
-      // For non-document requests, check allowlist (images allowed from any host)
-      if (resourceType !== "document" && resourceType !== "image") {
-        if (!isGoogleFonts && !isAdditionalAllowed) {
-          stats.blockedCount++;
-          await request.abort("blockedbyclient");
-          return;
+      // In URL mode (allowAllDomains), allow all document/stylesheet/font/image requests
+      if (allowAllDomains) {
+        // All allowed resource types pass through
+      } else {
+        // For non-document requests, check allowlist (images allowed from any host)
+        if (resourceType !== "document" && resourceType !== "image") {
+          if (!isGoogleFonts && !isAdditionalAllowed) {
+            stats.blockedCount++;
+            await request.abort("blockedbyclient");
+            return;
+          }
         }
       }
     }

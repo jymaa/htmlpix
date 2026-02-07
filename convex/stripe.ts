@@ -1,16 +1,17 @@
 import { internalMutation, internalQuery, query } from "./_generated/server";
-import { components } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import { v } from "convex/values";
+import { workflow } from "./emailWorkflows";
 
 // Re-export actions from stripeActions.ts
 export { createCheckoutSession, createPortalSession, syncSubscription } from "./stripeActions";
 
-const PLAN_PRICES: Record<string, { plan: "starter" | "pro" | "scale"; limit: number }> = {
+const PLAN_PRICES: Record<string, { plan: "free" | "starter" | "pro" | "scale"; limit: number }> = {
   // These will be set in Stripe Dashboard - use env vars or hardcode after creation
   // Format: price_xxx -> { plan, limit }
 };
 
-function getPlanFromPriceId(priceId: string): { plan: "starter" | "pro" | "scale"; limit: number } {
+function getPlanFromPriceId(priceId: string): { plan: "free" | "starter" | "pro" | "scale"; limit: number } {
   // Check hardcoded mappings first
   if (PLAN_PRICES[priceId]) {
     return PLAN_PRICES[priceId];
@@ -163,6 +164,9 @@ export const handleCheckoutCompleted = internalMutation({
         update: { stripeCustomerId },
       },
     });
+
+    // Start post-upgrade email workflow
+    await workflow.start(ctx, internal.emailWorkflows.postUpgradeWorkflow, { userId });
   },
 });
 
@@ -184,6 +188,7 @@ export const syncSubscriptionFromWebhook = internalMutation({
       return;
     }
 
+    const previousCancelAtPeriodEnd = quota.cancelAtPeriodEnd;
     const { plan, limit } = getPlanFromPriceId(args.priceId);
 
     await ctx.db.patch(quota._id, {
@@ -194,6 +199,13 @@ export const syncSubscriptionFromWebhook = internalMutation({
       currentPeriodEnd: args.currentPeriodEnd,
       cancelAtPeriodEnd: args.cancelAtPeriodEnd,
     });
+
+    // Start cancellation email workflow when cancelAtPeriodEnd flips to true
+    if (args.cancelAtPeriodEnd && !previousCancelAtPeriodEnd) {
+      await workflow.start(ctx, internal.emailWorkflows.cancellationWorkflow, {
+        userId: quota.userId,
+      });
+    }
   },
 });
 

@@ -1,9 +1,16 @@
+export const metadata = {
+  title: "Examples",
+  description: "HTMLPix API code examples in TypeScript, Python, and curl. OG images, social cards, and more."
+}
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.htmlpix.com";
 
 # Code Examples
+
+## Basic HTML Render
 
 <Tabs defaultValue="curl" className="w-full">
   <TabsList className="grid w-full grid-cols-3">
@@ -24,8 +31,7 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.html
     "width": 1200,
     "height": 630,
     "format": "png"
-  }' \\
-  --output og-image.png`}
+  }'`}
     />
   </TabsContent>
   <TabsContent value="typescript" className="mt-4">
@@ -48,13 +54,8 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.html
     }),
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message);
-  }
-
-  const imageBuffer = await response.arrayBuffer();
-  return Buffer.from(imageBuffer);
+  const data = await response.json();
+  return data; // { id, url, imageKey }
 }`}
     />
   </TabsContent>
@@ -80,15 +81,154 @@ def render_image():
             'format': 'png',
         },
     )
+    return response.json()  # { id, url, imageKey }`}
+    />
+  </TabsContent>
+</Tabs>
 
-    if not response.ok:
-        raise Exception(response.json()['message'])
+## URL Screenshot
 
-    return response.content
+Capture a screenshot of any public URL:
 
-# Save to file
-with open('image.png', 'wb') as f:
-    f.write(render_image())`}
+<Tabs defaultValue="curl" className="w-full">
+  <TabsList className="grid w-full grid-cols-2">
+    <TabsTrigger value="curl">cURL</TabsTrigger>
+    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
+  </TabsList>
+  <TabsContent value="curl" className="mt-4">
+    <CodeBlock
+      language="bash"
+      filename="screenshot-url.sh"
+      code={`curl -X POST ${API_BASE_URL}/render \\
+  -H "Authorization: Bearer hpx_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "url": "https://example.com",
+    "width": 1280,
+    "height": 720,
+    "format": "png"
+  }'`}
+    />
+  </TabsContent>
+  <TabsContent value="typescript" className="mt-4">
+    <CodeBlock
+      language="typescript"
+      filename="screenshot-url.ts"
+      code={`async function screenshotUrl(url: string) {
+  const response = await fetch('${API_BASE_URL}/render', {
+    method: 'POST',
+    headers: {
+      'Authorization': \`Bearer \${process.env.HTMLPIX_API_KEY}\`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url,
+      width: 1280,
+      height: 720,
+      format: 'png',
+    }),
+  });
+
+  return response.json();
+}`}
+    />
+  </TabsContent>
+</Tabs>
+
+## Element Selector
+
+Screenshot a specific element using a CSS selector:
+
+<Tabs defaultValue="curl" className="w-full">
+  <TabsList className="grid w-full grid-cols-2">
+    <TabsTrigger value="curl">cURL</TabsTrigger>
+    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
+  </TabsList>
+  <TabsContent value="curl" className="mt-4">
+    <CodeBlock
+      language="bash"
+      filename="screenshot-element.sh"
+      code={`curl -X POST ${API_BASE_URL}/render \\
+  -H "Authorization: Bearer hpx_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "html": "<div id=\\"card\\"><h1>Card Title</h1></div><footer>Footer</footer>",
+    "css": "#card { padding: 20px; background: white; }",
+    "selector": "#card"
+  }'`}
+    />
+  </TabsContent>
+  <TabsContent value="typescript" className="mt-4">
+    <CodeBlock
+      language="typescript"
+      filename="screenshot-element.ts"
+      code={`async function screenshotElement(html: string, selector: string) {
+  const response = await fetch('${API_BASE_URL}/render', {
+    method: 'POST',
+    headers: {
+      'Authorization': \`Bearer \${process.env.HTMLPIX_API_KEY}\`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      html,
+      selector,
+      format: 'png',
+    }),
+  });
+
+  return response.json();
+}`}
+    />
+  </TabsContent>
+</Tabs>
+
+## Base64 Response
+
+Get image data directly instead of a URL:
+
+<Tabs defaultValue="curl" className="w-full">
+  <TabsList className="grid w-full grid-cols-2">
+    <TabsTrigger value="curl">cURL</TabsTrigger>
+    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
+  </TabsList>
+  <TabsContent value="curl" className="mt-4">
+    <CodeBlock
+      language="bash"
+      filename="base64-response.sh"
+      code={`curl -X POST ${API_BASE_URL}/render \\
+  -H "Authorization: Bearer hpx_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "html": "<h1>Hello World</h1>",
+    "responseFormat": "base64"
+  }'
+
+# Response: { "id": "...", "base64": "iVBORw0K...", "mimeType": "image/png" }`}
+    />
+  </TabsContent>
+  <TabsContent value="typescript" className="mt-4">
+    <CodeBlock
+      language="typescript"
+      filename="base64-response.ts"
+      code={`async function renderToBase64(html: string) {
+  const response = await fetch('${API_BASE_URL}/render', {
+    method: 'POST',
+    headers: {
+      'Authorization': \`Bearer \${process.env.HTMLPIX_API_KEY}\`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      html,
+      responseFormat: 'base64',
+    }),
+  });
+
+  const { base64, mimeType } = await response.json();
+
+  // Convert to buffer if needed
+  const buffer = Buffer.from(base64, 'base64');
+  return { buffer, mimeType };
+}`}
     />
   </TabsContent>
 </Tabs>

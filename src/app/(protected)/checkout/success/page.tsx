@@ -58,8 +58,8 @@ export default function CheckoutSuccessPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/billing">
-              <Button>Return to Billing</Button>
+            <Link href="/settings">
+              <Button>Return to Settings</Button>
             </Link>
           </CardContent>
         </Card>

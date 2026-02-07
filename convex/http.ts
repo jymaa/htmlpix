@@ -1,4 +1,5 @@
 import { httpRouter } from "convex/server";
+import { httpAction } from "./_generated/server";
 import { authComponent, createAuth } from "./auth";
 import { components } from "./_generated/api";
 import { registerRoutes } from "@convex-dev/stripe";
@@ -85,5 +86,58 @@ registerRoutes(http, components.stripe, {
     },
   },
 });
+
+http.route({
+  path: "/unsubscribe",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const token = url.searchParams.get("token");
+    const category = url.searchParams.get("category");
+
+    if (!token || !category) {
+      return new Response(unsubscribePage("Invalid unsubscribe link.", false), {
+        status: 400,
+        headers: { "Content-Type": "text/html" },
+      });
+    }
+
+    const success = await ctx.runMutation(internal.emailHelpers.processUnsubscribe, {
+      token,
+      category,
+    });
+
+    if (success) {
+      return new Response(
+        unsubscribePage(
+          `You've been unsubscribed from ${category.replace("_", " ")} emails.`,
+          true
+        ),
+        { status: 200, headers: { "Content-Type": "text/html" } }
+      );
+    }
+
+    return new Response(unsubscribePage("Invalid or expired unsubscribe link.", false), {
+      status: 400,
+      headers: { "Content-Type": "text/html" },
+    });
+  }),
+});
+
+function unsubscribePage(message: string, success: boolean): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribe — HTMLPix</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fafafa}
+.card{background:#fff;border-radius:12px;padding:48px;max-width:420px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+h1{font-size:20px;margin:0 0 12px;color:${success ? "#333" : "#c00"}}
+p{color:#666;margin:0 0 24px;font-size:14px;line-height:1.5}
+a{color:#ff4d00;text-decoration:none;font-size:14px}</style></head>
+<body><div class="card">
+<h1>${success ? "Done!" : "Oops"}</h1>
+<p>${message}</p>
+<a href="https://htmlpix.com">Back to HTMLPix</a>
+</div></body></html>`;
+}
 
 export default http;

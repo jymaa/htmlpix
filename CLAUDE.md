@@ -87,9 +87,12 @@ Use Bun instead of Node.js for all operations.
 - `Bun.serve()` - HTTP server (not express)
 - `Bun.file` - File I/O (prefer over node:fs)
 
-## Convex Actions Notes
 
 ## Common Pitfalls
+
+### Convex User Schema
+
+If you want to do someting that is user related with the schema, check convex/betterAuth this is where is located all the user related data.
 
 ### Convex Action use node
 If you add `"use node"`, the file can only define actions (no queries or mutations). Prefer web-safe APIs like `atob` + `Uint8Array` + `Blob`.

@@ -1,6 +1,8 @@
 import { query, mutation, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { usageAggregate } from "./usage";
+import { workflow } from "./emailWorkflows";
 
 export const getAuthData = query({
   args: {},
@@ -49,6 +51,7 @@ export const ingestRenders = mutation({
         userId: v.string(),
         status: v.union(v.literal("success"), v.literal("error")),
         htmlHash: v.string(),
+        contentHash: v.optional(v.string()),
         format: v.string(),
         renderMs: v.number(),
         imageKey: v.optional(v.string()),
@@ -61,6 +64,9 @@ export const ingestRenders = mutation({
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
 
+    // Track which users had successful renders in this batch
+    const usersWithSuccessfulRenders = new Set<string>();
+
     for (const r of renders) {
       const existing = await ctx.db
         .query("renders")
@@ -72,6 +78,7 @@ export const ingestRenders = mutation({
       await ctx.db.insert("renders", r);
 
       if (r.status === "success") {
+        usersWithSuccessfulRenders.add(r.userId);
         const usageDoc = await ctx.db.insert("usageMonthly", {
           userId: r.userId,
           year,
@@ -84,6 +91,71 @@ export const ingestRenders = mutation({
           year,
           month,
         });
+      }
+    }
+
+    // Check email triggers for users with successful renders
+    for (const userId of usersWithSuccessfulRenders) {
+      // Check for first render ever
+      const firstRenderSent = await ctx.db
+        .query("emailEvents")
+        .withIndex("by_userId_emailType", (q) =>
+          q.eq("userId", userId).eq("emailType", "first_render")
+        )
+        .first();
+
+      if (!firstRenderSent) {
+        // Count total successful renders
+        const allRenders = await ctx.db
+          .query("renders")
+          .withIndex("by_userId", (q) => q.eq("userId", userId))
+          .filter((q) => q.eq(q.field("status"), "success"))
+          .collect();
+
+        if (allRenders.length <= renders.filter((r) => r.userId === userId && r.status === "success").length) {
+          // These are their first renders ever
+          await workflow.start(ctx, internal.emailWorkflows.firstRenderWorkflow, { userId });
+        }
+      }
+
+      // Check usage milestones
+      const quota = await ctx.db
+        .query("quotas")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .first();
+
+      const monthlyLimit = quota?.monthlyLimit ?? 50;
+      const currentUsage = await usageAggregate.count(ctx, {
+        bounds: {
+          lower: { key: [userId, year, month], inclusive: true },
+          upper: { key: [userId, year, month], inclusive: true },
+        },
+      });
+
+      const usagePercent = currentUsage / monthlyLimit;
+
+      if (usagePercent >= 1) {
+        const emailType100 = `usage_100_${year}_${month}`;
+        const sent100 = await ctx.db
+          .query("emailEvents")
+          .withIndex("by_userId_emailType", (q) =>
+            q.eq("userId", userId).eq("emailType", emailType100)
+          )
+          .first();
+        if (!sent100) {
+          await workflow.start(ctx, internal.emailWorkflows.usage100Workflow, { userId });
+        }
+      } else if (usagePercent >= 0.75) {
+        const emailType75 = `usage_75_${year}_${month}`;
+        const sent75 = await ctx.db
+          .query("emailEvents")
+          .withIndex("by_userId_emailType", (q) =>
+            q.eq("userId", userId).eq("emailType", emailType75)
+          )
+          .first();
+        if (!sent75) {
+          await workflow.start(ctx, internal.emailWorkflows.usage75Workflow, { userId });
+        }
       }
     }
   },

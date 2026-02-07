@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
-import { components } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import { v } from "convex/values";
+import { workflow } from "./emailWorkflows";
 
 export const hasCompletedOnboarding = query({
   args: { userId: v.string() },
@@ -28,6 +29,9 @@ export const completeOnboarding = mutation({
         update: { onboardingCompleted: true },
       },
     });
+
+    // Start welcome email workflow
+    await workflow.start(ctx, internal.emailWorkflows.welcomeWorkflow, { userId });
 
     return { success: true };
   },

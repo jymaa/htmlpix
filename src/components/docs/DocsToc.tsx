@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 interface TocItem {
   id: string;
@@ -9,6 +10,7 @@ interface TocItem {
 }
 
 export function DocsToc() {
+  const pathname = usePathname();
   const [headings, setHeadings] = useState<TocItem[]>([]);
   const [activeId, setActiveId] = useState<string>("");
 
@@ -17,11 +19,13 @@ export function DocsToc() {
     if (!article) return;
 
     const elements = article.querySelectorAll("h2, h3");
-    const items: TocItem[] = Array.from(elements).map((el) => ({
-      id: el.id,
-      text: el.textContent?.replace("#", "").trim() || "",
-      level: parseInt(el.tagName[1]),
-    }));
+    const items: TocItem[] = Array.from(elements)
+      .filter((el) => el.id)
+      .map((el) => ({
+        id: el.id,
+        text: el.textContent?.replace("#", "").trim() || "",
+        level: parseInt(el.tagName[1]),
+      }));
     setHeadings(items);
 
     const observer = new IntersectionObserver(
@@ -37,7 +41,7 @@ export function DocsToc() {
 
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [pathname]);
 
   if (headings.length === 0) {
     return null;

@@ -10,6 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +38,7 @@ export function OnboardingModal({ userId, open, onComplete }: OnboardingModalPro
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const createKey = useMutation(api.apiKeys.createKey);
   const completeOnboarding = useMutation(api.users.completeOnboarding);
@@ -43,7 +53,7 @@ export function OnboardingModal({ userId, open, onComplete }: OnboardingModalPro
       setStep(3);
     } catch (error) {
       console.error("Failed to create key:", error);
-      alert("Failed to create API key. Please try again.");
+      setErrorMessage("Failed to create API key. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -66,6 +76,18 @@ export function OnboardingModal({ userId, open, onComplete }: OnboardingModalPro
   };
 
   return (
+    <>
+    <AlertDialog open={!!errorMessage} onOpenChange={() => setErrorMessage(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Error</AlertDialogTitle>
+          <AlertDialogDescription>{errorMessage}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogAction onClick={() => setErrorMessage(null)}>OK</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => e.preventDefault()}>
         {step === 1 && (
@@ -188,5 +210,6 @@ export function OnboardingModal({ userId, open, onComplete }: OnboardingModalPro
         )}
       </DialogContent>
     </Dialog>
+    </>
   );
 }
