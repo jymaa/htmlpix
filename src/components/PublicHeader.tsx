@@ -10,7 +10,7 @@ export function PublicHeader() {
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 bg-[#f5f0e8]/80 font-[family-name:var(--font-space-mono)] backdrop-blur-xl">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-8 py-6">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 md:px-8">
         <Link href="/" className="group flex items-center gap-3">
           <div className="relative flex h-10 w-10 items-center justify-center border-2 border-[#1a1a1a]">
             <span className="font-bold text-[#1a1a1a]">{"<>"}</span>

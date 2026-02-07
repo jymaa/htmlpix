@@ -427,7 +427,7 @@ export default function LandingV6() {
           <div className="flex flex-wrap justify-center gap-6 text-xs tracking-widest text-[#1a1a1a]/30 uppercase">
             <Link href="/docs" className="transition-colors hover:text-[#ff4d00]">Docs</Link>
             <Link href="/#pricing" className="transition-colors hover:text-[#ff4d00]">Pricing</Link>
-            <Link href="/status" className="transition-colors hover:text-[#ff4d00]">Status</Link>
+            <a href="https://status.htmlpix.com" className="transition-colors hover:text-[#ff4d00]">Status</a>
             <Link href="/login" className="transition-colors hover:text-[#ff4d00]">Login</Link>
           </div>
           <span className="text-xs text-[#1a1a1a]/20">&copy; 2026 HTMLPix</span>

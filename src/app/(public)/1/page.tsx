@@ -444,7 +444,7 @@ export default function LandingVariant1() {
           <span>htmlpix &copy; 2026</span>
           <div className="flex gap-6">
             <Link href="/docs" className="hover:text-[#ff4d00]">docs</Link>
-            <Link href="/status" className="hover:text-[#ff4d00]">status</Link>
+            <a href="https://status.htmlpix.com" className="hover:text-[#ff4d00]">status</a>
             <Link href="/login" className="hover:text-[#ff4d00]">login</Link>
           </div>
         </div>

@@ -10,6 +10,8 @@
 
 import type * as apiKeys from "../apiKeys.js";
 import type * as auth from "../auth.js";
+import type * as billing_plans from "../billing/plans.js";
+import type * as billing_reconcile from "../billing/reconcile.js";
 import type * as crons from "../crons.js";
 import type * as email from "../email.js";
 import type * as emailActions from "../emailActions.js";
@@ -47,6 +49,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   apiKeys: typeof apiKeys;
   auth: typeof auth;
+  "billing/plans": typeof billing_plans;
+  "billing/reconcile": typeof billing_reconcile;
   crons: typeof crons;
   email: typeof email;
   emailActions: typeof emailActions;

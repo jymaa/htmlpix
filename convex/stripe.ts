@@ -1,41 +1,100 @@
-import { internalMutation, internalQuery, query } from "./_generated/server";
+import { internalMutation, internalQuery, query, type MutationCtx } from "./_generated/server";
 import { components, internal } from "./_generated/api";
 import { v } from "convex/values";
 import { workflow } from "./emailWorkflows";
+import {
+  findQuotaBySubscriptionId,
+  reconcileQuotaForUser,
+  normalizePeriodEndMillis,
+} from "./billing/reconcile";
 
 // Re-export actions from stripeActions.ts
 export { createCheckoutSession, createPortalSession, syncSubscription } from "./stripeActions";
 
-const PLAN_PRICES: Record<string, { plan: "free" | "starter" | "pro" | "scale"; limit: number }> = {
-  // These will be set in Stripe Dashboard - use env vars or hardcode after creation
-  // Format: price_xxx -> { plan, limit }
+type StripeComponentSubscription = {
+  stripeSubscriptionId: string;
+  stripeCustomerId: string;
+  status: string;
+  priceId: string;
+  currentPeriodEnd: number;
+  cancelAtPeriodEnd: boolean;
+  userId?: string;
+  metadata?: Record<string, unknown>;
 };
 
-function getPlanFromPriceId(priceId: string): { plan: "free" | "starter" | "pro" | "scale"; limit: number } {
-  // Check hardcoded mappings first
-  if (PLAN_PRICES[priceId]) {
-    return PLAN_PRICES[priceId];
-  }
-
-  // Fallback: Parse from price metadata or use defaults based on amount
-  // In production, configure price IDs in env vars
-  const priceIdLower = priceId.toLowerCase();
-  if (priceIdLower.includes("starter") || priceIdLower.includes("1000")) {
-    return { plan: "starter", limit: 1000 };
-  }
-  if (priceIdLower.includes("scale") || priceIdLower.includes("10000")) {
-    return { plan: "scale", limit: 10000 };
-  }
-  // Default to pro
-  return { plan: "pro", limit: 3000 };
+function normalizeString(value: string): string {
+  return value.trim();
 }
 
-function normalizePeriodEnd(periodEnd: number): number {
-  if (!Number.isFinite(periodEnd) || periodEnd <= 0) {
-    return Date.now();
-  }
+function normalizeOptionalString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
 
-  return periodEnd < 1_000_000_000_000 ? periodEnd * 1000 : periodEnd;
+function getUserIdFromComponentSubscription(subscription: StripeComponentSubscription | null): string {
+  if (!subscription) return "";
+
+  const userIdFromField = normalizeOptionalString(subscription.userId);
+  if (userIdFromField) return userIdFromField;
+
+  const metadataUserId = normalizeOptionalString(subscription.metadata?.userId);
+  return metadataUserId;
+}
+
+async function updateStripeCustomerForUser(
+  ctx: MutationCtx,
+  userId: string,
+  stripeCustomerId: string
+): Promise<void> {
+  const normalizedUserId = normalizeString(userId);
+  const normalizedStripeCustomerId = normalizeString(stripeCustomerId);
+  if (!normalizedUserId || !normalizedStripeCustomerId) return;
+
+  await ctx.runMutation(components.betterAuth.adapter.updateOne, {
+    input: {
+      model: "user",
+      where: [{ field: "_id", value: normalizedUserId }],
+      update: { stripeCustomerId: normalizedStripeCustomerId },
+    },
+  });
+}
+
+async function resolveUserIdByStripeCustomer(
+  ctx: MutationCtx,
+  stripeCustomerId: string
+): Promise<string> {
+  const normalizedStripeCustomerId = normalizeString(stripeCustomerId);
+  if (!normalizedStripeCustomerId) return "";
+
+  const userId = await ctx.runQuery(internal.stripe.getUserIdByStripeCustomerId, {
+    stripeCustomerId: normalizedStripeCustomerId,
+  });
+
+  return normalizeOptionalString(userId);
+}
+
+async function getComponentSubscription(
+  ctx: MutationCtx,
+  stripeSubscriptionId: string
+): Promise<StripeComponentSubscription | null> {
+  const normalizedSubscriptionId = normalizeString(stripeSubscriptionId);
+  if (!normalizedSubscriptionId) return null;
+
+  const subscription = await ctx.runQuery(components.stripe.public.getSubscription, {
+    stripeSubscriptionId: normalizedSubscriptionId,
+  });
+
+  if (!subscription) return null;
+
+  return {
+    stripeSubscriptionId: normalizeString(subscription.stripeSubscriptionId),
+    stripeCustomerId: normalizeString(subscription.stripeCustomerId),
+    status: normalizeString(subscription.status),
+    priceId: normalizeString(subscription.priceId),
+    currentPeriodEnd: subscription.currentPeriodEnd,
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    userId: normalizeOptionalString(subscription.userId) || undefined,
+    metadata: subscription.metadata,
+  };
 }
 
 export const getSubscription = query({
@@ -44,6 +103,7 @@ export const getSubscription = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
     const userId = identity.subject;
+
     const user = await ctx.runQuery(components.betterAuth.adapter.findOne, {
       model: "user",
       where: [{ field: "_id", value: userId }],
@@ -95,8 +155,6 @@ export const getStripeCustomer = query({
 export const getStripeCustomerInternal = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
-    // Query Better Auth user table via component adapter
-    // userId here is actually the _id of the user document from Better Auth
     const user = await ctx.runQuery(components.betterAuth.adapter.findOne, {
       model: "user",
       where: [{ field: "_id", value: userId }],
@@ -134,8 +192,6 @@ export const ensureStripeCustomer = internalMutation({
     stripeCustomerId: v.string(),
   },
   handler: async (ctx, { userId, stripeCustomerId }) => {
-    // Update Better Auth user with stripeCustomerId
-    // userId here is actually the _id of the user document from Better Auth
     await ctx.runMutation(components.betterAuth.adapter.updateOne, {
       input: {
         model: "user",
@@ -157,75 +213,45 @@ export const handleCheckoutCompleted = internalMutation({
     cancelAtPeriodEnd: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const {
-      stripeSubscriptionId,
-      stripeCustomerId,
-      userId,
-      priceId,
-      status,
-      currentPeriodEnd,
-      cancelAtPeriodEnd,
-    } = args;
-    const normalizedCurrentPeriodEnd = normalizePeriodEnd(currentPeriodEnd);
-    const normalizedUserId = userId.trim();
-    if (!normalizedUserId) {
-      throw new Error("Cannot handle checkout completion without a userId");
+    const stripeSubscriptionId = normalizeString(args.stripeSubscriptionId);
+    const stripeCustomerId = normalizeString(args.stripeCustomerId);
+    const userId = normalizeString(args.userId);
+    const priceId = normalizeString(args.priceId);
+
+    if (!stripeSubscriptionId) {
+      throw new Error("Cannot handle checkout completion without a stripeSubscriptionId");
     }
-    const normalizedStripeCustomerId = stripeCustomerId.trim();
-    if (!normalizedStripeCustomerId) {
+    if (!stripeCustomerId) {
       throw new Error("Cannot handle checkout completion without a stripeCustomerId");
     }
-    const normalizedPriceId = priceId.trim();
-    if (!normalizedPriceId) {
+    if (!userId) {
+      throw new Error("Cannot handle checkout completion without a userId");
+    }
+    if (!priceId) {
       throw new Error("Cannot handle checkout completion without a priceId");
     }
 
-    const { plan, limit } = getPlanFromPriceId(normalizedPriceId);
-
-    // Upsert quota
-    const existingQuota = await ctx.db
-      .query("quotas")
-      .withIndex("by_userId", (q) => q.eq("userId", normalizedUserId))
-      .first();
-    const shouldStartPostUpgradeWorkflow =
-      (!existingQuota || existingQuota.plan === "free") && plan !== "free";
-
-    if (existingQuota) {
-      await ctx.db.patch(existingQuota._id, {
-        plan,
-        monthlyLimit: limit,
+    const result = await reconcileQuotaForUser(ctx, {
+      userId,
+      source: "checkout",
+      subscription: {
         stripeSubscriptionId,
-        stripeSubscriptionStatus: status,
-        stripePriceId: normalizedPriceId,
-        currentPeriodEnd: normalizedCurrentPeriodEnd,
-        cancelAtPeriodEnd,
-      });
-    } else {
-      await ctx.db.insert("quotas", {
-        userId: normalizedUserId,
-        plan,
-        monthlyLimit: limit,
-        stripeSubscriptionId,
-        stripeSubscriptionStatus: status,
-        stripePriceId: normalizedPriceId,
-        currentPeriodEnd: normalizedCurrentPeriodEnd,
-        cancelAtPeriodEnd,
-      });
-    }
-
-    // Update Better Auth user with stripeCustomerId
-    // userId here is actually the _id of the user document from Better Auth
-    await ctx.runMutation(components.betterAuth.adapter.updateOne, {
-      input: {
-        model: "user",
-        where: [{ field: "_id", value: normalizedUserId }],
-        update: { stripeCustomerId: normalizedStripeCustomerId },
+        stripeCustomerId,
+        userId,
+        status: args.status,
+        priceId,
+        currentPeriodEnd: args.currentPeriodEnd,
+        cancelAtPeriodEnd: args.cancelAtPeriodEnd,
       },
     });
 
-    // Start post-upgrade email workflow only on first move from free/no quota to a paid plan.
+    await updateStripeCustomerForUser(ctx, userId, stripeCustomerId);
+
+    const shouldStartPostUpgradeWorkflow =
+      (result.previousPlan === null || result.previousPlan === "free") && result.currentPlan !== "free";
+
     if (shouldStartPostUpgradeWorkflow) {
-      await workflow.start(ctx, internal.emailWorkflows.postUpgradeWorkflow, { userId: normalizedUserId });
+      await workflow.start(ctx, internal.emailWorkflows.postUpgradeWorkflow, { userId });
     }
   },
 });
@@ -237,33 +263,77 @@ export const syncSubscriptionFromWebhook = internalMutation({
     priceId: v.string(),
     currentPeriodEnd: v.number(),
     cancelAtPeriodEnd: v.boolean(),
+    stripeCustomerId: v.optional(v.string()),
+    userId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Find quota by subscription ID
-    const quotas = await ctx.db.query("quotas").collect();
-    const quota = quotas.find((q) => q.stripeSubscriptionId === args.stripeSubscriptionId);
+    const stripeSubscriptionId = normalizeString(args.stripeSubscriptionId);
+    if (!stripeSubscriptionId) {
+      throw new Error("Cannot sync subscription without a stripeSubscriptionId");
+    }
 
-    if (!quota) {
-      console.error("Quota not found for subscription:", args.stripeSubscriptionId);
+    const normalizedExplicitUserId = normalizeOptionalString(args.userId);
+    const normalizedStripeCustomerId = normalizeOptionalString(args.stripeCustomerId);
+    const normalizedPriceId = normalizeString(args.priceId);
+
+    const quotaBySubscription = await findQuotaBySubscriptionId(ctx, stripeSubscriptionId);
+    const componentSubscription = await getComponentSubscription(ctx, stripeSubscriptionId);
+
+    let resolvedUserId = quotaBySubscription?.userId ?? "";
+    if (!resolvedUserId && normalizedExplicitUserId) {
+      resolvedUserId = normalizedExplicitUserId;
+    }
+    if (!resolvedUserId && normalizedStripeCustomerId) {
+      resolvedUserId = await resolveUserIdByStripeCustomer(ctx, normalizedStripeCustomerId);
+    }
+    if (!resolvedUserId) {
+      const userIdFromComponentSubscription = getUserIdFromComponentSubscription(componentSubscription);
+      if (userIdFromComponentSubscription) {
+        resolvedUserId = userIdFromComponentSubscription;
+      }
+    }
+
+    const effectiveStripeCustomerId =
+      normalizedStripeCustomerId || normalizeOptionalString(componentSubscription?.stripeCustomerId);
+
+    if (!resolvedUserId && effectiveStripeCustomerId) {
+      resolvedUserId = await resolveUserIdByStripeCustomer(ctx, effectiveStripeCustomerId);
+    }
+
+    if (!resolvedUserId) {
+      console.error("BILLING_SUBSCRIPTION_UNRESOLVED", {
+        eventType: "customer.subscription.updated",
+        stripeSubscriptionId,
+        stripeCustomerId: effectiveStripeCustomerId,
+        providedUserId: normalizedExplicitUserId,
+        status: args.status,
+        priceId: normalizedPriceId,
+      });
       return;
     }
 
-    const previousCancelAtPeriodEnd = quota.cancelAtPeriodEnd;
-    const { plan, limit } = getPlanFromPriceId(args.priceId);
-
-    await ctx.db.patch(quota._id, {
-      plan,
-      monthlyLimit: limit,
-      stripeSubscriptionStatus: args.status,
-      stripePriceId: args.priceId,
-      currentPeriodEnd: normalizePeriodEnd(args.currentPeriodEnd),
-      cancelAtPeriodEnd: args.cancelAtPeriodEnd,
+    const effectivePriceId = normalizedPriceId || normalizeOptionalString(componentSubscription?.priceId);
+    const result = await reconcileQuotaForUser(ctx, {
+      userId: resolvedUserId,
+      source: "webhook",
+      subscription: {
+        stripeSubscriptionId,
+        stripeCustomerId: effectiveStripeCustomerId || undefined,
+        userId: resolvedUserId,
+        status: normalizeString(args.status),
+        priceId: effectivePriceId,
+        currentPeriodEnd: normalizePeriodEndMillis(args.currentPeriodEnd),
+        cancelAtPeriodEnd: args.cancelAtPeriodEnd,
+      },
     });
 
-    // Start cancellation email workflow when cancelAtPeriodEnd flips to true
-    if (args.cancelAtPeriodEnd && !previousCancelAtPeriodEnd) {
+    if (effectiveStripeCustomerId) {
+      await updateStripeCustomerForUser(ctx, resolvedUserId, effectiveStripeCustomerId);
+    }
+
+    if (args.cancelAtPeriodEnd && !result.previousCancelAtPeriodEnd) {
       await workflow.start(ctx, internal.emailWorkflows.cancellationWorkflow, {
-        userId: quota.userId,
+        userId: resolvedUserId,
       });
     }
   },
@@ -275,17 +345,44 @@ export const handleInvoicePaid = internalMutation({
     periodEnd: v.number(),
   },
   handler: async (ctx, { stripeSubscriptionId, periodEnd }) => {
-    const quotas = await ctx.db.query("quotas").collect();
-    const quota = quotas.find((q) => q.stripeSubscriptionId === stripeSubscriptionId);
+    const normalizedSubscriptionId = normalizeString(stripeSubscriptionId);
+    if (!normalizedSubscriptionId) return;
 
-    if (!quota) {
-      console.error("Quota not found for subscription:", stripeSubscriptionId);
+    const quota = await findQuotaBySubscriptionId(ctx, normalizedSubscriptionId);
+    if (quota) {
+      await ctx.db.patch(quota._id, {
+        stripeSubscriptionStatus: "active",
+        currentPeriodEnd: normalizePeriodEndMillis(periodEnd),
+      });
       return;
     }
 
-    await ctx.db.patch(quota._id, {
-      stripeSubscriptionStatus: "active",
-      currentPeriodEnd: normalizePeriodEnd(periodEnd),
+    const componentSubscription = await getComponentSubscription(ctx, normalizedSubscriptionId);
+    const resolvedUserId =
+      getUserIdFromComponentSubscription(componentSubscription) ||
+      (componentSubscription?.stripeCustomerId
+        ? await resolveUserIdByStripeCustomer(ctx, componentSubscription.stripeCustomerId)
+        : "");
+
+    if (!resolvedUserId) {
+      console.error("BILLING_INVOICE_PAID_UNRESOLVED", {
+        stripeSubscriptionId: normalizedSubscriptionId,
+      });
+      return;
+    }
+
+    await reconcileQuotaForUser(ctx, {
+      userId: resolvedUserId,
+      source: "webhook",
+      subscription: {
+        stripeSubscriptionId: normalizedSubscriptionId,
+        stripeCustomerId: componentSubscription?.stripeCustomerId,
+        userId: resolvedUserId,
+        status: "active",
+        priceId: componentSubscription?.priceId ?? "",
+        currentPeriodEnd: normalizePeriodEndMillis(periodEnd),
+        cancelAtPeriodEnd: componentSubscription?.cancelAtPeriodEnd ?? false,
+      },
     });
   },
 });
@@ -295,16 +392,43 @@ export const handlePaymentFailed = internalMutation({
     stripeSubscriptionId: v.string(),
   },
   handler: async (ctx, { stripeSubscriptionId }) => {
-    const quotas = await ctx.db.query("quotas").collect();
-    const quota = quotas.find((q) => q.stripeSubscriptionId === stripeSubscriptionId);
+    const normalizedSubscriptionId = normalizeString(stripeSubscriptionId);
+    if (!normalizedSubscriptionId) return;
 
-    if (!quota) {
-      console.error("Quota not found for subscription:", stripeSubscriptionId);
+    const quota = await findQuotaBySubscriptionId(ctx, normalizedSubscriptionId);
+    if (quota) {
+      await ctx.db.patch(quota._id, {
+        stripeSubscriptionStatus: "past_due",
+      });
       return;
     }
 
-    await ctx.db.patch(quota._id, {
-      stripeSubscriptionStatus: "past_due",
+    const componentSubscription = await getComponentSubscription(ctx, normalizedSubscriptionId);
+    const resolvedUserId =
+      getUserIdFromComponentSubscription(componentSubscription) ||
+      (componentSubscription?.stripeCustomerId
+        ? await resolveUserIdByStripeCustomer(ctx, componentSubscription.stripeCustomerId)
+        : "");
+
+    if (!resolvedUserId) {
+      console.error("BILLING_PAYMENT_FAILED_UNRESOLVED", {
+        stripeSubscriptionId: normalizedSubscriptionId,
+      });
+      return;
+    }
+
+    await reconcileQuotaForUser(ctx, {
+      userId: resolvedUserId,
+      source: "webhook",
+      subscription: {
+        stripeSubscriptionId: normalizedSubscriptionId,
+        stripeCustomerId: componentSubscription?.stripeCustomerId,
+        userId: resolvedUserId,
+        status: "past_due",
+        priceId: componentSubscription?.priceId ?? "",
+        currentPeriodEnd: componentSubscription?.currentPeriodEnd ?? Date.now(),
+        cancelAtPeriodEnd: componentSubscription?.cancelAtPeriodEnd ?? false,
+      },
     });
   },
 });

@@ -50,6 +50,21 @@ registerRoutes(http, components.stripe, {
         }
 
         if (!userId) {
+          await ctx.runMutation(internal.stripe.syncSubscriptionFromWebhook, {
+            stripeSubscriptionId,
+            status: sub.status,
+            priceId: sub.priceId,
+            currentPeriodEnd: sub.currentPeriodEnd,
+            cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
+            stripeCustomerId,
+            userId: userIdFromSessionMetadata || userIdFromSubscriptionMetadata || undefined,
+          });
+          console.error("BILLING_CHECKOUT_USER_RESOLUTION_FAILED", {
+            eventType: "checkout.session.completed",
+            sessionId: session.id,
+            stripeSubscriptionId,
+            stripeCustomerId,
+          });
           throw new Error(
             `Unable to resolve userId for checkout.session.completed: session=${session.id} subscription=${stripeSubscriptionId} customer=${stripeCustomerId}`
           );
@@ -69,31 +84,45 @@ registerRoutes(http, components.stripe, {
     "customer.subscription.updated": async (ctx, event) => {
       const subscription = event.data.object as unknown as {
         id: string;
+        customer?: string | { id?: string };
+        metadata?: { userId?: string };
         status: string;
         items: { data: Array<{ price: { id: string } }> };
         current_period_end: number;
         cancel_at_period_end: boolean;
       };
+      const stripeCustomerId =
+        typeof subscription.customer === "string" ? subscription.customer.trim() : "";
+      const userId = typeof subscription.metadata?.userId === "string" ? subscription.metadata.userId.trim() : "";
       await ctx.runMutation(internal.stripe.syncSubscriptionFromWebhook, {
         stripeSubscriptionId: subscription.id,
         status: subscription.status,
         priceId: subscription.items.data[0]?.price.id || "",
         currentPeriodEnd: subscription.current_period_end * 1000,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        stripeCustomerId: stripeCustomerId || undefined,
+        userId: userId || undefined,
       });
     },
     "customer.subscription.deleted": async (ctx, event) => {
       const subscription = event.data.object as unknown as {
         id: string;
+        customer?: string | { id?: string };
+        metadata?: { userId?: string };
         items: { data: Array<{ price: { id: string } }> };
         current_period_end: number;
       };
+      const stripeCustomerId =
+        typeof subscription.customer === "string" ? subscription.customer.trim() : "";
+      const userId = typeof subscription.metadata?.userId === "string" ? subscription.metadata.userId.trim() : "";
       await ctx.runMutation(internal.stripe.syncSubscriptionFromWebhook, {
         stripeSubscriptionId: subscription.id,
         status: "canceled",
         priceId: subscription.items.data[0]?.price.id || "",
         currentPeriodEnd: subscription.current_period_end * 1000,
         cancelAtPeriodEnd: false,
+        stripeCustomerId: stripeCustomerId || undefined,
+        userId: userId || undefined,
       });
     },
     "invoice.paid": async (ctx, event) => {

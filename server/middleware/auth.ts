@@ -38,6 +38,7 @@ export function authenticateRequest(req: Request): AuthResult {
       MISSING_KEY: 401,
       INVALID_KEY: 401,
       KEY_INACTIVE: 403,
+      SUBSCRIPTION_INACTIVE: 402,
       QUOTA_EXCEEDED: 429,
       NOT_READY: 503,
     };

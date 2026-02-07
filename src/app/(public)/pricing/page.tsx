@@ -267,9 +267,9 @@ export default function PricingPage() {
             <Link href="/pricing" className="transition-colors hover:text-[#ff4d00]">
               Pricing
             </Link>
-            <Link href="/status" className="transition-colors hover:text-[#ff4d00]">
+            <a href="https://status.htmlpix.com" className="transition-colors hover:text-[#ff4d00]">
               Status
-            </Link>
+            </a>
             <Link href="/login" className="transition-colors hover:text-[#ff4d00]">
               Login
             </Link>

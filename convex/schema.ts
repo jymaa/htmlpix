@@ -23,7 +23,9 @@ export default defineSchema({
     stripePriceId: v.optional(v.string()),
     currentPeriodEnd: v.optional(v.number()),
     cancelAtPeriodEnd: v.optional(v.boolean()),
-  }).index("by_userId", ["userId"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_stripeSubscriptionId", ["stripeSubscriptionId"]),
 
   renders: defineTable({
     apiKeyId: v.id("apiKeys"),

@@ -122,6 +122,7 @@ export function validateApiKey(authHeader: string | null): AuthResult {
   if (status) {
     const hasActiveSubscription =
       status === "active" ||
+      status === "trialing" ||
       (status === "canceled" && periodEnd && periodEnd > now);
 
     if (!hasActiveSubscription) {

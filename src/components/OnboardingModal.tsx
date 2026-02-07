@@ -82,7 +82,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
         </AlertDialogContent>
       </AlertDialog>
       <Dialog open={open} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogContent className="sm:max-w-xl" onPointerDownOutside={(e) => e.preventDefault()}>
           {step === 1 && (
             <>
               <DialogHeader>

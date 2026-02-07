@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LogOut, User } from "lucide-react";
 
 const PLANS = [
@@ -70,9 +70,43 @@ export default function SettingsPage() {
 
   const createCheckout = useAction(api.stripe.createCheckoutSession);
   const createPortal = useAction(api.stripe.createPortalSession);
+  const syncSubscription = useAction(api.stripe.syncSubscription);
 
   const [loading, setLoading] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const lastBackgroundSyncRef = useRef(0);
+
+  const runBackgroundBillingSync = useCallback(async () => {
+    if (!userId) return;
+
+    const now = Date.now();
+    if (now - lastBackgroundSyncRef.current < 3000) {
+      return;
+    }
+    lastBackgroundSyncRef.current = now;
+
+    try {
+      await syncSubscription({ sessionId: "settings_background_sync" });
+    } catch (error) {
+      console.error("Background billing sync failed:", error);
+    }
+  }, [syncSubscription, userId]);
+
+  useEffect(() => {
+    void runBackgroundBillingSync();
+  }, [runBackgroundBillingSync]);
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "visible") return;
+      void runBackgroundBillingSync();
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [runBackgroundBillingSync]);
 
   const handleSubscribe = async (priceId: string, loadingKey: string) => {
     if (!priceId) {

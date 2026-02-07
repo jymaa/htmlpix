@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import Image from "next/image";
 
@@ -24,6 +24,22 @@ const NEXT_PLAN: Record<string, { name: string; renders: string; price: number }
   starter: { name: "Pro", renders: "3,000", price: 15 },
 };
 
+type Render = {
+  _id: string;
+  _creationTime: number;
+  apiKeyId: string;
+  userId: string;
+  externalId: string;
+  status: "success" | "error";
+  htmlHash: string;
+  contentHash?: string;
+  format: string;
+  renderMs: number;
+  imageKey?: string;
+  imageUrl?: string;
+  createdAt: number;
+};
+
 export default function DashboardPage() {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
@@ -34,7 +50,8 @@ export default function DashboardPage() {
   const onboardingStatus = useQuery(api.users.hasCompletedOnboarding, userId ? {} : "skip");
 
   const [dismissed, setDismissed] = useState(false);
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [selectedRender, setSelectedRender] = useState<Render | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Open onboarding once when the user qualifies, then keep it open until they complete it.
   const shouldShowOnboarding =
@@ -44,24 +61,30 @@ export default function DashboardPage() {
     apiKeys.length === 0 &&
     !onboardingStatus.completed;
 
-  useEffect(() => {
-    if (shouldShowOnboarding) {
-      setIsOnboardingOpen(true);
-    }
-  }, [shouldShowOnboarding]);
-
   const usagePercent = quota ? Math.round((quota.currentUsage / quota.monthlyLimit) * 100) : 0;
   const isFreePlan = quota?.plan === "free" || quota?.plan === "starter";
   const nextPlan = quota ? NEXT_PLAN[quota.plan] : null;
   const activeKeyCount = apiKeys ? apiKeys.filter((k) => k.active).length : 0;
+  const formatDate = (ts: number) =>
+    new Date(ts).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  const handleCopyUrl = async (url: string) => {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="space-y-8">
       <OnboardingModal
-        open={isOnboardingOpen}
+        open={shouldShowOnboarding}
         onComplete={() => {
           setDismissed(true);
-          setIsOnboardingOpen(false);
         }}
       />
 
@@ -287,9 +310,11 @@ export default function DashboardPage() {
               {renders.map((render) => {
                 const imgUrl = render.imageUrl ?? null;
                 return (
-                  <div
+                  <button
                     key={render._id}
-                    className="group border-border/50 hover:bg-muted/30 grid grid-cols-[40px_1fr_auto] items-center gap-3 border-t px-3 py-2.5 transition-colors md:grid-cols-[40px_1fr_80px_80px_80px_140px]"
+                    type="button"
+                    onClick={() => setSelectedRender(render as Render)}
+                    className="group border-border/50 hover:bg-muted/30 focus:ring-ring grid w-full grid-cols-[40px_1fr_auto] items-center gap-3 border-t px-3 py-2.5 text-left transition-colors focus:ring-2 focus:outline-none md:grid-cols-[40px_1fr_80px_80px_80px_140px]"
                   >
                     {/* Thumbnail */}
                     <div className="bg-muted/20 h-8 w-8 overflow-hidden border">
@@ -309,27 +334,11 @@ export default function DashboardPage() {
                       )}
                     </div>
 
-                    {/* Image ID — full, linked */}
+                    {/* Image ID */}
                     <div className="min-w-0">
-                      {imgUrl ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <a
-                              href={imgUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:text-primary block truncate font-mono text-sm transition-colors"
-                            >
-                              {render.externalId}
-                            </a>
-                          </TooltipTrigger>
-                          <TooltipContent>Open image in new tab</TooltipContent>
-                        </Tooltip>
-                      ) : (
-                        <span className="text-muted-foreground block truncate font-mono text-sm">
-                          {render.externalId}
-                        </span>
-                      )}
+                      <span className="group-hover:text-primary block truncate font-mono text-sm transition-colors">
+                        {render.externalId}
+                      </span>
                     </div>
 
                     {/* Mobile: compact meta */}
@@ -359,20 +368,105 @@ export default function DashboardPage() {
                       {render.renderMs}ms
                     </span>
                     <span className="text-muted-foreground hidden font-mono text-xs md:block">
-                      {new Date(render.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {formatDate(render.createdAt)}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!selectedRender} onOpenChange={(open) => !open && setSelectedRender(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-mono text-sm font-normal tracking-wider">
+              RENDER {selectedRender?.externalId}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedRender && (
+            <div className="space-y-4">
+              <div className="bg-muted/20 overflow-hidden border">
+                {selectedRender.imageUrl ? (
+                  <Image
+                    src={selectedRender.imageUrl}
+                    alt={`Render ${selectedRender.externalId}`}
+                    className="max-h-[400px] w-full object-contain"
+                    width={400}
+                    height={400}
+                  />
+                ) : (
+                  <div className="flex h-48 items-center justify-center">
+                    <span className="text-muted-foreground text-sm">
+                      {selectedRender.status === "error" ? "Render failed" : "Image not available"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="space-y-1">
+                  <span className="text-muted-foreground font-mono text-[10px] tracking-widest uppercase">
+                    Status
+                  </span>
+                  <div>
+                    <Badge variant={selectedRender.status === "success" ? "default" : "destructive"}>
+                      {selectedRender.status}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-muted-foreground font-mono text-[10px] tracking-widest uppercase">
+                    Format
+                  </span>
+                  <p className="font-mono uppercase">{selectedRender.format}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-muted-foreground font-mono text-[10px] tracking-widest uppercase">
+                    Render Time
+                  </span>
+                  <p className="font-mono">{selectedRender.renderMs}ms</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-muted-foreground font-mono text-[10px] tracking-widest uppercase">
+                    Date
+                  </span>
+                  <p className="font-mono text-sm">{formatDate(selectedRender.createdAt)}</p>
+                </div>
+                {selectedRender.imageKey && (
+                  <div className="col-span-2 space-y-1">
+                    <span className="text-muted-foreground font-mono text-[10px] tracking-widest uppercase">
+                      Image Key
+                    </span>
+                    <p className="text-muted-foreground truncate font-mono text-xs">
+                      {selectedRender.imageKey}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {selectedRender.imageUrl && (
+                <div className="flex gap-2 border-t pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="font-mono text-xs"
+                    onClick={() => handleCopyUrl(selectedRender.imageUrl!)}
+                  >
+                    {copied ? "Copied!" : "Copy URL"}
+                  </Button>
+                  <Button variant="outline" size="sm" className="font-mono text-xs" asChild>
+                    <a href={selectedRender.imageUrl} target="_blank" rel="noopener noreferrer">
+                      Open in New Tab
+                    </a>
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

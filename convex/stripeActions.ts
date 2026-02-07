@@ -4,6 +4,11 @@ import { action } from "./_generated/server";
 import { internal, components } from "./_generated/api";
 import { v } from "convex/values";
 import { StripeSubscriptions } from "@convex-dev/stripe";
+import { isAllowedCheckoutPriceId } from "./billing/plans";
+import {
+  pickBestSubscriptionForEntitlement,
+  shouldBlockCheckoutFromSubscriptions,
+} from "./billing/reconcile";
 
 const stripeClient = new StripeSubscriptions(components.stripe, {});
 
@@ -22,6 +27,17 @@ export const createCheckoutSession = action({
     if (!identity) throw new Error("Not authenticated");
 
     const userId = identity.subject;
+    const priceId = args.priceId.trim();
+    if (!isAllowedCheckoutPriceId(priceId)) {
+      throw new Error("Unsupported billing plan. Please select a valid plan from settings.");
+    }
+
+    const subscriptions = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+      userId,
+    });
+    if (shouldBlockCheckoutFromSubscriptions(subscriptions)) {
+      throw new Error("You already have an active subscription. Use the billing portal to change plans.");
+    }
 
     // Get or create customer
     const customer = await stripeClient.getOrCreateCustomer(ctx, {
@@ -38,7 +54,7 @@ export const createCheckoutSession = action({
 
     // Create checkout session
     const session = await stripeClient.createCheckoutSession(ctx, {
-      priceId: args.priceId,
+      priceId,
       customerId: customer.customerId,
       mode: "subscription",
       successUrl: args.successUrl,
@@ -91,19 +107,17 @@ export const syncSubscription = action({
     });
     if (subscriptions.length === 0) return false;
 
-    const latestSubscription = subscriptions
-      .slice()
-      .sort((a, b) => b.currentPeriodEnd - a.currentPeriodEnd)[0];
-    if (!latestSubscription) return false;
+    const bestSubscription = pickBestSubscriptionForEntitlement(subscriptions);
+    if (!bestSubscription) return false;
 
     await ctx.runMutation(internal.stripe.handleCheckoutCompleted, {
-      stripeSubscriptionId: latestSubscription.stripeSubscriptionId,
-      stripeCustomerId: latestSubscription.stripeCustomerId,
+      stripeSubscriptionId: bestSubscription.stripeSubscriptionId,
+      stripeCustomerId: bestSubscription.stripeCustomerId,
       userId,
-      priceId: latestSubscription.priceId,
-      status: latestSubscription.status,
-      currentPeriodEnd: latestSubscription.currentPeriodEnd,
-      cancelAtPeriodEnd: latestSubscription.cancelAtPeriodEnd,
+      priceId: bestSubscription.priceId,
+      status: bestSubscription.status,
+      currentPeriodEnd: bestSubscription.currentPeriodEnd,
+      cancelAtPeriodEnd: bestSubscription.cancelAtPeriodEnd,
     });
 
     return true;

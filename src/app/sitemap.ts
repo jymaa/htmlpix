@@ -63,11 +63,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/status`,
-      lastModified: new Date(),
-      priority: 0.3,
-    },
-    {
       url: `${BASE_URL}/login`,
       lastModified: new Date(),
       priority: 0.5,
