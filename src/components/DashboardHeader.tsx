@@ -24,7 +24,7 @@ export function DashboardHeader() {
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="border-foreground relative flex h-8 w-8 items-center justify-center border-2">
-            <span className="text-sm font-bold">{"<>"}</span>
+            <span className="text-sm font-bold">{"</>"}</span>
             <div className="absolute -top-1 -right-1 h-1.5 w-1.5 bg-[#ff4d00]" />
           </div>
           <span className="font-bold tracking-wide">HTMLPIX</span>

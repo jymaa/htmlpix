@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicHeader } from "@/components/PublicHeader";
+import { JsonLd } from "@/components/JsonLd";
 
 export default function LandingVariant2() {
   return (
@@ -27,6 +28,49 @@ export default function LandingVariant2() {
 
       <PublicHeader />
 
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "HTMLPix",
+          url: "https://htmlpix.com",
+          applicationCategory: "DeveloperApplication",
+          operatingSystem: "Any",
+          description:
+            "HTML to Image API. Generate pixel-perfect screenshots from HTML/CSS with a single POST request.",
+          offers: [
+            {
+              "@type": "Offer",
+              name: "Free",
+              price: "0",
+              priceCurrency: "USD",
+              description: "50 renders per month",
+            },
+            {
+              "@type": "Offer",
+              name: "Starter",
+              price: "8",
+              priceCurrency: "USD",
+              description: "1,000 renders per month",
+            },
+            {
+              "@type": "Offer",
+              name: "Pro",
+              price: "15",
+              priceCurrency: "USD",
+              description: "3,000 renders per month",
+            },
+            {
+              "@type": "Offer",
+              name: "Scale",
+              price: "35",
+              priceCurrency: "USD",
+              description: "10,000 renders per month",
+            },
+          ],
+        }}
+      />
+
       {/* Hero */}
       <section className="relative z-10 flex min-h-screen items-center px-4 pt-24 md:px-8">
         <div className="mx-auto w-full max-w-7xl">
@@ -43,12 +87,13 @@ export default function LandingVariant2() {
                 <span className="text-[#ff4d00]">HTML IN.</span>
                 <br />
                 <span>IMAGE OUT.</span>
+                <span className="sr-only"> — HTML to Image API for Developers</span>
               </h1>
 
               <div className="relative mb-8 md:mb-10">
                 <p className="max-w-md text-sm leading-relaxed text-[#1a1a1a]/50 md:text-base">
-                  One POST request. Your HTML and CSS go in, a pixel-perfect screenshot comes back. No
-                  Puppeteer. No Chrome. No infrastructure. Just an API key and a fetch call.
+                  Having to maintain headless Chrome and Puppeteer is a pain. Send us your HTML, get back a
+                  pixel-perfect screenshot. One POST request. One API key. No more headaches.
                 </p>
               </div>
 
@@ -137,7 +182,7 @@ export default function LandingVariant2() {
                     </div>
                     <div className="mb-1 pl-4">
                       <span className="text-[#ff4d00]">-d</span>{" "}
-                      <span className="text-[#a5d6a7]">{`'{"html":"<h1>Hello</h1>","viewport":{"width":1200,"height":630}}'`}</span>{" "}
+                      <span className="text-[#a5d6a7]">{`'{"html":"<h1>Hello</h1>","width":1200,"height":630}'`}</span>{" "}
                     </div>
 
                     {/* Response */}
@@ -147,27 +192,21 @@ export default function LandingVariant2() {
                         <span className="text-[#f5f0e8]/30">{`{`}</span>
                       </div>
                       <div className="pl-4">
+                        <span className="text-[#81c784]">{`"id"`}</span>
+                        <span className="text-[#f5f0e8]/30">: </span>
+                        <span className="text-[#a5d6a7]">{`"abc123"`}</span>
+                        <span className="text-[#f5f0e8]/30">,</span>
+                      </div>
+                      <div className="pl-4">
                         <span className="text-[#81c784]">{`"url"`}</span>
                         <span className="text-[#f5f0e8]/30">: </span>
-                        <span className="text-[#a5d6a7]">{`"https://cdn.htmlpix.com/abc123.png"`}</span>
+                        <span className="text-[#a5d6a7]">{`"https://api.htmlpix.com/images/abc123.png"`}</span>
                         <span className="text-[#f5f0e8]/30">,</span>
                       </div>
                       <div className="pl-4">
-                        <span className="text-[#81c784]">{`"width"`}</span>
+                        <span className="text-[#81c784]">{`"imageKey"`}</span>
                         <span className="text-[#f5f0e8]/30">: </span>
-                        <span className="text-[#ffcc80]">1200</span>
-                        <span className="text-[#f5f0e8]/30">,</span>
-                      </div>
-                      <div className="pl-4">
-                        <span className="text-[#81c784]">{`"height"`}</span>
-                        <span className="text-[#f5f0e8]/30">: </span>
-                        <span className="text-[#ffcc80]">630</span>
-                        <span className="text-[#f5f0e8]/30">,</span>
-                      </div>
-                      <div className="pl-4">
-                        <span className="text-[#81c784]">{`"size"`}</span>
-                        <span className="text-[#f5f0e8]/30">: </span>
-                        <span className="text-[#a5d6a7]">{`"24.3 KB"`}</span>
+                        <span className="text-[#a5d6a7]">{`"abc123.png"`}</span>
                       </div>
                       <div>
                         <span className="text-[#f5f0e8]/30">{`}`}</span>
@@ -218,11 +257,21 @@ export default function LandingVariant2() {
               {
                 step: "01",
                 title: "Send Your HTML",
-                desc: "POST your HTML, CSS, and viewport settings to our API. Tailwind, Google Fonts, inline styles — it all works.",
+                desc: "POST your HTML, CSS, and viewport settings to our API. Tailwind, Google Fonts, inline styles. It all works.",
                 code: `POST /render\n{ "html": "<div>...</div>" }`,
                 icon: (
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"
+                    />
                   </svg>
                 ),
               },
@@ -232,8 +281,18 @@ export default function LandingVariant2() {
                 desc: "Our rendering cluster boots a real browser, injects your HTML, waits for fonts and assets, and captures a screenshot.",
                 code: `→ Parse → Render → Encode`,
                 icon: (
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+                    />
                   </svg>
                 ),
               },
@@ -243,8 +302,18 @@ export default function LandingVariant2() {
                 desc: "Receive a PNG, JPEG, or WebP binary in the response. Average turnaround under 200ms. Cache it, serve it, done.",
                 code: `Content-Type: image/png\n← 24.3 KB`,
                 icon: (
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V5.25a1.5 1.5 0 00-1.5-1.5H3.75a1.5 1.5 0 00-1.5 1.5v14.25a1.5 1.5 0 001.5 1.5z" />
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V5.25a1.5 1.5 0 00-1.5-1.5H3.75a1.5 1.5 0 00-1.5 1.5v14.25a1.5 1.5 0 001.5 1.5z"
+                    />
                   </svg>
                 ),
               },
@@ -254,7 +323,9 @@ export default function LandingVariant2() {
                 {i < 2 && (
                   <div className="absolute top-12 right-0 hidden h-px w-full bg-gradient-to-r from-transparent via-[#ff4d00]/30 to-transparent md:block" />
                 )}
-                <div className={`relative p-6 md:p-8 ${i === 1 ? "md:border-x-2 md:border-[#1a1a1a]/10" : ""}`}>
+                <div
+                  className={`relative p-6 md:p-8 ${i === 1 ? "md:border-x-2 md:border-[#1a1a1a]/10" : ""}`}
+                >
                   {/* Step number badge + icon */}
                   <div className="mb-5 flex items-center gap-3">
                     <span className="flex h-9 w-9 items-center justify-center bg-[#ff4d00] font-[family-name:var(--font-bebas-neue)] text-lg text-white shadow-[2px_2px_0_0_rgba(26,26,26,0.1)]">
@@ -296,7 +367,7 @@ export default function LandingVariant2() {
           </div>
 
           <p className="mx-auto -mt-6 mb-12 max-w-lg text-center text-sm text-[#f5f0e8]/30 md:-mt-10 md:mb-16">
-            Any HTML you can write, we can render. Here&apos;s what developers are shipping.
+            If it renders in a browser, we can screenshot it. Here&apos;s what teams ship with HTMLPix.
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -304,11 +375,13 @@ export default function LandingVariant2() {
               {
                 title: "OG Images",
                 tag: "SEO",
-                desc: "Dynamic per-page social previews. Every blog post, product, profile gets a unique card that drives clicks.",
+                desc: "Generate a unique social preview for every page on your site. More clicks from Google, Twitter, and LinkedIn.",
                 bg: "from-[#1a1a1a] to-[#333]",
                 preview: (
                   <div className="flex h-full flex-col justify-between p-4">
-                    <div className="text-[8px] font-bold tracking-wider text-[#ff4d00] uppercase">Blog Post</div>
+                    <div className="text-[8px] font-bold tracking-wider text-[#ff4d00] uppercase">
+                      Blog Post
+                    </div>
                     <div>
                       <div className="mb-1 font-[family-name:var(--font-bebas-neue)] text-base leading-tight text-white">
                         How We Scaled to 10M Requests
@@ -326,12 +399,14 @@ export default function LandingVariant2() {
               {
                 title: "Social Cards",
                 tag: "SOCIAL",
-                desc: "Twitter/X, LinkedIn, Discord. Auto-generate branded cards from your app data in real-time.",
+                desc: "Branded cards for Twitter/X, LinkedIn, and Discord. Generated from your app data on every request.",
                 bg: "from-[#ff4d00] to-[#ff6a33]",
                 preview: (
                   <div className="flex h-full items-center justify-center p-4">
                     <div className="text-center">
-                      <div className="mb-1 font-[family-name:var(--font-bebas-neue)] text-xl text-white">Launch Day</div>
+                      <div className="mb-1 font-[family-name:var(--font-bebas-neue)] text-xl text-white">
+                        Launch Day
+                      </div>
                       <div className="text-[8px] tracking-wider text-white/60">@yourapp</div>
                     </div>
                   </div>
@@ -344,7 +419,9 @@ export default function LandingVariant2() {
                 bg: "from-[#f5f0e8] to-[#e8e0d5]",
                 preview: (
                   <div className="flex h-full flex-col justify-between p-4">
-                    <div className="text-[8px] font-bold tracking-wider text-[#1a1a1a]/50 uppercase">Receipt</div>
+                    <div className="text-[8px] font-bold tracking-wider text-[#1a1a1a]/50 uppercase">
+                      Receipt
+                    </div>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[7px] text-[#1a1a1a]/50">
                         <span>API Pro Plan</span>
@@ -367,12 +444,16 @@ export default function LandingVariant2() {
               {
                 title: "Certificates",
                 tag: "EDUCATION",
-                desc: "Personalized diplomas, awards, badges at scale with dynamic name and date injection.",
+                desc: "Generate thousands of personalized diplomas, awards, and badges. Just swap the name and date in your HTML template.",
                 bg: "from-[#f5f0e8] to-[#ece5d8]",
                 preview: (
                   <div className="flex h-full flex-col items-center justify-center p-4 text-center">
-                    <div className="mb-1.5 text-[7px] tracking-[0.15em] text-[#1a1a1a]/40 uppercase">Certificate of</div>
-                    <div className="font-[family-name:var(--font-bebas-neue)] text-base text-[#1a1a1a]">Completion</div>
+                    <div className="mb-1.5 text-[7px] tracking-[0.15em] text-[#1a1a1a]/40 uppercase">
+                      Certificate of
+                    </div>
+                    <div className="font-[family-name:var(--font-bebas-neue)] text-base text-[#1a1a1a]">
+                      Completion
+                    </div>
                     <div className="mt-2 h-px w-16 bg-[#ff4d00]" />
                     <div className="mt-2 text-[7px] text-[#1a1a1a]/30">Jane Doe — 2026</div>
                   </div>
@@ -399,7 +480,7 @@ export default function LandingVariant2() {
               {
                 title: "Charts & Reports",
                 tag: "DATA",
-                desc: "Render D3/Chart.js visualizations as static images for Slack, PDF, email.",
+                desc: "Turn D3 or Chart.js visualizations into static images you can drop into Slack, PDFs, or emails.",
                 bg: "from-[#1a1a1a] to-[#2a2a2a]",
                 preview: (
                   <div className="flex h-full items-end gap-1 p-4 pb-3">
@@ -426,7 +507,9 @@ export default function LandingVariant2() {
                 </div>
                 {/* Tag + line */}
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold tracking-[0.15em] text-[#ff4d00] uppercase">{uc.tag}</span>
+                  <span className="text-[10px] font-bold tracking-[0.15em] text-[#ff4d00] uppercase">
+                    {uc.tag}
+                  </span>
                   <div className="h-px flex-grow bg-[#f5f0e8]/10" />
                 </div>
                 <h3 className="mt-1.5 font-[family-name:var(--font-bebas-neue)] text-2xl tracking-wide text-[#f5f0e8]">
@@ -510,9 +593,7 @@ export default function LandingVariant2() {
                   <span className="text-[#dcdcaa]">stringify</span>
                   <span className="text-[#f5f0e8]/40">{`({ `}</span>
                   <span className="text-[#9cdcfe]">html</span>
-                  <span className="text-[#f5f0e8]/40">,</span>
-                  <span className="text-[#9cdcfe]"> viewport</span>
-                  <span className="text-[#f5f0e8]/40">{`: { `}</span>
+                  <span className="text-[#f5f0e8]/40">{`, `}</span>
                   <span className="text-[#9cdcfe]">width</span>
                   <span className="text-[#f5f0e8]/40">{`: `}</span>
                   <span className="text-[#b5cea8]">1200</span>
@@ -520,7 +601,7 @@ export default function LandingVariant2() {
                   <span className="text-[#9cdcfe]">height</span>
                   <span className="text-[#f5f0e8]/40">{`: `}</span>
                   <span className="text-[#b5cea8]">630</span>
-                  <span className="text-[#f5f0e8]/40">{` } })`}</span>
+                  <span className="text-[#f5f0e8]/40">{` })`}</span>
                   {"\n"}
                   <span className="text-[#f5f0e8]/40">{`});`}</span>
                 </code>
@@ -554,7 +635,7 @@ export default function LandingVariant2() {
           </div>
 
           <p className="mx-auto -mt-8 mb-12 max-w-lg text-center text-sm text-[#1a1a1a]/40 md:-mt-10 md:mb-16">
-            All plans include every feature. Pick the volume that fits. Upgrade or downgrade anytime.
+            Every plan gets every feature. You just pick how many renders you need. Change plans anytime.
           </p>
 
           {/* Desktop: horizontal table */}
@@ -680,17 +761,13 @@ export default function LandingVariant2() {
         <div className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full border-[60px] border-white/5" />
 
         <div className="relative mx-auto max-w-4xl text-center">
-          {/* Blueprint terminal prompt */}
-          <div className="mx-auto mb-6 inline-block border-2 border-white/20 bg-white/10 px-5 py-2.5 text-[13px] text-white/80">
-            <span className="text-white">$</span> htmlpix init
-          </div>
           <h2 className="mb-4 font-[family-name:var(--font-bebas-neue)] text-4xl text-white sm:text-6xl md:mb-6 md:text-8xl">
             YOUR HTML
             <br />
             DESERVES PIXELS
           </h2>
           <p className="mx-auto mb-8 max-w-xl text-base text-white/60 md:mb-10 md:text-lg">
-            50 free renders/month. No credit card. API key in 30 seconds.
+            50 free renders every month. No credit card. Your API key is 30 seconds away.
           </p>
           <Link
             href="/login"
@@ -719,7 +796,7 @@ export default function LandingVariant2() {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row md:gap-6">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center border-2 border-[#1a1a1a]">
-              <span className="text-xs font-bold text-[#1a1a1a]">{"<>"}</span>
+              <span className="text-xs font-bold text-[#1a1a1a]">{"</>"}</span>
             </div>
             <span className="font-bold tracking-wider">HTMLPIX</span>
           </div>
@@ -730,11 +807,23 @@ export default function LandingVariant2() {
             <Link href="/#pricing" className="transition-colors hover:text-[#ff4d00]">
               Pricing
             </Link>
+            <Link href="/support" className="transition-colors hover:text-[#ff4d00]">
+              Support
+            </Link>
+            <Link href="/docs/faq" className="transition-colors hover:text-[#ff4d00]">
+              FAQ
+            </Link>
             <a href="https://status.htmlpix.com" className="transition-colors hover:text-[#ff4d00]">
               Status
             </a>
             <Link href="/login" className="transition-colors hover:text-[#ff4d00]">
               Login
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-[#ff4d00]">
+              Privacy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-[#ff4d00]">
+              Terms
             </Link>
           </div>
           <span className="text-xs text-[#1a1a1a]/20">&copy; 2026 HTMLPix</span>

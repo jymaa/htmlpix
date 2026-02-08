@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Mono, Bebas_Neue } from "next/font/google";
+import { JsonLd } from "@/components/JsonLd";
 import "./globals.css";
 
 const spaceMono = Space_Mono({
@@ -22,6 +23,9 @@ export const metadata: Metadata = {
   description:
     "Generate images from HTML/CSS with a single API call. OG images, social cards, receipts, certificates — at scale. Free tier included.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://htmlpix.com"),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     siteName: "HTMLPix",
@@ -43,7 +47,27 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${spaceMono.variable} ${bebasNeue.variable} antialiased`}>{children}</body>
+      <head>
+        <meta name="apple-mobile-web-app-title" content="HTMLPix" />
+      </head>
+      <body className={`${spaceMono.variable} ${bebasNeue.variable} antialiased`}>
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "HTMLPix",
+            url: "https://htmlpix.com",
+            logo: "https://htmlpix.com/logo.png",
+            description: "HTML to Image API. Generate images from HTML/CSS with a single API call.",
+            contactPoint: {
+              "@type": "ContactPoint",
+              email: "support@htmlpix.com",
+              contactType: "customer support",
+            },
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

@@ -33,7 +33,7 @@ function buildHtml(html: string, request: RenderRequest, useTransparentBackgroun
   // Inject default white background unless transparent is requested
   // This prevents grey/dark backgrounds in headless Chrome
   if (!useTransparentBackground) {
-    const defaultBgStyle = `<style>html, body { background-color: white; }</style>`;
+    const defaultBgStyle = `<style>html, body { margin: 0; padding: 0; background-color: white; }</style>`;
     const headCloseIndex = result.toLowerCase().indexOf("</head>");
     if (headCloseIndex !== -1) {
       result = result.slice(0, headCloseIndex) + defaultBgStyle + "\n" + result.slice(headCloseIndex);

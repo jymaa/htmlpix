@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Support",
   description:
-    "Get help with HTMLPix. Browse our documentation for guides and API reference, or contact our support team for further assistance.",
+    "Get help with HTMLPix. Docs, API reference, quickstart guides, and direct email support from the team.",
 };
 
 const resources = [
@@ -18,7 +18,8 @@ const resources = [
   {
     label: "API REFERENCE",
     title: "Endpoints & Parameters",
-    description: "Full reference for the /render endpoint — formats, viewports, CSS injection, fonts, and more.",
+    description:
+      "Full reference for the /render endpoint. Formats, viewports, CSS injection, fonts, and more.",
     href: "/docs/endpoints",
   },
   {
@@ -36,7 +37,8 @@ const resources = [
   {
     label: "RATE LIMITS",
     title: "Quotas & Rate Limits",
-    description: "Understand your monthly render quota, rate limit headers, and what happens when you exceed them.",
+    description:
+      "Understand your monthly render quota, rate limit headers, and what happens when you exceed them.",
     href: "/docs/rate-limits",
   },
   {
@@ -81,8 +83,7 @@ export default function SupportPage() {
             How Can We Help?
           </h1>
           <p className="mx-auto max-w-xl text-base leading-relaxed text-[#1a1a1a]/60 md:text-lg">
-            Most questions are answered in our documentation. Browse the resources below or reach out directly if you
-            need more help.
+            Everything you need is in the docs. If you get stuck, we&apos;re one email away.
           </p>
         </div>
 
@@ -121,7 +122,12 @@ export default function SupportPage() {
                 <div className="mt-4 flex items-center gap-2 text-xs font-bold tracking-wider text-[#1a1a1a]/30 uppercase transition-colors group-hover:text-[#ff4d00]">
                   Read more
                   <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
                   </svg>
                 </div>
               </Link>
@@ -146,11 +152,11 @@ export default function SupportPage() {
             <div className="flex flex-col gap-8 md:flex-row md:items-center md:gap-12">
               <div className="flex-1">
                 <p className="mb-4 text-sm leading-relaxed text-[#1a1a1a]/60">
-                  If you&apos;ve gone through the documentation and still can&apos;t find the answer you&apos;re looking
-                  for, our team is happy to help. Drop us an email and we&apos;ll get back to you as soon as possible.
+                  Can&apos;t find the answer in the docs? Send us an email. We typically reply within a few
+                  hours on business days.
                 </p>
                 <p className="text-sm leading-relaxed text-[#1a1a1a]/40">
-                  Please include your account email and a description of the issue so we can help you faster.
+                  Include your account email and what you&apos;re trying to do so we can jump in faster.
                 </p>
               </div>
               <div className="shrink-0">
@@ -179,7 +185,7 @@ export default function SupportPage() {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row md:gap-6">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center border-2 border-[#1a1a1a]">
-              <span className="text-xs font-bold text-[#1a1a1a]">{"<>"}</span>
+              <span className="text-xs font-bold text-[#1a1a1a]">{"</>"}</span>
             </div>
             <span className="font-bold tracking-wider">HTMLPIX</span>
           </div>
@@ -187,7 +193,7 @@ export default function SupportPage() {
             <Link href="/docs" className="transition-colors hover:text-[#ff4d00]">
               Docs
             </Link>
-            <Link href="/pricing" className="transition-colors hover:text-[#ff4d00]">
+            <Link href="/#pricing" className="transition-colors hover:text-[#ff4d00]">
               Pricing
             </Link>
             <a href="https://status.htmlpix.com" className="transition-colors hover:text-[#ff4d00]">
@@ -195,6 +201,12 @@ export default function SupportPage() {
             </a>
             <Link href="/login" className="transition-colors hover:text-[#ff4d00]">
               Login
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-[#ff4d00]">
+              Privacy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-[#ff4d00]">
+              Terms
             </Link>
           </div>
           <span className="text-xs text-[#1a1a1a]/20">&copy; 2026 HTMLPix</span>

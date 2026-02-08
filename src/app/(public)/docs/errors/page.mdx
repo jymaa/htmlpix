@@ -45,8 +45,8 @@ On error, the API returns a JSON object:
 | HTTP Status | Code | Description |
 |-------------|------|-------------|
 | 400 | `INVALID_BODY` | Request body is not valid JSON |
-| 400 | `MISSING_INPUT` | Either html or url field is required |
-| 400 | `CONFLICTING_INPUT` | Cannot specify both html and url |
+| 400 | `MISSING_INPUT` | Either html, url, or templateId is required |
+| 400 | `CONFLICTING_INPUT` | Only one of html, url, or templateId allowed |
 | 400 | `HTML_TOO_LARGE` | HTML exceeds maximum size (500KB) |
 | 400 | `CSS_TOO_LARGE` | CSS exceeds maximum size (200KB) |
 | 400 | `URL_TOO_LONG` | URL exceeds maximum length (2048 chars) |
@@ -57,7 +57,9 @@ On error, the API returns a JSON object:
 | 401 | `INVALID_KEY` | API key is invalid |
 | 401 | `KEY_INACTIVE` | API key has been revoked |
 | 402 | `SUBSCRIPTION_INACTIVE` | Subscription has expired |
+| 404 | `TEMPLATE_NOT_FOUND` | Template not found or not accessible |
 | 429 | `QUOTA_EXCEEDED` | Monthly render quota exceeded |
+| 429 | `QUEUE_FULL` | Server render queue is at capacity |
 | 500 | `RENDER_ERROR` | Failed to render the HTML |
 | 500 | `SELECTOR_NOT_FOUND` | The specified CSS selector was not found |
 | 500 | `RENDER_TIMEOUT` | Render timed out |

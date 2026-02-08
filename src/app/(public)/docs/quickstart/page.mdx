@@ -5,7 +5,36 @@ export const metadata = {
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.htmlpix.com";
 
+import { JsonLd } from "@/components/JsonLd";
+
 # Quick Start
+
+<JsonLd data={{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Convert HTML to an Image with HTMLPix",
+  "description": "Make your first HTMLPix API call in under a minute. Convert HTML to images with curl or any HTTP client.",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Get your API key",
+      "text": "Sign in to HTMLPix and copy your API key from the dashboard."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Send a POST request",
+      "text": "POST your HTML, CSS, and viewport settings to https://api.htmlpix.com/render with your API key in the Authorization header."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Receive your image",
+      "text": "The API returns a JSON response with the image URL. Download or embed the image directly."
+    }
+  ]
+}} />
 
 Make your first API call with curl:
 
@@ -18,8 +47,9 @@ curl -X POST https://api.htmlpix.com/render \
     "width": 800,
     "height": 400,
     "format": "png"
-  }' \
-  --output image.png
+  }'
+
+# Response: { "id": "...", "url": "https://api.htmlpix.com/images/...", "imageKey": "..." }
 ```
 
 ## What's Next?

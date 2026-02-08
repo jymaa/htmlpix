@@ -13,7 +13,7 @@ export function PublicHeader() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 md:px-8">
         <Link href="/" className="group flex items-center gap-3">
           <div className="relative flex h-10 w-10 items-center justify-center border-2 border-[#1a1a1a]">
-            <span className="font-bold text-[#1a1a1a]">{"<>"}</span>
+            <span className="font-bold text-[#1a1a1a]">{"</>"}</span>
             <div className="absolute -top-1 -right-1 h-2 w-2 bg-[#ff4d00]" />
           </div>
           <div>
@@ -24,22 +24,6 @@ export function PublicHeader() {
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-4 text-xs tracking-widest uppercase md:flex md:gap-8">
-          <>
-            <Link
-              href="/#spec"
-              className="flex items-center gap-2 text-[#1a1a1a]/50 transition-colors hover:text-[#ff4d00]"
-            >
-              <span className="h-1 w-1 bg-current" />
-              Specifications
-            </Link>
-            <Link
-              href="/#pricing"
-              className="flex items-center gap-2 text-[#1a1a1a]/50 transition-colors hover:text-[#ff4d00]"
-            >
-              <span className="h-1 w-1 bg-current" />
-              Pricing
-            </Link>
-          </>
           <Link
             href="/docs"
             className="flex items-center gap-2 text-[#1a1a1a]/50 transition-colors hover:text-[#ff4d00]"
@@ -48,7 +32,7 @@ export function PublicHeader() {
             Docs
           </Link>
           <Link
-            href="/pricing"
+            href="/#pricing"
             className="flex items-center gap-2 text-[#1a1a1a]/50 transition-colors hover:text-[#ff4d00]"
           >
             <span className="h-1 w-1 bg-current" />
@@ -72,20 +56,6 @@ export function PublicHeader() {
               <SheetTitle className="text-left font-bold tracking-wider">HTMLPIX</SheetTitle>
             </SheetHeader>
             <nav className="mt-6 flex flex-col gap-1 text-sm tracking-widest uppercase">
-              <>
-                <Link
-                  href="#spec"
-                  className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]"
-                >
-                  Specifications
-                </Link>
-                <Link
-                  href="#pricing"
-                  className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]"
-                >
-                  Pricing
-                </Link>
-              </>
               <Link
                 href="/docs"
                 className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]"
@@ -93,7 +63,7 @@ export function PublicHeader() {
                 Docs
               </Link>
               <Link
-                href="/pricing"
+                href="#pricing"
                 className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]"
               >
                 Pricing

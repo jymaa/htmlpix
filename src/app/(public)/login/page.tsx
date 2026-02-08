@@ -63,7 +63,7 @@ export default function LoginPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 md:px-8">
           <Link href="/" className="group flex items-center gap-3">
             <div className="relative flex h-10 w-10 items-center justify-center border-2 border-[#1a1a1a]">
-              <span className="font-bold text-[#1a1a1a]">{"<>"}</span>
+              <span className="font-bold text-[#1a1a1a]">{"</>"}</span>
               <div className="absolute -top-1 -right-1 h-2 w-2 bg-[#ff4d00]" />
             </div>
             <div>
@@ -102,16 +102,15 @@ export default function LoginPage() {
               </div>
 
               <h1 className="mb-6 font-[family-name:var(--font-bebas-neue)] text-4xl leading-tight tracking-tight sm:text-5xl md:mb-8 md:text-6xl">
-                <span className="text-[#ff4d00]">CONNECT</span>
+                <span className="text-[#ff4d00]">GET YOUR</span>
                 <br />
-                <span>YOUR ACCOUNT</span>
+                <span>API KEY</span>
               </h1>
 
               <div className="relative mb-8 border-l-2 border-[#1a1a1a]/20 pl-6 md:mb-12 md:pl-8">
                 <div className="absolute top-0 left-0 h-2 w-2 -translate-x-[5px] bg-[#ff4d00]" />
                 <p className="max-w-md text-base leading-relaxed text-[#1a1a1a]/60 md:text-lg">
-                  Sign in to access your API dashboard, manage your renders, and monitor your usage in
-                  real-time.
+                  Sign in to grab your API key and start rendering. Your dashboard tracks every request.
                 </p>
               </div>
 
@@ -125,15 +124,15 @@ export default function LoginPage() {
                     {
                       step: "01",
                       title: "Get API Key",
-                      desc: "Instant access to your unique API credentials",
+                      desc: "Copy your key and start building",
                     },
                     {
                       step: "02",
                       title: "Start Rendering",
-                      desc: "Transform HTML to images with one API call",
+                      desc: "One fetch call turns any HTML into an image",
                     },
-                    { step: "03", title: "Track Usage", desc: "Real-time dashboard with render analytics" },
-                    { step: "04", title: "Scale Up", desc: "Upgrade your plan as your needs grow" },
+                    { step: "03", title: "Track Usage", desc: "See every render, response time, and error" },
+                    { step: "04", title: "Scale Up", desc: "Go from 50 to 10,000 renders/month" },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-3 p-4 md:p-5">
                       <span className="text-xs font-bold text-[#ff4d00]">{item.step}</span>
@@ -200,7 +199,7 @@ export default function LoginPage() {
                           <h2 className="mb-2 font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide md:text-4xl">
                             SIGN IN
                           </h2>
-                          <p className="text-sm text-[#1a1a1a]/50">Choose your preferred method</p>
+                          <p className="text-sm text-[#1a1a1a]/50">Takes 30 seconds. No credit card.</p>
                         </div>
 
                         {/* Google Sign In - Primary */}
@@ -320,7 +319,7 @@ export default function LoginPage() {
       {/* Footer */}
       <footer className="relative z-10 border-t-2 border-[#1a1a1a]/10 px-4 py-6 md:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <span className="text-xs text-[#1a1a1a]/30">By signing in, you agree to our Terms of Service</span>
+          <span className="text-xs text-[#1a1a1a]/30">By signing in, you agree to our <a href="/terms" className="underline transition-colors hover:text-[#ff4d00]">Terms</a> and <a href="/privacy" className="underline transition-colors hover:text-[#ff4d00]">Privacy Policy</a></span>
           <span className="text-xs text-[#1a1a1a]/20">v2.0</span>
         </div>
       </footer>
