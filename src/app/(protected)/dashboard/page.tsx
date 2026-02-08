@@ -50,16 +50,22 @@ export default function DashboardPage() {
   const onboardingStatus = useQuery(api.users.hasCompletedOnboarding, userId ? {} : "skip");
 
   const [dismissed, setDismissed] = useState(false);
+  const [hasOpenedOnboarding, setHasOpenedOnboarding] = useState(false);
   const [selectedRender, setSelectedRender] = useState<Render | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Open onboarding once when the user qualifies, then keep it open until they complete it.
-  const shouldShowOnboarding =
-    !dismissed &&
-    apiKeys !== undefined &&
-    onboardingStatus !== undefined &&
-    apiKeys.length === 0 &&
-    !onboardingStatus.completed;
+  useEffect(() => {
+    if (dismissed || hasOpenedOnboarding || apiKeys === undefined || onboardingStatus === undefined) {
+      return;
+    }
+
+    if (apiKeys.length === 0 && !onboardingStatus.completed) {
+      setHasOpenedOnboarding(true);
+    }
+  }, [dismissed, hasOpenedOnboarding, apiKeys, onboardingStatus]);
+
+  // Keep onboarding open once it starts until the user completes/dismisses it.
+  const shouldShowOnboarding = !dismissed && hasOpenedOnboarding && onboardingStatus?.completed === false;
 
   const usagePercent = quota ? Math.round((quota.currentUsage / quota.monthlyLimit) * 100) : 0;
   const isFreePlan = quota?.plan === "free" || quota?.plan === "starter";
