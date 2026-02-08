@@ -15,14 +15,16 @@ function injectBeforeHeadClose(html: string, injection: string): string {
 function buildGoogleFontsUrl(fonts: string[]): string {
   if (fonts.length === 0) return "";
   const families = fonts.map((font) => `family=${encodeURIComponent(font).replace(/%20/g, "+")}`);
-  return `https://fonts.googleapis.com/css2?${families.join("&")}&display=swap`;
+  return `https://fonts.googleapis.com/css2?${families.join("&")}&display=block`;
 }
 
 function injectGoogleFonts(html: string, fonts: string[]): string {
   if (fonts.length === 0) return html;
 
   const cssUrl = buildGoogleFontsUrl(fonts);
-  const injection = `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  const injection = `<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="${cssUrl}">
 <link rel="stylesheet" href="${cssUrl}">`;
 
   const headCloseIndex = html.toLowerCase().indexOf("</head>");

@@ -7,12 +7,18 @@ const spaceMono = Space_Mono({
   variable: "--font-space-mono",
   subsets: ["latin"],
   weight: ["400", "700"],
+  display: "block",
+  preload: true,
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 });
 
 const bebasNeue = Bebas_Neue({
   variable: "--font-bebas-neue",
   subsets: ["latin"],
   weight: ["400"],
+  display: "block",
+  preload: true,
+  fallback: ["Impact", "Arial Narrow", "sans-serif"],
 });
 
 export const metadata: Metadata = {

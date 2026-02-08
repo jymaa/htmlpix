@@ -42,7 +42,7 @@ cd ..
 
 # Build server bundle (resolves npm deps from server/node_modules)
 echo "Building server..."
-/home/deploy/.bun/bin/bun build server/server.ts --target=bun --outdir=server/dist --sourcemap
+NODE_ENV=production /home/deploy/.bun/bin/bun build server/server.ts --target=bun --outdir=server/dist --sourcemap --external=lmdb
 
 # Copy env and set port
 cp /opt/htmlpix/shared/.env ./server/.env

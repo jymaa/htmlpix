@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, type SyntheticEvent } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
@@ -447,9 +447,11 @@ export default function PlaygroundPage() {
   const [snippetTab, setSnippetTab] = useState<"curl" | "typescript" | "python">("curl");
   const [viewMode, setViewMode] = useState<"preview" | "rendered">("preview");
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [previewFontsReady, setPreviewFontsReady] = useState(false);
 
   const htmlRef = useRef<HTMLTextAreaElement>(null);
   const cssRef = useRef<HTMLTextAreaElement>(null);
+  const previewLoadIdRef = useRef(0);
 
   const handleSelectExample = (key: string) => {
     const example = EXAMPLES[key];
@@ -615,6 +617,32 @@ print(data["url"])`;
   const previewHtml = useMemo(() => {
     return buildRenderHtml(html, { css, googleFonts, background: "white" });
   }, [html, css, googleFonts]);
+  const googleFontsKey = useMemo(() => googleFonts.join("|"), [googleFonts]);
+
+  useEffect(() => {
+    previewLoadIdRef.current += 1;
+    setPreviewFontsReady(false);
+  }, [googleFontsKey]);
+
+  const handlePreviewLoad = useCallback((event: SyntheticEvent<HTMLIFrameElement>) => {
+    const loadId = previewLoadIdRef.current;
+    const doc = event.currentTarget.contentDocument;
+    if (!doc) {
+      setPreviewFontsReady(true);
+      return;
+    }
+
+    const fontsReady = doc.fonts ? doc.fonts.ready.catch(() => undefined) : Promise.resolve();
+    const timeout = new Promise<void>((resolve) => {
+      setTimeout(resolve, 1500);
+    });
+
+    void Promise.race([fontsReady, timeout]).then(() => {
+      if (previewLoadIdRef.current === loadId) {
+        setPreviewFontsReady(true);
+      }
+    });
+  }, []);
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ w: 600, h: 340 });
@@ -835,14 +863,21 @@ print(data["url"])`;
                       srcDoc={previewHtml}
                       title="Live preview"
                       sandbox="allow-same-origin"
-                      className="pointer-events-none origin-top-left"
+                      onLoad={handlePreviewLoad}
+                      className="pointer-events-none origin-top-left transition-opacity duration-150"
                       style={{
                         width,
                         height,
                         transform: `scale(${previewScale})`,
                         transformOrigin: "top left",
+                        opacity: previewFontsReady ? 1 : 0,
                       }}
                     />
+                    {!previewFontsReady && (
+                      <div className="pointer-events-none absolute inset-0 grid place-items-center bg-white">
+                        <BlueprintSpinner size="sm" label="Loading fonts" />
+                      </div>
+                    )}
                   </div>
                 )}
 

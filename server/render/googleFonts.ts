@@ -15,7 +15,7 @@ export function buildGoogleFontsUrl(fonts: string[]): string {
     return `family=${encodeURIComponent(font).replace(/%20/g, "+")}`;
   });
 
-  return `https://fonts.googleapis.com/css2?${families.join("&")}&display=swap`;
+  return `https://fonts.googleapis.com/css2?${families.join("&")}&display=block`;
 }
 
 /**
@@ -26,7 +26,9 @@ export function getGoogleFontsHeadInjection(fonts: string[]): string {
 
   const cssUrl = buildGoogleFontsUrl(fonts);
 
-  return `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  return `<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="${cssUrl}">
 <link rel="stylesheet" href="${cssUrl}">`;
 }
 
