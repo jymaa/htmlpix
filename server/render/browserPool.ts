@@ -1,4 +1,5 @@
 import puppeteer, { Browser, BrowserContext } from "puppeteer";
+import { logger } from "../lib/logger";
 
 const BROWSER_INSTANCES = parseInt(process.env.BROWSER_INSTANCES || "1", 10);
 const RENDER_CONCURRENCY = parseInt(process.env.RENDER_CONCURRENCY || "3", 10);
@@ -78,7 +79,7 @@ export class BrowserPool {
     }
 
     this.isInitialized = true;
-    console.log(`BrowserPool: initialized ${BROWSER_INSTANCES} browser(s), concurrency=${RENDER_CONCURRENCY}`);
+    logger.info(`BrowserPool: initialized ${BROWSER_INSTANCES} browser(s), concurrency=${RENDER_CONCURRENCY}`);
   }
 
   async acquireContext(): Promise<{ context: BrowserContext; release: () => Promise<void> }> {
@@ -145,7 +146,7 @@ export class BrowserPool {
 
     this.browsers[index] = browser;
     this.restartCount++;
-    console.log(`BrowserPool: restarted browser ${index}, total restarts=${this.restartCount}`);
+    logger.info(`BrowserPool: restarted browser ${index}`, { totalRestarts: this.restartCount });
   }
 
   async shutdown(): Promise<void> {

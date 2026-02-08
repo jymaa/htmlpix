@@ -1,5 +1,6 @@
 import { getConvexClient } from "./convexClient";
 import { api } from "../../convex/_generated/api";
+import { logger } from "../lib/logger";
 
 const UPLOAD_CONCURRENCY = parseInt(process.env.UPLOAD_CONCURRENCY || "2", 10);
 const UPLOAD_RETRY_MAX = parseInt(process.env.UPLOAD_RETRY_MAX || "5", 10);
@@ -51,6 +52,8 @@ async function runUpload(task: UploadTask): Promise<void> {
       imageKey: task.imageKey,
     });
 
+    logger.debug("upload.success", { renderId: task.renderId });
+
     if (!result.linked) {
       scheduleLinkRetry(task.renderId, task.imageKey, 0);
     }
@@ -64,12 +67,15 @@ async function runUpload(task: UploadTask): Promise<void> {
 
 function scheduleUploadRetry(task: UploadTask, error: unknown): void {
   if (task.attempts >= UPLOAD_RETRY_MAX) {
-    console.error("UploadQueue: upload failed permanently", error);
+    logger.error("upload.failed_permanently", { renderId: task.renderId, attempts: task.attempts, error });
     return;
   }
 
   const delay = Math.min(UPLOAD_RETRY_BASE_MS * 2 ** task.attempts, UPLOAD_RETRY_MAX_MS);
-  const nextTask = { ...task, attempts: task.attempts + 1 };
+  const nextAttempt = task.attempts + 1;
+  logger.warn("upload.retry", { renderId: task.renderId, attempt: nextAttempt, delayMs: delay, error });
+
+  const nextTask = { ...task, attempts: nextAttempt };
 
   setTimeout(() => {
     queue.push(nextTask);
@@ -78,8 +84,14 @@ function scheduleUploadRetry(task: UploadTask, error: unknown): void {
 }
 
 function scheduleLinkRetry(renderId: string, imageKey: string, attempt: number): void {
-  if (attempt >= LINK_RETRY_MAX) return;
+  if (attempt >= LINK_RETRY_MAX) {
+    logger.error("link.failed_permanently", { renderId, attempts: attempt });
+    return;
+  }
   const delay = Math.min(LINK_RETRY_BASE_MS * 2 ** attempt, LINK_RETRY_MAX_MS);
+  if (attempt > 0) {
+    logger.warn("link.retry", { renderId, attempt: attempt + 1, delayMs: delay });
+  }
   setTimeout(() => {
     void runLink(renderId, imageKey, attempt);
   }, delay);
@@ -93,7 +105,7 @@ async function runLink(renderId: string, imageKey: string, attempt: number): Pro
       scheduleLinkRetry(renderId, imageKey, attempt + 1);
     }
   } catch (error) {
-    console.error("UploadQueue: failed to link image to render", error);
+    logger.error("link.error", { renderId, attempt, error });
     scheduleLinkRetry(renderId, imageKey, attempt + 1);
   }
 }

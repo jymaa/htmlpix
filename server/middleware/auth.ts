@@ -4,6 +4,7 @@ import {
   type AuthSuccess as ConvexAuthSuccess,
 } from "../sync/convexClient";
 import type { Id } from "../../convex/_generated/dataModel";
+import type { Logger } from "../lib/logger";
 
 export interface ApiKey {
   id: Id<"apiKeys">;
@@ -29,7 +30,7 @@ export interface AuthError {
 
 export type AuthResult = AuthSuccess | AuthError;
 
-export function authenticateRequest(req: Request): AuthResult {
+export function authenticateRequest(req: Request, log?: Logger): AuthResult {
   const authHeader = req.headers.get("Authorization");
   const result = validateApiKey(authHeader);
 
@@ -43,12 +44,23 @@ export function authenticateRequest(req: Request): AuthResult {
       NOT_READY: 503,
     };
 
+    log?.warn("auth.failure", {
+      code: result.code,
+      keyPrefix: authHeader?.slice(0, 12) || "none",
+    });
+
     return {
       authenticated: false,
       status: statusMap[result.code] || 401,
       response: { code: result.code, message: result.message },
     };
   }
+
+  log?.debug("auth.success", {
+    userId: result.apiKey.userId,
+    keyPrefix: result.apiKey.keyPrefix,
+    usageThisMonth: result.usageThisMonth,
+  });
 
   return {
     authenticated: true,

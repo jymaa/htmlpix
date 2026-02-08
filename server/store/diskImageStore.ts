@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { logger } from "../lib/logger";
 
 const IMAGE_DIR = process.env.IMAGE_DIR || path.resolve(import.meta.dir, "../cache/images");
 const IMAGE_TTL_MS = parseInt(process.env.IMAGE_TTL_MS || "86400000", 10); // 24 hours default
@@ -77,7 +78,7 @@ class DiskImageStore {
         return { path: filePath, contentType: contentTypeForExt(candidate) };
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-          console.error("DiskImageStore: failed to read image", error);
+          logger.error("DiskImageStore: failed to read image", { error: String(error) });
         }
       }
     }

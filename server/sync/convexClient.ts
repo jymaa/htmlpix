@@ -1,5 +1,6 @@
 import { ConvexClient } from "convex/browser";
 import { api } from "../../convex/_generated/api";
+import { logger } from "../lib/logger";
 import {
   initCache,
   closeCache,
@@ -47,13 +48,11 @@ export function initConvexSync(): void {
     }
 
     setLastUpdate(Date.now(), data.keys.length, data.quotas.length);
-    console.log(
-      `Synced auth data: ${data.keys.length} keys, ${data.quotas.length} quotas`
-    );
+    logger.info("Synced auth data", { keys: data.keys.length, quotas: data.quotas.length });
   });
 
   subscribed = true;
-  console.log("Convex sync initialized");
+  logger.info("Convex sync initialized");
 }
 
 export interface AuthSuccess {

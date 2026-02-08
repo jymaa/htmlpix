@@ -3,6 +3,7 @@ import { browserPool } from "./browserPool";
 import { injectGoogleFonts } from "./googleFonts";
 import { createRequestInterceptor, updateBytesDownloaded, type RequestStats } from "./requestPolicy";
 import type { RenderRequest } from "../validation";
+import { logger, type Logger } from "../lib/logger";
 
 const DEFAULT_WIDTH = 1200;
 const DEFAULT_HEIGHT = 800;
@@ -61,7 +62,17 @@ function buildHtml(html: string, request: RenderRequest, useTransparentBackgroun
   return result;
 }
 
-export async function render(request: RenderRequest): Promise<RenderResult | RenderError> {
+export async function render(request: RenderRequest, log: Logger = logger): Promise<RenderResult | RenderError> {
+  const mode = request.url ? "url" : request.html ? "html" : "unknown";
+  log.info("render.start", {
+    mode,
+    width: request.width || DEFAULT_WIDTH,
+    height: request.height || DEFAULT_HEIGHT,
+    format: request.format || "png",
+    selector: request.selector,
+    fullPage: request.fullPage,
+  });
+
   const startTime = performance.now();
   let queueWaitMs = 0;
   let renderMs = 0;
@@ -69,6 +80,10 @@ export async function render(request: RenderRequest): Promise<RenderResult | Ren
 
   const { context, release } = await browserPool.acquireContext();
   queueWaitMs = performance.now() - startTime;
+
+  if (queueWaitMs > 1000) {
+    log.warn("render.slow_queue", { queueWaitMs: Math.round(queueWaitMs) });
+  }
 
   let page: Page | null = null;
   const requestStats: RequestStats = { bytesDownloaded: 0, blockedCount: 0 };
@@ -237,8 +252,15 @@ export async function render(request: RenderRequest): Promise<RenderResult | Ren
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
+    const isTimeout = message.includes("timeout") || message.includes("Timeout");
 
-    if (message.includes("timeout") || message.includes("Timeout")) {
+    log.error("render.error", {
+      error,
+      isTimeout,
+      renderMs: Math.round(performance.now() - startTime),
+    });
+
+    if (isTimeout) {
       return { code: "RENDER_TIMEOUT", message: `Render timed out: ${message}` };
     }
 

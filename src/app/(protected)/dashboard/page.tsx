@@ -60,6 +60,7 @@ export default function DashboardPage() {
     }
 
     if (apiKeys.length === 0 && !onboardingStatus.completed) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasOpenedOnboarding(true);
     }
   }, [dismissed, hasOpenedOnboarding, apiKeys, onboardingStatus]);

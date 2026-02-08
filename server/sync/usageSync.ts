@@ -1,6 +1,7 @@
 import { getConvexClient } from "./convexClient";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { logger } from "../lib/logger";
 
 interface PendingRender {
   externalId: string;
@@ -46,9 +47,9 @@ async function flushRenders(): Promise<void> {
     const serverSecret = process.env.SERVER_SECRET;
     if (!serverSecret) throw new Error("SERVER_SECRET environment variable is required");
     await client.mutation(api.sync.ingestRenders, { serverSecret, renders: batch });
-    console.log(`Reported ${batch.length} renders to Convex`);
+    logger.info("Reported renders to Convex", { count: batch.length });
   } catch (error) {
-    console.error("Failed to report renders to Convex:", error);
+    logger.error("Failed to report renders to Convex", { error: String(error) });
     pendingRenders.unshift(...batch);
 
     if (!flushTimer) {

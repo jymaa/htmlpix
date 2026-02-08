@@ -8,6 +8,7 @@ import { queueImageUpload } from "./sync/uploadQueue";
 import { imageStore } from "./store/imageStore";
 import { diskImageStore } from "./store/diskImageStore";
 import { api } from "../convex/_generated/api";
+import { logger, type Logger } from "./lib/logger";
 
 const PORT = parseInt(process.env.PORT || "3201", 10);
 const IS_DEV = process.env.NODE_ENV !== "production";
@@ -15,10 +16,13 @@ const MAX_QUEUE_LENGTH = parseInt(process.env.MAX_QUEUE_LENGTH || "50", 10);
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || (IS_DEV ? "*" : "");
 
-function jsonResponse(data: object, status = 200, headers?: HeadersInit): Response {
+function jsonResponse(data: object, status = 200, headers?: HeadersInit, requestId?: string): Response {
   const responseHeaders = new Headers(headers);
   if (!responseHeaders.has("Content-Type")) {
     responseHeaders.set("Content-Type", "application/json");
+  }
+  if (requestId) {
+    responseHeaders.set("X-Request-Id", requestId);
   }
   return new Response(JSON.stringify(data), {
     status,
@@ -26,32 +30,36 @@ function jsonResponse(data: object, status = 200, headers?: HeadersInit): Respon
   });
 }
 
-function logRender(result: RenderResult["stats"], success: boolean): void {
-  console.log(
-    JSON.stringify({
-      type: "render",
-      success,
-      queueWaitMs: result.queueWaitMs,
-      renderMs: result.renderMs,
-      screenshotMs: result.screenshotMs,
-      bytesDownloaded: result.bytesDownloaded,
-      blockedRequests: result.blockedRequests,
-      timestamp: new Date().toISOString(),
-    })
-  );
+function generateRequestId(): string {
+  return crypto.randomUUID().slice(0, 8);
 }
 
-async function handleRender(req: Request): Promise<Response> {
+function logRender(log: Logger, result: RenderResult["stats"], success: boolean): void {
+  log.info("render.complete", {
+    success,
+    queueWaitMs: result.queueWaitMs,
+    renderMs: result.renderMs,
+    screenshotMs: result.screenshotMs,
+    bytesDownloaded: result.bytesDownloaded,
+    blockedRequests: result.blockedRequests,
+  });
+}
+
+async function handleRender(req: Request, log: Logger, requestId: string): Promise<Response> {
   // Auth check
-  const auth = authenticateRequest(req);
+  const auth = authenticateRequest(req, log);
   if (!auth.authenticated) {
-    return jsonResponse(auth.response, auth.status);
+    return jsonResponse(auth.response, auth.status, undefined, requestId);
   }
+
+  // Enrich logger with user context
+  const rlog = log.child({ userId: auth.apiKey.userId, apiKeyId: auth.apiKey.id });
 
   // Check queue length
   const stats = browserPool.stats;
   if (stats.queueLength >= MAX_QUEUE_LENGTH) {
-    return jsonResponse({ code: "QUEUE_FULL", message: "Server is overloaded, try again later" }, 429);
+    rlog.warn("queue.full", { queueLength: stats.queueLength, available: stats.available });
+    return jsonResponse({ code: "QUEUE_FULL", message: "Server is overloaded, try again later" }, 429, undefined, requestId);
   }
 
   // Parse body
@@ -59,13 +67,15 @@ async function handleRender(req: Request): Promise<Response> {
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ code: "INVALID_JSON", message: "Request body must be valid JSON" }, 400);
+    rlog.warn("request.invalid_json");
+    return jsonResponse({ code: "INVALID_JSON", message: "Request body must be valid JSON" }, 400, undefined, requestId);
   }
 
   // Validate
   const validated = validateRenderRequest(body);
   if (isValidationError(validated)) {
-    return jsonResponse(validated, 400);
+    rlog.warn("request.validation_error", { code: validated.code });
+    return jsonResponse(validated, 400, undefined, requestId);
   }
 
   // Template resolution: fetch template from Convex and interpolate variables
@@ -84,12 +94,17 @@ async function handleRender(req: Request): Promise<Response> {
         templateId: validated.templateId,
       });
       if (!template) {
-        return jsonResponse({ code: "TEMPLATE_NOT_FOUND", message: "Template not found" }, 404);
+        return jsonResponse({ code: "TEMPLATE_NOT_FOUND", message: "Template not found" }, 404, undefined, requestId);
       }
       // Check access: template must be public or owned by the user
       if (!template.isPublic && template.userId !== auth.apiKey.userId) {
-        return jsonResponse({ code: "TEMPLATE_NOT_FOUND", message: "Template not found" }, 404);
+        return jsonResponse({ code: "TEMPLATE_NOT_FOUND", message: "Template not found" }, 404, undefined, requestId);
       }
+
+      rlog.debug("template.resolved", {
+        templateId: validated.templateId,
+        variableCount: template.variables.length,
+      });
 
       // Interpolate variables into HTML and CSS
       let html = template.html;
@@ -111,8 +126,8 @@ async function handleRender(req: Request): Promise<Response> {
       if (!validated.height && template.height) validated.height = template.height;
       if (!validated.format && template.format) validated.format = template.format;
     } catch (error) {
-      console.error("Template fetch failed:", error);
-      return jsonResponse({ code: "TEMPLATE_ERROR", message: "Failed to fetch template" }, 500);
+      rlog.error("template.fetch_failed", { templateId: validated.templateId, error });
+      return jsonResponse({ code: "TEMPLATE_ERROR", message: "Failed to fetch template" }, 500, undefined, requestId);
     }
   }
 
@@ -126,6 +141,7 @@ async function handleRender(req: Request): Promise<Response> {
       const cached = await getConvexClient().action(api.images.checkCachedRender, { contentHash });
       if (cached.cached && cached.externalId && cached.imageKey) {
         const ext = validated.format || "png";
+        rlog.info("cache.hit", { contentHash: contentHash.slice(0, 12), renderId: cached.externalId });
 
         // Return cached result
         if (validated.responseFormat === "base64") {
@@ -139,7 +155,7 @@ async function handleRender(req: Request): Promise<Response> {
               base64,
               mimeType: imageData.contentType,
               cached: true,
-            });
+            }, 200, undefined, requestId);
           }
           // If not in disk cache, redirect to URL
         }
@@ -149,16 +165,16 @@ async function handleRender(req: Request): Promise<Response> {
           url: `${BASE_URL}/images/${cached.externalId}.${ext}`,
           imageKey: cached.imageKey,
           cached: true,
-        });
+        }, 200, undefined, requestId);
       }
     } catch (error) {
       // If cache check fails, proceed with render
-      console.error("Cache check failed:", error);
+      rlog.error("cache.check_failed", { error });
     }
   }
 
   // Render
-  const result = await render(validated);
+  const result = await render(validated, rlog);
   const id = generateImageId();
 
   // Compute htmlHash for backwards compat (use html or url)
@@ -166,6 +182,7 @@ async function handleRender(req: Request): Promise<Response> {
 
   if (isRenderError(result)) {
     logRender(
+      rlog,
       { queueWaitMs: 0, renderMs: 0, screenshotMs: 0, bytesDownloaded: 0, blockedRequests: 0 },
       false
     );
@@ -183,17 +200,17 @@ async function handleRender(req: Request): Promise<Response> {
       createdAt: Date.now(),
     });
 
-    return jsonResponse(result, 500);
+    return jsonResponse(result, 500, undefined, requestId);
   }
 
-  logRender(result.stats, true);
+  logRender(rlog, result.stats, true);
 
   const ext = result.contentType.split("/")[1] || "png";
   const imageKey = `${id}.${ext}`;
 
   imageStore.store(id, result.buffer, result.contentType);
   void diskImageStore.save(id, ext, result.buffer).catch((error) => {
-    console.error("Failed to save image to disk cache:", error);
+    rlog.error("disk_cache.save_failed", { error });
   });
 
   const enqueueStart = performance.now();
@@ -230,7 +247,8 @@ async function handleRender(req: Request): Promise<Response> {
         mimeType: result.contentType,
       },
       200,
-      { "Server-Timing": serverTiming }
+      { "Server-Timing": serverTiming },
+      requestId
     );
   }
 
@@ -241,7 +259,8 @@ async function handleRender(req: Request): Promise<Response> {
       imageKey,
     },
     200,
-    { "Server-Timing": serverTiming }
+    { "Server-Timing": serverTiming },
+    requestId
   );
 }
 
@@ -295,11 +314,12 @@ function parseImageId(id: string): { cleanId: string; ext?: string } {
   return { cleanId: id };
 }
 
-async function handleGetImage(id: string): Promise<Response> {
+async function handleGetImage(id: string, log: Logger): Promise<Response> {
   const { cleanId, ext } = parseImageId(id);
 
   const cached = imageStore.get(cleanId);
   if (cached) {
+    log.debug("image.hit", { renderId: cleanId, tier: "memory" });
     const body = Uint8Array.from(cached.buffer);
     const blob = new Blob([body], { type: cached.contentType });
     return new Response(blob, {
@@ -313,6 +333,7 @@ async function handleGetImage(id: string): Promise<Response> {
 
   const diskCached = await diskImageStore.get(cleanId, ext);
   if (diskCached) {
+    log.debug("image.hit", { renderId: cleanId, tier: "disk" });
     return new Response(Bun.file(diskCached.path), {
       status: 200,
       headers: {
@@ -326,14 +347,16 @@ async function handleGetImage(id: string): Promise<Response> {
     const client = getConvexClient();
     const url = await client.action(api.images.getImageUrlByRender, { renderId: cleanId });
     if (!url) {
+      log.debug("image.miss", { renderId: cleanId });
       return jsonResponse({ code: "NOT_FOUND", message: "Image not found" }, 404);
     }
+    log.debug("image.hit", { renderId: cleanId, tier: "remote" });
     return new Response(null, {
       status: 302,
       headers: { Location: url },
     });
   } catch (error) {
-    console.error("Failed to fetch image URL:", error);
+    log.error("image.fetch_failed", { renderId: cleanId, error });
     return jsonResponse({ code: "NOT_FOUND", message: "Image not found" }, 404);
   }
 }
@@ -388,6 +411,9 @@ async function handleRequest(req: Request): Promise<Response> {
     return withCors(new Response(null, { status: 204 }), origin);
   }
 
+  const requestId = generateRequestId();
+  const log = logger.child({ requestId, method, path });
+
   // Dev testing interface (dev mode only)
   if (IS_DEV && path === "/dev" && method === "GET") {
     const devPage = Bun.file(import.meta.dir + "/dev/index.html");
@@ -397,13 +423,17 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   if (path === "/render" && method === "POST") {
-    return withCors(await handleRender(req), origin);
+    const res = await handleRender(req, log, requestId);
+    res.headers.set("X-Request-Id", requestId);
+    return withCors(res, origin);
   }
 
   // GET /images/:id
   const imageMatch = path.match(/^\/images\/([^/]+)$/);
   if (imageMatch && method === "GET") {
-    return withCors(await handleGetImage(imageMatch[1] || ""), origin);
+    const res = await handleGetImage(imageMatch[1] || "", log);
+    res.headers.set("X-Request-Id", requestId);
+    return withCors(res, origin);
   }
 
   if (path === "/healthz" && method === "GET") {
@@ -419,10 +449,10 @@ async function handleRequest(req: Request): Promise<Response> {
 
 // Initialize browser pool and start server
 async function main() {
-  console.log("Initializing Convex sync...");
+  logger.info("Initializing Convex sync...");
   initConvexSync();
 
-  console.log("Initializing browser pool...");
+  logger.info("Initializing browser pool...");
   await browserPool.initialize();
 
   const server = Bun.serve({
@@ -430,18 +460,19 @@ async function main() {
     fetch: handleRequest,
   });
 
-  console.log(`Server running on http://localhost:${server.port}`);
+  logger.info(`Server running on http://localhost:${server.port}`);
 
   // Handle graceful shutdown
   const shutdown = async () => {
-    console.log("Shutting down...");
-    console.log("Flushing pending renders...");
+    logger.info("Shutting down...");
+    logger.info("Flushing pending renders...");
     await flushPendingRenders();
 
     imageStore.shutdown();
     diskImageStore.shutdown();
     await browserPool.shutdown();
     await closeConvexClient();
+    await logger.flush();
     process.exit(0);
   };
 
@@ -450,7 +481,7 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("Failed to start server:", err);
+  logger.error("Failed to start server", { error: String(err) });
   process.exit(1);
 });
 
