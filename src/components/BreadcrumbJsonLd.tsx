@@ -14,6 +14,13 @@ const LABELS: Record<string, string> = {
   "image-storage": "Image Storage",
   errors: "Errors",
   faq: "FAQ",
+  "use-cases": "Use Cases",
+  "og-images": "OG Images",
+  "social-cards": "Social Cards",
+  invoices: "Invoices",
+  certificates: "Certificates",
+  "email-banners": "Email Banners",
+  "charts-and-reports": "Charts & Reports",
 };
 
 export function BreadcrumbJsonLd() {

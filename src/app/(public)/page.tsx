@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PublicHeader } from "@/components/PublicHeader";
 import { JsonLd } from "@/components/JsonLd";
+import { getAllUseCases } from "./use-cases/data";
 
 export default function LandingVariant2() {
   return (
@@ -371,134 +372,8 @@ export default function LandingVariant2() {
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: "OG Images",
-                tag: "SEO",
-                desc: "Generate a unique social preview for every page on your site. More clicks from Google, Twitter, and LinkedIn.",
-                bg: "from-[#1a1a1a] to-[#333]",
-                preview: (
-                  <div className="flex h-full flex-col justify-between p-4">
-                    <div className="text-[8px] font-bold tracking-wider text-[#ff4d00] uppercase">
-                      Blog Post
-                    </div>
-                    <div>
-                      <div className="mb-1 font-[family-name:var(--font-bebas-neue)] text-base leading-tight text-white">
-                        How We Scaled to 10M Requests
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="h-3.5 w-3.5 rounded-full bg-[#ff4d00]" />
-                        <span className="text-[7px] text-white/40">htmlpix.com</span>
-                        <span className="text-[7px] text-white/20">|</span>
-                        <span className="text-[7px] text-white/40">5 min</span>
-                      </div>
-                    </div>
-                  </div>
-                ),
-              },
-              {
-                title: "Social Cards",
-                tag: "SOCIAL",
-                desc: "Branded cards for Twitter/X, LinkedIn, and Discord. Generated from your app data on every request.",
-                bg: "from-[#ff4d00] to-[#ff6a33]",
-                preview: (
-                  <div className="flex h-full items-center justify-center p-4">
-                    <div className="text-center">
-                      <div className="mb-1 font-[family-name:var(--font-bebas-neue)] text-xl text-white">
-                        Launch Day
-                      </div>
-                      <div className="text-[8px] tracking-wider text-white/60">@yourapp</div>
-                    </div>
-                  </div>
-                ),
-              },
-              {
-                title: "Invoices",
-                tag: "COMMERCE",
-                desc: "Pixel-perfect receipts from HTML templates. Email-ready, print-ready, archive-ready.",
-                bg: "from-[#f5f0e8] to-[#e8e0d5]",
-                preview: (
-                  <div className="flex h-full flex-col justify-between p-4">
-                    <div className="text-[8px] font-bold tracking-wider text-[#1a1a1a]/50 uppercase">
-                      Receipt
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-[7px] text-[#1a1a1a]/50">
-                        <span>API Pro Plan</span>
-                        <span>$15.00</span>
-                      </div>
-                      <div className="flex justify-between text-[7px] text-[#1a1a1a]/50">
-                        <span>Extra Renders</span>
-                        <span>$8.00</span>
-                      </div>
-                      <div className="border-t border-dashed border-[#1a1a1a]/15 pt-1.5">
-                        <div className="flex justify-between text-[8px] font-bold text-[#1a1a1a]">
-                          <span>Total</span>
-                          <span>$23.00</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ),
-              },
-              {
-                title: "Certificates",
-                tag: "EDUCATION",
-                desc: "Generate thousands of personalized diplomas, awards, and badges. Just swap the name and date in your HTML template.",
-                bg: "from-[#f5f0e8] to-[#ece5d8]",
-                preview: (
-                  <div className="flex h-full flex-col items-center justify-center p-4 text-center">
-                    <div className="mb-1.5 text-[7px] tracking-[0.15em] text-[#1a1a1a]/40 uppercase">
-                      Certificate of
-                    </div>
-                    <div className="font-[family-name:var(--font-bebas-neue)] text-base text-[#1a1a1a]">
-                      Completion
-                    </div>
-                    <div className="mt-2 h-px w-16 bg-[#ff4d00]" />
-                    <div className="mt-2 text-[7px] text-[#1a1a1a]/30">Jane Doe — 2026</div>
-                  </div>
-                ),
-              },
-              {
-                title: "Email Banners",
-                tag: "MARKETING",
-                desc: "Dynamic headers that look identical in every email client. No more rendering bugs.",
-                bg: "from-[#1a1a1a] to-[#2d2d2d]",
-                preview: (
-                  <div className="flex h-full flex-col items-center justify-center gap-2 p-4">
-                    <div className="w-full rounded bg-gradient-to-r from-[#ff4d00] to-[#ff6a33] px-3 py-2.5 text-center text-[9px] font-bold tracking-wider text-white uppercase">
-                      Flash Sale — 50% Off
-                    </div>
-                    <div className="flex w-full gap-1">
-                      <div className="h-1 flex-1 rounded-full bg-white/10" />
-                      <div className="h-1 flex-1 rounded-full bg-white/10" />
-                      <div className="h-1 flex-1 rounded-full bg-white/10" />
-                    </div>
-                  </div>
-                ),
-              },
-              {
-                title: "Charts & Reports",
-                tag: "DATA",
-                desc: "Turn D3 or Chart.js visualizations into static images you can drop into Slack, PDFs, or emails.",
-                bg: "from-[#1a1a1a] to-[#2a2a2a]",
-                preview: (
-                  <div className="flex h-full items-end gap-1 p-4 pb-3">
-                    {[40, 65, 45, 80, 55, 70, 50].map((h, j) => (
-                      <div
-                        key={j}
-                        className="flex-1 rounded-t"
-                        style={{
-                          height: `${h}%`,
-                          background: j === 3 ? "#ff4d00" : "rgba(255,77,0,0.35)",
-                        }}
-                      />
-                    ))}
-                  </div>
-                ),
-              },
-            ].map((uc, i) => (
-              <div key={i} className="group">
+            {getAllUseCases().map((uc, i) => (
+              <Link key={i} href={`/use-cases/${uc.slug}`} className="group">
                 {/* Preview card with hover lift */}
                 <div
                   className={`mb-4 h-44 overflow-hidden border border-[#f5f0e8]/10 bg-gradient-to-br ${uc.bg} transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-lg group-hover:shadow-[#ff4d00]/5`}
@@ -516,7 +391,10 @@ export default function LandingVariant2() {
                   {uc.title}
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-[#f5f0e8]/40">{uc.desc}</p>
-              </div>
+                <span className="mt-2 inline-block text-[10px] font-bold tracking-wider text-[#ff4d00]/60 uppercase transition-colors group-hover:text-[#ff4d00]">
+                  Learn more →
+                </span>
+              </Link>
             ))}
           </div>
         </div>
