@@ -1,13 +1,24 @@
 import { Axiom } from "@axiomhq/js";
 
-const AXIOM_TOKEN = process.env.AXIOM_TOKEN;
-const AXIOM_DATASET = process.env.AXIOM_DATASET;
-const IS_PROD = process.env.NODE_ENV === "production";
-
-const axiom =
-  IS_PROD && AXIOM_TOKEN && AXIOM_DATASET ? new Axiom({ token: AXIOM_TOKEN }) : null;
-
 type Fields = Record<string, unknown>;
+
+// Lazy-init Axiom so env vars are read at first use, not module load time.
+// This avoids issues with bundlers inlining process.env or .env loading order.
+let _axiom: Axiom | null | undefined;
+let _dataset: string | undefined;
+
+function getAxiom(): Axiom | null {
+  if (_axiom === undefined) {
+    const token = process.env.AXIOM_TOKEN;
+    _dataset = process.env.AXIOM_DATASET;
+    const isProd = process.env.NODE_ENV === "production";
+    _axiom = isProd && token && _dataset ? new Axiom({ token }) : null;
+    if (_axiom) {
+      console.log(`[logger] Axiom initialized (dataset=${_dataset})`);
+    }
+  }
+  return _axiom;
+}
 
 function serializeError(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
@@ -30,8 +41,9 @@ function resolveFields(fields?: Fields): Fields | undefined {
 }
 
 function ingest(level: "info" | "warn" | "error", msg: string, fields?: Fields): void {
-  if (!axiom || !AXIOM_DATASET) return;
-  axiom.ingest(AXIOM_DATASET, { level, msg, ...fields, _time: new Date().toISOString() });
+  const axiom = getAxiom();
+  if (!axiom || !_dataset) return;
+  axiom.ingest(_dataset, { level, msg, ...fields, _time: new Date().toISOString() });
 }
 
 export interface Logger {
@@ -74,6 +86,7 @@ function createLogger(baseFields?: Fields): Logger {
       ingest("error", msg, merged);
     },
     async flush(): Promise<void> {
+      const axiom = getAxiom();
       if (!axiom) return;
       await axiom.flush();
     },

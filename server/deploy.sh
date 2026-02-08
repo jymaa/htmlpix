@@ -40,13 +40,13 @@ cd server
 /home/deploy/.bun/bin/bun install --frozen-lockfile
 cd ..
 
-# Copy env and set port (before build so env vars are available to bundler)
-cp /opt/htmlpix/shared/.env ./server/.env
-sed -i "s/^PORT=.*/PORT=$TARGET_PORT/" ./server/.env
-
 # Build server bundle (resolves npm deps from server/node_modules)
 echo "Building server..."
 /home/deploy/.bun/bin/bun build server/server.ts --target=bun --outdir=server/dist --sourcemap
+
+# Copy env and set port
+cp /opt/htmlpix/shared/.env ./server/.env
+sed -i "s/^PORT=.*/PORT=$TARGET_PORT/" ./server/.env
 
 # Start new instance
 echo "Starting $TARGET instance..."
