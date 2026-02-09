@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { BlueprintSpinner } from "@/components/ui/blueprint-spinner";
+import { usePlausible } from "next-plausible";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState<"google" | "email" | null>(null);
   const [emailSent, setEmailSent] = useState(false);
+  const plausible = usePlausible();
 
   useEffect(() => {
     if (session) {
@@ -20,6 +22,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading("google");
+    plausible("Signup", { props: { method: "google" } });
     await authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" });
   };
 
@@ -29,6 +32,7 @@ export default function LoginPage() {
     setIsLoading("email");
     try {
       await authClient.signIn.magicLink({ email, callbackURL: "/dashboard" });
+      plausible("Signup", { props: { method: "magic_link" } });
       setEmailSent(true);
     } catch {
       setIsLoading(null);

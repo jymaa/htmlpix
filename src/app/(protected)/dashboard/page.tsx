@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import Image from "next/image";
+import { usePlausible } from "next-plausible";
 
 const PLAN_LIMITS: Record<string, number> = {
   free: 50,
@@ -51,6 +52,7 @@ export default function DashboardPage() {
 
   const [dismissed, setDismissed] = useState(false);
   const [hasOpenedOnboarding, setHasOpenedOnboarding] = useState(false);
+  const plausible = usePlausible();
   const [selectedRender, setSelectedRender] = useState<Render | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -248,7 +250,11 @@ export default function DashboardPage() {
                   : `Scale beyond ${PLAN_LIMITS[quota.plan]?.toLocaleString()} renders. Only $${nextPlan.price}/mo.`}
               </p>
             </div>
-            <Link href="/settings" className="shrink-0">
+            <Link
+              href="/settings"
+              className="shrink-0"
+              onClick={() => plausible("Plan Selected", { props: { plan: nextPlan.name.toLowerCase(), source: "dashboard" } })}
+            >
               <Button
                 size="lg"
                 className="bg-primary hover:bg-primary/90 font-mono text-xs font-bold tracking-widest text-white uppercase"

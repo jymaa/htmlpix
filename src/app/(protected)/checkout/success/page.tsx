@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { BlueprintSpinner } from "@/components/ui/blueprint-spinner";
+import { usePlausible } from "next-plausible";
 
 const MIN_VISIBLE_MS = 900;
 const FALLBACK_REDIRECT_MS = 4500;
@@ -20,6 +21,7 @@ export default function CheckoutSuccessPage() {
   const syncSubscription = useAction(api.stripe.syncSubscription);
   const [status, setStatus] = useState<"syncing" | "redirecting" | "error">(sessionId ? "syncing" : "error");
   const [showManualLink, setShowManualLink] = useState(false);
+  const plausible = usePlausible();
 
   useEffect(() => {
     if (!sessionId) return;
@@ -30,6 +32,7 @@ export default function CheckoutSuccessPage() {
     const sync = async () => {
       try {
         await syncSubscription({ sessionId });
+        plausible("Checkout Success");
       } catch (error) {
         console.error("Failed to sync subscription:", error);
         // Webhook still syncs subscription, continue users to dashboard.

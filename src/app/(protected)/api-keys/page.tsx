@@ -19,6 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { Id } from "../../../../convex/_generated/dataModel";
+import { usePlausible } from "next-plausible";
 
 export default function ApiKeysPage() {
   const { data: session } = authClient.useSession();
@@ -35,6 +36,7 @@ export default function ApiKeysPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const plausible = usePlausible();
 
   const handleCreateKey = async () => {
     if (!userId || !newKeyName.trim()) return;
@@ -42,6 +44,7 @@ export default function ApiKeysPage() {
     setIsLoading(true);
     try {
       const result = await createKey({ name: newKeyName.trim() });
+      plausible("API Key Created");
       setNewKeyValue(result.rawKey);
       setNewKeyName("");
       setIsCreateDialogOpen(false);

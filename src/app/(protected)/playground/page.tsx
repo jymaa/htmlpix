@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { usePlausible } from "next-plausible";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.htmlpix.com";
 
@@ -448,6 +449,7 @@ export default function PlaygroundPage() {
   const [viewMode, setViewMode] = useState<"preview" | "rendered">("preview");
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [previewFontsReady, setPreviewFontsReady] = useState(false);
+  const plausible = usePlausible();
 
   const htmlRef = useRef<HTMLTextAreaElement>(null);
   const cssRef = useRef<HTMLTextAreaElement>(null);
@@ -508,9 +510,11 @@ export default function PlaygroundPage() {
       } else if (data.url) {
         setImageUrl(data.url);
         setViewMode("rendered");
+        plausible("Playground Run");
       } else if (data.base64) {
         setImageUrl(`data:${data.mimeType};base64,${data.base64}`);
         setViewMode("rendered");
+        plausible("Playground Run");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Network error");

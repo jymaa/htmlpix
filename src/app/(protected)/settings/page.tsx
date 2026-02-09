@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LogOut, User } from "lucide-react";
+import { usePlausible } from "next-plausible";
 
 const PLANS = [
   {
@@ -74,6 +75,7 @@ export default function SettingsPage() {
 
   const [loading, setLoading] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const plausible = usePlausible();
   const lastBackgroundSyncRef = useRef(0);
 
   const runBackgroundBillingSync = useCallback(async () => {
@@ -166,6 +168,7 @@ export default function SettingsPage() {
   const isLoadingAny = loading !== null;
 
   const handlePlanChange = async (priceId: string, planId: string) => {
+    plausible("Plan Selected", { props: { plan: planId, source: "settings" } });
     if (hasPaidSubscription) {
       await handleManageBilling(planId);
       return;

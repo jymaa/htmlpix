@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicHeader } from "@/components/PublicHeader";
 import { JsonLd } from "@/components/JsonLd";
+import { TrackedCTA } from "@/components/TrackedCTA";
 import { getAllUseCases } from "./use-cases/data";
 
 export const metadata: Metadata = {
@@ -141,8 +142,10 @@ export default function LandingVariant2() {
               </div>
 
               <div className="flex flex-wrap gap-4">
-                <Link
+                <TrackedCTA
                   href="/login"
+                  eventName="CTA Click"
+                  eventProps={{ location: "hero", text: "Get API Key" }}
                   className="group inline-flex items-center gap-3 bg-[#ff4d00] px-6 py-3 text-[#f5f0e8] transition-colors hover:bg-[#1a1a1a] md:gap-4 md:px-8 md:py-4"
                 >
                   <span className="text-xs font-bold tracking-widest uppercase md:text-sm">Get API Key</span>
@@ -159,7 +162,7 @@ export default function LandingVariant2() {
                       d="M17 8l4 4m0 0l-4 4m4-4H3"
                     />
                   </svg>
-                </Link>
+                </TrackedCTA>
                 <Link
                   href="/docs"
                   className="inline-flex items-center gap-2 border-2 border-[#1a1a1a]/20 px-6 py-3 text-xs font-bold tracking-widest text-[#1a1a1a]/60 uppercase transition-colors hover:border-[#ff4d00] hover:text-[#ff4d00] md:px-8 md:py-4 md:text-sm"
@@ -595,8 +598,10 @@ export default function LandingVariant2() {
                     {plan.per}
                   </div>
                   <div className="border-l border-[#1a1a1a]/10 p-5 text-center">
-                    <Link
+                    <TrackedCTA
                       href={`/login?plan=${plan.planId}`}
+                      eventName="CTA Click"
+                      eventProps={{ location: "pricing", text: plan.name }}
                       className={`inline-block px-6 py-2 text-xs font-bold tracking-wider uppercase transition-colors ${
                         plan.popular
                           ? "bg-[#ff4d00] text-white hover:bg-[#1a1a1a]"
@@ -604,7 +609,7 @@ export default function LandingVariant2() {
                       }`}
                     >
                       {plan.price === "$0" ? "Start Free" : "Select"}
-                    </Link>
+                    </TrackedCTA>
                   </div>
                 </div>
               ))}
@@ -640,8 +645,10 @@ export default function LandingVariant2() {
                 <div className="mb-4 text-xs text-[#1a1a1a]/50">
                   <span className="font-bold">{plan.renders}</span> renders/month
                 </div>
-                <Link
+                <TrackedCTA
                   href={`/login?plan=${plan.planId}`}
+                  eventName="CTA Click"
+                  eventProps={{ location: "pricing", text: plan.name }}
                   className={`mt-auto block py-3 text-center text-xs font-bold tracking-wider uppercase transition-colors ${
                     plan.popular
                       ? "bg-[#ff4d00] text-white hover:bg-[#1a1a1a]"
@@ -649,7 +656,7 @@ export default function LandingVariant2() {
                   }`}
                 >
                   {plan.price === 0 ? "Start Free" : `Choose ${plan.name}`}
-                </Link>
+                </TrackedCTA>
               </div>
             ))}
           </div>
@@ -671,8 +678,10 @@ export default function LandingVariant2() {
           <p className="mx-auto mb-8 max-w-xl text-base text-white/60 md:mb-10 md:text-lg">
             50 free renders every month. No credit card. Your API key is 30 seconds away.
           </p>
-          <Link
+          <TrackedCTA
             href="/login"
+            eventName="CTA Click"
+            eventProps={{ location: "final", text: "Get Your API Key" }}
             className="group inline-flex items-center gap-3 bg-white px-6 py-4 font-bold tracking-wider text-[#ff4d00] uppercase transition-colors hover:bg-[#1a1a1a] hover:text-white md:gap-4 md:px-10 md:py-5"
           >
             Get Your API Key
@@ -689,7 +698,7 @@ export default function LandingVariant2() {
                 d="M17 8l4 4m0 0l-4 4m4-4H3"
               />
             </svg>
-          </Link>
+          </TrackedCTA>
         </div>
       </section>
 

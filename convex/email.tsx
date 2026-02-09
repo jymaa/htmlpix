@@ -41,7 +41,7 @@ export const sendMagicLink = async (
 ) => {
   await sendEmailHelper(ctx, {
     to,
-    subject: "Sign in to your account",
-    html: await render(<MagicLinkEmail url={url} brandName="HTMLPix" brandTagline="HTMLPix" />),
+    subject: "Sign in to HTMLPix",
+    html: await render(<MagicLinkEmail url={url} brandName="HTMLPix" brandTagline="HTML to image API" />),
   });
 };
