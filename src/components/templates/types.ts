@@ -1,6 +1,6 @@
 export type TemplateVariable = {
   name: string;
-  type: "string" | "number" | "url";
+  type?: "string" | "number" | "url";
   defaultValue?: string;
 };
 

@@ -10,6 +10,7 @@ interface TemplateInspectorProps {
   templateId: string;
   variables: TemplateVariable[];
   previewValues: Record<string, string>;
+  googleFonts: string[];
   width: number;
   height: number;
   format: TemplateFormat;
@@ -24,6 +25,7 @@ interface TemplateInspectorProps {
   onWidthChange: (next: number) => void;
   onHeightChange: (next: number) => void;
   onFormatChange: (next: TemplateFormat) => void;
+  onGoogleFontsChange: (next: string[]) => void;
 }
 
 function Section({
@@ -67,6 +69,7 @@ export function TemplateInspector({
   templateId,
   variables,
   previewValues,
+  googleFonts,
   width,
   height,
   format,
@@ -81,6 +84,7 @@ export function TemplateInspector({
   onWidthChange,
   onHeightChange,
   onFormatChange,
+  onGoogleFontsChange,
 }: TemplateInspectorProps) {
   const snippet = useMemo(() => {
     const variableLines = variables
@@ -103,6 +107,17 @@ ${variableLines}
     }
   }'`;
   }, [format, height, previewValues, templateId, variables, width]);
+
+  const [newFontInput, setNewFontInput] = useState("");
+
+  const handleAddFont = () => {
+    const trimmed = newFontInput.trim();
+    if (!trimmed) return;
+    if (!googleFonts.includes(trimmed)) {
+      onGoogleFontsChange([...googleFonts, trimmed]);
+    }
+    setNewFontInput("");
+  };
 
   return (
     <div className="bg-background flex h-full w-[320px] shrink-0 flex-col border-l border-[var(--border)]">
@@ -127,7 +142,7 @@ ${variableLines}
         >
           {variables.length === 0 ? (
             <p className="text-muted-foreground text-xs">
-              No variables yet. Use <code>{"{{name}}"}</code> placeholders in HTML/CSS.
+              No variables yet. Access values via <code>props.name</code> in JSX.
             </p>
           ) : (
             <div className="space-y-3">
@@ -141,22 +156,6 @@ ${variableLines}
                       className="h-7 text-xs"
                       placeholder="name"
                     />
-                    <Select
-                      value={variable.type}
-                      onValueChange={(value) =>
-                        onUpdateVariable(index, { type: value as "string" | "number" | "url" })
-                      }
-                      disabled={readOnly}
-                    >
-                      <SelectTrigger className="h-7 w-[92px] text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="string">String</SelectItem>
-                        <SelectItem value="number">Number</SelectItem>
-                        <SelectItem value="url">URL</SelectItem>
-                      </SelectContent>
-                    </Select>
                     {!readOnly && (
                       <button
                         type="button"
@@ -201,6 +200,56 @@ ${variableLines}
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </Section>
+
+        <Section title="Google Fonts">
+          {googleFonts.length === 0 ? (
+            <p className="text-muted-foreground text-xs">
+              No fonts added. Add a Google Font spec (e.g. <code>Inter:wght@400;700</code>).
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {googleFonts.map((font, index) => (
+                <div key={`${font}-${index}`} className="flex items-center gap-2">
+                  <span className="min-w-0 flex-1 truncate font-mono text-xs">{font}</span>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => onGoogleFontsChange(googleFonts.filter((_, i) => i !== index))}
+                      className="text-muted-foreground hover:text-destructive shrink-0 text-xs"
+                    >
+                      Del
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {!readOnly && (
+            <div className="flex items-center gap-2">
+              <Input
+                value={newFontInput}
+                onChange={(event) => setNewFontInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleAddFont();
+                  }
+                }}
+                className="h-7 text-xs"
+                placeholder="Inter:wght@400;700"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 shrink-0 px-2 text-xs"
+                onClick={handleAddFont}
+                disabled={!newFontInput.trim()}
+              >
+                Add
+              </Button>
             </div>
           )}
         </Section>

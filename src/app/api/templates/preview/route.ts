@@ -99,10 +99,10 @@ export async function POST(req: Request) {
         "X-Template-Preview-Secret": previewSecret,
       },
       body: JSON.stringify({
-        html: parsed.html,
-        css: parsed.css,
+        jsx: parsed.jsx,
         variables: parsed.variables,
         variableValues: parsed.variableValues,
+        googleFonts: parsed.googleFonts,
         width: parsed.width,
         height: parsed.height,
         format: parsed.format,

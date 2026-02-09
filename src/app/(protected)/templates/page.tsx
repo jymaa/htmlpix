@@ -32,9 +32,9 @@ type Template = {
   userId: string;
   name: string;
   description?: string;
-  html: string;
-  css?: string;
-  variables: { name: string; type: "string" | "number" | "url"; defaultValue?: string }[];
+  jsx: string;
+  variables: { name: string; type?: "string" | "number" | "url"; defaultValue?: string }[];
+  googleFonts?: string[];
   width?: number;
   height?: number;
   format?: "png" | "jpeg" | "webp";
@@ -71,11 +71,10 @@ export default function TemplatesPage() {
       const id = await createTemplate({
         name: newName.trim(),
         description: newDesc.trim() || undefined,
-        html: '<div class="w-[1200px] h-[630px] flex flex-col items-center justify-center bg-[#1a1a1a] text-[#f5f0e8]" style="font-family:system-ui">\n  <h1 style="font-size:64px;margin:0">{{title}}</h1>\n  <p style="font-size:24px;color:rgba(245,240,232,0.6);margin-top:16px">{{subtitle}}</p>\n</div>',
-        css: "",
+        jsx: `const { title, subtitle } = props;\nreturn (\n  <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", backgroundColor: "#1a1a1a", color: "#f5f0e8", fontFamily: "system-ui"}}>\n    <h1 style={{fontSize: "64px", margin: 0}}>{title}</h1>\n    <p style={{fontSize: "24px", color: "rgba(245,240,232,0.6)", marginTop: "16px"}}>{subtitle}</p>\n  </div>\n);`,
         variables: [
-          { name: "title", type: "string" as const, defaultValue: "Hello World" },
-          { name: "subtitle", type: "string" as const, defaultValue: "Edit this template" },
+          { name: "title", defaultValue: "Hello World" },
+          { name: "subtitle", defaultValue: "Edit this template" },
         ],
         width: 1200,
         height: 630,
@@ -120,7 +119,7 @@ export default function TemplatesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Templates</h1>
-          <p className="text-muted-foreground">Reusable HTML templates with variable placeholders</p>
+          <p className="text-muted-foreground">Reusable JSX templates with variable props</p>
         </div>
         {isPaidUser ? (
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -131,7 +130,7 @@ export default function TemplatesPage() {
               <DialogHeader>
                 <DialogTitle>Create Template</DialogTitle>
                 <DialogDescription>
-                  Give your template a name. You&apos;ll edit the HTML next.
+                  Give your template a name. You&apos;ll edit the JSX next.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">

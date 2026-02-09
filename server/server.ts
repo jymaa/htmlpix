@@ -1,4 +1,5 @@
-import { renderWithTakumi } from "./render/takumiRender";
+import { renderJsxTemplate } from "./render/takumiRender";
+import { resolveProps } from "./render/jsxEval";
 import { authenticateRequest } from "./middleware/auth";
 import {
   initConvexSync,
@@ -14,12 +15,10 @@ import {
   validateTemplatePreviewRenderRequest,
   parseSignedImageQuery,
   isValidationError,
-  type RenderRequest,
 } from "./validation";
 import { canonicalizeQuery, signCanonicalQuery, verifyCanonicalQuery } from "./lib/signing";
 import { api } from "../convex/_generated/api";
 import { logger, type Logger } from "./lib/logger";
-import { interpolateTemplate, resolveTemplateVariables } from "./render/templateInterpolation";
 
 const PORT = parseInt(process.env.PORT || "3201", 10);
 const IS_DEV = process.env.NODE_ENV !== "production";
@@ -36,9 +35,9 @@ if (!SERVER_SECRET) {
 interface ServerTemplate {
   _id: string;
   userId: string;
-  html: string;
-  css?: string;
+  jsx: string;
   variables: { name: string; defaultValue?: string }[];
+  googleFonts?: string[];
   width?: number;
   height?: number;
   format?: "png" | "jpeg" | "webp";
@@ -166,15 +165,7 @@ async function handleTemplatePreview(req: Request, log: Logger, requestId: strin
     return jsonResponse(validated, 400, undefined, requestId);
   }
 
-  const resolved = resolveTemplateVariables(
-    {
-      html: validated.html,
-      css: validated.css,
-      variables: validated.variables,
-    },
-    toStringRecord(validated.variableValues)
-  );
-
+  const resolved = resolveProps(validated.variables, toStringRecord(validated.variableValues));
   if (resolved.missing.length > 0) {
     return jsonResponse(
       {
@@ -187,22 +178,6 @@ async function handleTemplatePreview(req: Request, log: Logger, requestId: strin
     );
   }
 
-  const html = interpolateTemplate(
-    {
-      html: validated.html,
-      css: validated.css,
-      variables: validated.variables,
-    },
-    resolved.values
-  );
-  const renderRequest: RenderRequest = {
-    html,
-    width: validated.width,
-    height: validated.height,
-    format: validated.format,
-    quality: validated.quality,
-  };
-
   log.info("template_preview.render_start", {
     width: validated.width,
     height: validated.height,
@@ -210,7 +185,18 @@ async function handleTemplatePreview(req: Request, log: Logger, requestId: strin
   });
 
   try {
-    const rendered = await renderWithTakumi(renderRequest, log);
+    const rendered = await renderJsxTemplate(
+      {
+        jsx: validated.jsx,
+        props: resolved.props,
+        googleFonts: validated.googleFonts,
+        width: validated.width,
+        height: validated.height,
+        format: validated.format,
+        quality: validated.quality,
+      },
+      log
+    );
     log.info("template_preview.render_success", {
       renderMs: rendered.renderMs,
       bytes: rendered.buffer.length,
@@ -259,7 +245,7 @@ async function handleMintImageUrl(req: Request, log: Logger, requestId: string):
   }
 
   const requestedVariables = toStringRecord(validated.variables);
-  const resolved = resolveTemplateVariables(template, requestedVariables);
+  const resolved = resolveProps(template.variables, requestedVariables);
   if (resolved.missing.length > 0) {
     return jsonResponse(
       {
@@ -287,7 +273,7 @@ async function handleMintImageUrl(req: Request, log: Logger, requestId: string):
     format,
     quality: validated.quality,
     tv,
-    variables: resolved.values,
+    variables: resolved.props,
   });
   const sig = signCanonicalQuery(canonicalQuery);
 
@@ -337,7 +323,7 @@ async function handleSignedImage(req: Request, log: Logger, requestId: string): 
     return jsonResponse({ code: "TEMPLATE_NOT_FOUND", message: "Template not found" }, 404, undefined, requestId);
   }
 
-  const resolved = resolveTemplateVariables(template, parsed.variables);
+  const resolved = resolveProps(template.variables, parsed.variables);
   if (resolved.missing.length > 0) {
     return jsonResponse(
       {
@@ -456,17 +442,19 @@ async function handleSignedImage(req: Request, log: Logger, requestId: string): 
     );
   }
 
-  const html = interpolateTemplate(template, resolved.values);
-  const renderRequest: RenderRequest = {
-    html,
-    width: parsed.width,
-    height: parsed.height,
-    format,
-    quality: parsed.quality,
-  };
-
   try {
-    const rendered = await renderWithTakumi(renderRequest, log);
+    const rendered = await renderJsxTemplate(
+      {
+        jsx: template.jsx,
+        props: resolved.props,
+        googleFonts: template.googleFonts,
+        width: parsed.width,
+        height: parsed.height,
+        format,
+        quality: parsed.quality,
+      },
+      log
+    );
 
     imageStore.store(contentHash, rendered.buffer, rendered.contentType);
     await diskImageStore.save(contentHash, format, rendered.buffer);

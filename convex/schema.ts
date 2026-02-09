@@ -59,15 +59,15 @@ export default defineSchema({
     userId: v.string(),
     name: v.string(),
     description: v.optional(v.string()),
-    html: v.string(),
-    css: v.optional(v.string()),
+    jsx: v.string(),
     variables: v.array(
       v.object({
         name: v.string(),
-        type: v.union(v.literal("string"), v.literal("number"), v.literal("url")),
+        type: v.optional(v.union(v.literal("string"), v.literal("number"), v.literal("url"))),
         defaultValue: v.optional(v.string()),
       })
     ),
+    googleFonts: v.optional(v.array(v.string())),
     width: v.optional(v.number()),
     height: v.optional(v.number()),
     format: v.optional(v.union(v.literal("png"), v.literal("jpeg"), v.literal("webp"))),

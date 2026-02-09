@@ -1,5 +1,5 @@
 export interface RenderRequest {
-  html?: string;
+  jsx?: string;
   googleFonts?: string[];
   width?: number;
   height?: number;
@@ -21,15 +21,15 @@ export interface ImageUrlMintRequest {
 
 export interface TemplatePreviewVariable {
   name: string;
-  type: "string" | "number" | "url";
+  type?: "string" | "number" | "url";
   defaultValue?: string;
 }
 
 export interface TemplatePreviewRenderRequest {
-  html: string;
-  css?: string;
+  jsx: string;
   variables: TemplatePreviewVariable[];
   variableValues?: Record<string, string | number>;
+  googleFonts?: string[];
   width: number;
   height: number;
   format: "png" | "jpeg" | "webp";
@@ -105,6 +105,19 @@ function parseRequiredFormat(value: unknown): "png" | "jpeg" | "webp" | Validati
   return parseFormat(value);
 }
 
+function parseGoogleFonts(value: unknown): string[] | ValidationError {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value)) {
+    return { code: "INVALID_GOOGLE_FONTS", message: "googleFonts must be an array of strings" };
+  }
+  for (let i = 0; i < value.length; i++) {
+    if (typeof value[i] !== "string") {
+      return { code: "INVALID_GOOGLE_FONTS", message: `googleFonts[${i}] must be a string` };
+    }
+  }
+  return value as string[];
+}
+
 export function validateImageUrlMintRequest(body: unknown): ImageUrlMintRequest | ValidationError {
   if (!body || typeof body !== "object") {
     return { code: "INVALID_BODY", message: "Request body must be a JSON object" };
@@ -160,11 +173,8 @@ export function validateTemplatePreviewRenderRequest(body: unknown): TemplatePre
   }
 
   const req = body as Record<string, unknown>;
-  if (typeof req.html !== "string" || req.html.trim().length === 0) {
-    return { code: "MISSING_HTML", message: "html is required" };
-  }
-  if (req.css !== undefined && typeof req.css !== "string") {
-    return { code: "INVALID_CSS", message: "css must be a string" };
+  if (typeof req.jsx !== "string" || req.jsx.trim().length === 0) {
+    return { code: "MISSING_JSX", message: "jsx is required" };
   }
   if (!Array.isArray(req.variables)) {
     return { code: "INVALID_VARIABLES", message: "variables must be an array" };
@@ -186,10 +196,10 @@ export function validateTemplatePreviewRenderRequest(body: unknown): TemplatePre
         message: `variables[${idx}].name must be a non-empty string`,
       };
     }
-    if (v.type !== "string" && v.type !== "number" && v.type !== "url") {
+    if (v.type !== undefined && v.type !== "string" && v.type !== "number" && v.type !== "url") {
       return {
         code: "INVALID_VARIABLES",
-        message: `variables[${idx}].type must be string, number, or url`,
+        message: `variables[${idx}].type must be string, number, or url when provided`,
       };
     }
     if (v.defaultValue !== undefined && typeof v.defaultValue !== "string") {
@@ -200,7 +210,7 @@ export function validateTemplatePreviewRenderRequest(body: unknown): TemplatePre
     }
     parsedVariables.push({
       name: v.name,
-      type: v.type,
+      type: v.type as "string" | "number" | "url" | undefined,
       defaultValue: v.defaultValue as string | undefined,
     });
   }
@@ -223,6 +233,9 @@ export function validateTemplatePreviewRenderRequest(body: unknown): TemplatePre
   const quality = parseQuality(req.quality);
   if (isValidationError(quality)) return quality;
 
+  const googleFonts = parseGoogleFonts(req.googleFonts);
+  if (isValidationError(googleFonts)) return googleFonts;
+
   if (
     req.variableValues !== undefined &&
     (typeof req.variableValues !== "object" || req.variableValues === null || Array.isArray(req.variableValues))
@@ -242,10 +255,10 @@ export function validateTemplatePreviewRenderRequest(body: unknown): TemplatePre
   }
 
   return {
-    html: req.html,
-    css: req.css as string | undefined,
+    jsx: req.jsx,
     variables: parsedVariables,
     variableValues: Object.keys(variableValues).length > 0 ? variableValues : undefined,
+    googleFonts: googleFonts.length > 0 ? googleFonts : undefined,
     width,
     height,
     format,
@@ -319,7 +332,8 @@ export function isValidationError(
     | SignedImageQueryParams
     | number
     | string
+    | string[]
     | undefined
 ): result is ValidationError {
-  return !!result && typeof result === "object" && "code" in result && "message" in result;
+  return !!result && typeof result === "object" && !Array.isArray(result) && "code" in result && "message" in result;
 }

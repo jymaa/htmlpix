@@ -1,14 +1,18 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { components } from "./_generated/api";
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 
 const variableValidator = v.object({
   name: v.string(),
-  type: v.union(v.literal("string"), v.literal("number"), v.literal("url")),
+  type: v.optional(v.union(v.literal("string"), v.literal("number"), v.literal("url"))),
   defaultValue: v.optional(v.string()),
 });
 
-async function authenticateUser(ctx: { auth: { getUserIdentity: () => Promise<{ subject: string } | null> }; runQuery: Function }) {
+async function authenticateUser(ctx: {
+  auth: { getUserIdentity: () => Promise<{ subject: string } | null> };
+  runQuery: Function;
+}) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new Error("Not authenticated");
   const userId = identity.subject;
@@ -67,7 +71,7 @@ export const getTemplateForServer = query({
   },
   handler: async (ctx, { serverSecret, templateId }) => {
     validateServerSecret(serverSecret);
-    const template = await (ctx.db as any).get(templateId);
+    const template = await ctx.db.get(templateId as Id<"templates">);
     return template ?? null;
   },
 });
@@ -76,9 +80,9 @@ export const createTemplate = mutation({
   args: {
     name: v.string(),
     description: v.optional(v.string()),
-    html: v.string(),
-    css: v.optional(v.string()),
+    jsx: v.string(),
     variables: v.array(variableValidator),
+    googleFonts: v.optional(v.array(v.string())),
     width: v.optional(v.number()),
     height: v.optional(v.number()),
     format: v.optional(v.union(v.literal("png"), v.literal("jpeg"), v.literal("webp"))),
@@ -99,9 +103,9 @@ export const createTemplate = mutation({
       userId,
       name: args.name,
       description: args.description,
-      html: args.html,
-      css: args.css,
+      jsx: args.jsx,
       variables: args.variables,
+      googleFonts: args.googleFonts,
       width: args.width,
       height: args.height,
       format: args.format,
@@ -117,9 +121,9 @@ export const updateTemplate = mutation({
     templateId: v.id("templates"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
-    html: v.optional(v.string()),
-    css: v.optional(v.string()),
+    jsx: v.optional(v.string()),
     variables: v.optional(v.array(variableValidator)),
+    googleFonts: v.optional(v.array(v.string())),
     width: v.optional(v.number()),
     height: v.optional(v.number()),
     format: v.optional(v.union(v.literal("png"), v.literal("jpeg"), v.literal("webp"))),
@@ -133,9 +137,9 @@ export const updateTemplate = mutation({
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     if (updates.name !== undefined) patch.name = updates.name;
     if (updates.description !== undefined) patch.description = updates.description;
-    if (updates.html !== undefined) patch.html = updates.html;
-    if (updates.css !== undefined) patch.css = updates.css;
+    if (updates.jsx !== undefined) patch.jsx = updates.jsx;
     if (updates.variables !== undefined) patch.variables = updates.variables;
+    if (updates.googleFonts !== undefined) patch.googleFonts = updates.googleFonts;
     if (updates.width !== undefined) patch.width = updates.width;
     if (updates.height !== undefined) patch.height = updates.height;
     if (updates.format !== undefined) patch.format = updates.format;
@@ -168,9 +172,9 @@ export const cloneTemplate = mutation({
       userId,
       name: `${source.name} (Copy)`,
       description: source.description,
-      html: source.html,
-      css: source.css,
+      jsx: source.jsx,
       variables: source.variables,
+      googleFonts: source.googleFonts,
       width: source.width,
       height: source.height,
       format: source.format,
@@ -224,141 +228,92 @@ function getDefaultTemplates() {
   return [
     {
       name: "Blog Post",
-      description: "Clean blog post OG card with title, author, and category tag",
-      html: `<div class="flex h-[630px] w-[1200px] flex-col justify-between bg-[#0a0a0a] p-[72px]" style="font-family:system-ui">
-  <div class="flex items-center gap-3">
-    <div style="width:40px;height:40px;border-radius:9999px;background:#6366f1"></div>
-    <span style="font-size:18px;color:rgba(255,255,255,0.5)">{{author}}</span>
-  </div>
-  <div>
-    <div style="display:flex;margin-bottom:24px">
-      <span style="font-size:14px;font-weight:600;color:#6366f1;text-transform:uppercase;letter-spacing:2px;border:1px solid rgba(99,102,241,0.3);padding:6px 16px;border-radius:9999px">{{tag}}</span>
+      description: "Clean blog post OG card with title, author, date, and category",
+      jsx: `const { title, author, date, category } = props;
+return (
+  <div style={{display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%", height: "100%", backgroundColor: "#0a0a0a", padding: "72px", fontFamily: "Inter, system-ui, sans-serif"}}>
+    <div style={{display: "flex", alignItems: "center", gap: "12px"}}>
+      <div style={{width: "40px", height: "40px", borderRadius: "9999px", background: "#6366f1", display: "flex", alignItems: "center", justifyContent: "center"}}>
+        <span style={{fontSize: "18px", color: "#fff", fontWeight: 700}}>{author ? author[0] : "?"}</span>
+      </div>
+      <span style={{fontSize: "18px", color: "rgba(255,255,255,0.5)"}}>{author}</span>
+      <span style={{fontSize: "18px", color: "rgba(255,255,255,0.3)"}}>{date}</span>
     </div>
-    <h1 style="font-size:64px;font-weight:700;color:#fafafa;margin:0;line-height:1.1;letter-spacing:-1px">{{title}}</h1>
-    <p style="font-size:24px;color:rgba(255,255,255,0.45);margin:20px 0 0 0;line-height:1.4">{{subtitle}}</p>
-  </div>
-</div>`,
-      css: "",
-      variables: [
-        { name: "title", type: "string" as const, defaultValue: "How We Scaled to 1M Users" },
-        { name: "subtitle", type: "string" as const, defaultValue: "A deep dive into our infrastructure journey" },
-        { name: "author", type: "string" as const, defaultValue: "Jane Smith" },
-        { name: "tag", type: "string" as const, defaultValue: "Engineering" },
-      ],
-      width: 1200,
-      height: 630,
-      format: "png" as const,
-    },
-    {
-      name: "Product Launch",
-      description: "Bold product announcement card with gradient accent",
-      html: `<div class="flex h-[630px] w-[1200px] items-center bg-[#0a0a0a]" style="font-family:system-ui">
-  <div style="flex:1;padding:72px">
-    <div style="display:flex;margin-bottom:32px">
-      <span style="font-size:13px;font-weight:700;color:#000;background:#22d3ee;padding:8px 20px;border-radius:9999px;text-transform:uppercase;letter-spacing:2px">{{badge}}</span>
+    <div style={{display: "flex", flexDirection: "column"}}>
+      <div style={{display: "flex", marginBottom: "24px"}}>
+        <span style={{fontSize: "14px", fontWeight: 600, color: "#6366f1", textTransform: "uppercase", letterSpacing: "2px", border: "1px solid rgba(99,102,241,0.3)", padding: "6px 16px", borderRadius: "9999px"}}>{category}</span>
+      </div>
+      <h1 style={{fontSize: "64px", fontWeight: 700, color: "#fafafa", margin: 0, lineHeight: 1.1, letterSpacing: "-1px"}}>{title}</h1>
     </div>
-    <h1 style="font-size:72px;font-weight:800;color:#fafafa;margin:0;line-height:1;letter-spacing:-2px">{{name}}</h1>
-    <p style="font-size:26px;color:rgba(255,255,255,0.5);margin:24px 0 0 0;line-height:1.4;max-width:550px">{{tagline}}</p>
   </div>
-  <div style="width:420px;height:100%;background:linear-gradient(135deg,#6366f1 0%,#22d3ee 100%);display:flex;align-items:center;justify-content:center">
-    <span style="font-size:120px">{{emoji}}</span>
-  </div>
-</div>`,
-      css: "",
+);`,
       variables: [
-        { name: "name", type: "string" as const, defaultValue: "Acme Pro" },
-        { name: "tagline", type: "string" as const, defaultValue: "Ship faster with AI-powered workflows" },
-        { name: "badge", type: "string" as const, defaultValue: "Now Available" },
-        { name: "emoji", type: "string" as const, defaultValue: "\u{1F680}" },
+        { name: "title", defaultValue: "How We Scaled to 1M Users" },
+        { name: "author", defaultValue: "Jane Smith" },
+        { name: "date", defaultValue: "Mar 15, 2026" },
+        { name: "category", defaultValue: "Engineering" },
       ],
+      googleFonts: ["Inter:wght@400;700"],
       width: 1200,
       height: 630,
       format: "png" as const,
     },
     {
       name: "Documentation",
-      description: "Technical documentation page card with icon and section info",
-      html: `<div class="flex h-[630px] w-[1200px] flex-col justify-between bg-[#fafafa] p-[72px]" style="font-family:system-ui">
-  <div style="display:flex;align-items:center;gap:16px">
-    <div style="width:48px;height:48px;background:#18181b;border-radius:12px;display:flex;align-items:center;justify-content:center">
-      <span style="font-size:24px;color:#fafafa">&lt;/&gt;</span>
+      description: "Technical documentation page card with section and description",
+      jsx: `const { title, description, site } = props;
+return (
+  <div style={{display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%", height: "100%", backgroundColor: "#fafafa", padding: "72px", fontFamily: "Inter, system-ui, sans-serif"}}>
+    <div style={{display: "flex", alignItems: "center", gap: "16px"}}>
+      <div style={{width: "48px", height: "48px", background: "#18181b", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center"}}>
+        <span style={{fontSize: "24px", color: "#fafafa"}}>&lt;/&gt;</span>
+      </div>
+      <span style={{fontSize: "16px", fontWeight: 600, color: "rgba(0,0,0,0.4)", textTransform: "uppercase", letterSpacing: "2px"}}>{site}</span>
     </div>
-    <span style="font-size:16px;font-weight:600;color:rgba(0,0,0,0.4);text-transform:uppercase;letter-spacing:2px">{{section}}</span>
+    <div style={{display: "flex", flexDirection: "column"}}>
+      <h1 style={{fontSize: "56px", fontWeight: 700, color: "#18181b", margin: 0, lineHeight: 1.15, letterSpacing: "-1px"}}>{title}</h1>
+      <p style={{fontSize: "22px", color: "rgba(0,0,0,0.45)", margin: "16px 0 0 0", lineHeight: 1.5, maxWidth: "700px"}}>{description}</p>
+    </div>
   </div>
-  <div>
-    <span style="font-size:56px;margin-bottom:16px;display:block">{{icon}}</span>
-    <h1 style="font-size:56px;font-weight:700;color:#18181b;margin:0;line-height:1.15;letter-spacing:-1px">{{title}}</h1>
-    <p style="font-size:22px;color:rgba(0,0,0,0.45);margin:16px 0 0 0;line-height:1.5;max-width:700px">{{description}}</p>
-  </div>
-</div>`,
-      css: "",
+);`,
       variables: [
-        { name: "title", type: "string" as const, defaultValue: "Authentication" },
-        { name: "description", type: "string" as const, defaultValue: "Set up API key authentication and manage user quotas" },
-        { name: "section", type: "string" as const, defaultValue: "API Reference" },
-        { name: "icon", type: "string" as const, defaultValue: "\u{1F512}" },
+        { name: "title", defaultValue: "Authentication" },
+        { name: "description", defaultValue: "Set up API key authentication and manage user quotas" },
+        { name: "site", defaultValue: "API Reference" },
       ],
+      googleFonts: ["Inter:wght@400;700"],
       width: 1200,
       height: 630,
       format: "png" as const,
     },
     {
-      name: "Event",
-      description: "Event or webinar invitation card with date and speaker",
-      html: `<div class="flex h-[630px] w-[1200px] bg-[#0a0a0a]" style="font-family:system-ui">
-  <div style="flex:1;padding:72px;display:flex;flex-direction:column;justify-content:space-between">
-    <div>
-      <div style="display:flex;gap:12px;margin-bottom:40px">
-        <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.15);padding:8px 18px;border-radius:9999px">{{date}}</span>
-        <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.15);padding:8px 18px;border-radius:9999px">{{location}}</span>
+      name: "Product Card",
+      description: "Product announcement card with name, price, and description",
+      jsx: `const { productName, price, description, brand } = props;
+return (
+  <div style={{display: "flex", width: "100%", height: "100%", backgroundColor: "#0a0a0a", fontFamily: "Inter, system-ui, sans-serif"}}>
+    <div style={{flex: 1, padding: "72px", display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
+      <div style={{display: "flex", flexDirection: "column"}}>
+        <span style={{fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "16px"}}>{brand}</span>
+        <h1 style={{fontSize: "64px", fontWeight: 800, color: "#fafafa", margin: 0, lineHeight: 1, letterSpacing: "-2px"}}>{productName}</h1>
+        <p style={{fontSize: "22px", color: "rgba(255,255,255,0.5)", margin: "24px 0 0 0", lineHeight: 1.4, maxWidth: "500px"}}>{description}</p>
       </div>
-      <h1 style="font-size:58px;font-weight:700;color:#fafafa;margin:0;line-height:1.1;letter-spacing:-1px">{{title}}</h1>
+      <div style={{display: "flex", alignItems: "center", gap: "16px"}}>
+        <span style={{fontSize: "48px", fontWeight: 800, color: "#22d3ee"}}>{price}</span>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:16px;border-top:1px solid rgba(255,255,255,0.1);padding-top:32px">
-      <div style="width:52px;height:52px;border-radius:9999px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center">
-        <span style="font-size:22px;color:#fff;font-weight:700">{{speaker_initial}}</span>
-      </div>
-      <div>
-        <p style="font-size:18px;color:#fafafa;margin:0;font-weight:600">{{speaker}}</p>
-        <p style="font-size:14px;color:rgba(255,255,255,0.4);margin:4px 0 0 0">{{speaker_title}}</p>
-      </div>
+    <div style={{width: "320px", height: "100%", background: "linear-gradient(135deg, #6366f1 0%, #22d3ee 100%)", display: "flex", alignItems: "center", justifyContent: "center"}}>
+      <span style={{fontSize: "80px", fontWeight: 900, color: "rgba(255,255,255,0.15)"}}>{brand ? brand[0] : ""}</span>
     </div>
   </div>
-  <div style="width:8px;background:linear-gradient(to bottom,#f59e0b,#ef4444)"></div>
-</div>`,
-      css: "",
+);`,
       variables: [
-        { name: "title", type: "string" as const, defaultValue: "Building at Scale with Edge Functions" },
-        { name: "date", type: "string" as const, defaultValue: "Mar 15, 2026" },
-        { name: "location", type: "string" as const, defaultValue: "Online" },
-        { name: "speaker", type: "string" as const, defaultValue: "Alex Chen" },
-        { name: "speaker_initial", type: "string" as const, defaultValue: "A" },
-        { name: "speaker_title", type: "string" as const, defaultValue: "Head of Engineering, Acme Inc" },
+        { name: "productName", defaultValue: "Acme Pro" },
+        { name: "price", defaultValue: "$49/mo" },
+        { name: "description", defaultValue: "Ship faster with AI-powered workflows" },
+        { name: "brand", defaultValue: "Acme" },
       ],
-      width: 1200,
-      height: 630,
-      format: "png" as const,
-    },
-    {
-      name: "Stats Card",
-      description: "Dashboard-style metrics card with big number and trend",
-      html: `<div class="flex h-[630px] w-[1200px] items-center justify-center bg-[#0a0a0a]" style="font-family:system-ui">
-  <div style="text-align:center;max-width:800px">
-    <p style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:3px;margin:0 0 24px 0">{{metric}}</p>
-    <h1 style="font-size:144px;font-weight:800;color:#fafafa;margin:0;line-height:1;letter-spacing:-4px">{{value}}</h1>
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:32px">
-      <span style="font-size:20px;font-weight:700;color:#22c55e">{{delta}}</span>
-      <span style="font-size:18px;color:rgba(255,255,255,0.35)">{{period}}</span>
-    </div>
-  </div>
-</div>`,
-      css: "",
-      variables: [
-        { name: "metric", type: "string" as const, defaultValue: "Monthly Active Users" },
-        { name: "value", type: "string" as const, defaultValue: "2.4M" },
-        { name: "delta", type: "string" as const, defaultValue: "+34%" },
-        { name: "period", type: "string" as const, defaultValue: "vs last month" },
-      ],
+      googleFonts: ["Inter:wght@400;600;800"],
       width: 1200,
       height: 630,
       format: "png" as const,

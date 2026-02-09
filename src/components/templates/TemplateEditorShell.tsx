@@ -54,14 +54,13 @@ export function TemplateEditorShell({ templateId }: TemplateEditorShellProps) {
   const [initialized, setInitialized] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [html, setHtml] = useState("");
-  const [css, setCss] = useState("");
+  const [jsx, setJsx] = useState("");
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
+  const [googleFonts, setGoogleFonts] = useState<string[]>([]);
   const [previewValues, setPreviewValues] = useState<Record<string, string>>({});
   const [width, setWidth] = useState(1200);
   const [height, setHeight] = useState(630);
   const [format, setFormat] = useState<TemplateFormat>("png");
-  const [activeTab, setActiveTab] = useState<"html" | "css">("html");
   const [splitRatio, setSplitRatio] = useState(50);
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -84,18 +83,18 @@ export function TemplateEditorShell({ templateId }: TemplateEditorShellProps) {
     if (template && !initialized) {
       setName(template.name);
       setDescription(template.description || "");
-      setHtml(template.html);
-      setCss(template.css || "");
+      setJsx(template.jsx);
       setVariables(template.variables || []);
+      setGoogleFonts(template.googleFonts || []);
       setWidth(template.width || 1200);
       setHeight(template.height || 630);
       setFormat(template.format || "png");
       persistedSnapshotRef.current = JSON.stringify({
         name: template.name,
         description: template.description || "",
-        html: template.html,
-        css: template.css || "",
+        jsx: template.jsx,
         variables: template.variables || [],
+        googleFonts: template.googleFonts || [],
         width: template.width || 1200,
         height: template.height || 630,
         format: template.format || "png",
@@ -119,14 +118,14 @@ export function TemplateEditorShell({ templateId }: TemplateEditorShellProps) {
       JSON.stringify({
         name: name.trim(),
         description: description.trim(),
-        html,
-        css,
+        jsx,
         variables,
+        googleFonts,
         width,
         height,
         format,
       }),
-    [css, description, format, height, html, name, variables, width]
+    [description, format, googleFonts, height, jsx, name, variables, width]
   );
 
   const isOwner = !!template && template.userId === userId;
@@ -157,9 +156,9 @@ export function TemplateEditorShell({ templateId }: TemplateEditorShellProps) {
         templateId,
         name: name.trim(),
         description: description.trim() || undefined,
-        html,
-        css,
+        jsx,
         variables,
+        googleFonts,
         width,
         height,
         format,
@@ -170,7 +169,7 @@ export function TemplateEditorShell({ templateId }: TemplateEditorShellProps) {
     } finally {
       setSaving(false);
     }
-  }, [css, currentSnapshot, description, format, height, html, isOwner, name, templateId, updateTemplate, variables, width]);
+  }, [currentSnapshot, description, format, googleFonts, height, isOwner, jsx, name, templateId, updateTemplate, variables, width]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -201,10 +200,10 @@ export function TemplateEditorShell({ templateId }: TemplateEditorShellProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           templateId,
-          html,
-          css,
+          jsx,
           variables,
           variableValues: normalizedPreviewValues,
+          googleFonts,
           width,
           height,
           format,
@@ -255,7 +254,7 @@ export function TemplateEditorShell({ templateId }: TemplateEditorShellProps) {
         setIsRenderingPreview(false);
       }
     }
-  }, [css, format, height, html, initialized, normalizedPreviewValues, templateId, variables, width]);
+  }, [format, googleFonts, height, initialized, jsx, normalizedPreviewValues, templateId, variables, width]);
 
   useEffect(() => {
     if (!initialized) return;
@@ -401,13 +400,9 @@ ${lines}
           >
             <div className="min-h-0 min-w-0">
               <TemplateCodeEditor
-                html={html}
-                css={css}
-                activeTab={activeTab}
+                jsx={jsx}
                 readOnly={!isOwner}
-                onActiveTabChange={setActiveTab}
-                onHtmlChange={setHtml}
-                onCssChange={setCss}
+                onJsxChange={setJsx}
               />
             </div>
 
@@ -440,13 +435,14 @@ ${lines}
             templateId={templateId}
             variables={variables}
             previewValues={previewValues}
+            googleFonts={googleFonts}
             width={width}
             height={height}
             format={format}
             readOnly={!isOwner}
             copied={copied}
             onCopySnippet={() => void handleCopySnippet()}
-            onAddVariable={() => setVariables((current) => [...current, { name: "", type: "string", defaultValue: "" }])}
+            onAddVariable={() => setVariables((current) => [...current, { name: "", defaultValue: "" }])}
             onRemoveVariable={(index) => setVariables((current) => current.filter((_, i) => i !== index))}
             onUpdateVariable={updateVariable}
             onUpdatePreviewValue={(variableName, value) =>
@@ -462,6 +458,7 @@ ${lines}
             onWidthChange={(next) => setWidth(clamp(Number.isFinite(next) ? next : 0, 1, 4096))}
             onHeightChange={(next) => setHeight(clamp(Number.isFinite(next) ? next : 0, 1, 4096))}
             onFormatChange={setFormat}
+            onGoogleFontsChange={setGoogleFonts}
           />
         )}
       </div>
