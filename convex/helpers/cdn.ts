@@ -1,8 +1,7 @@
-const CDN_BASE_URL =
-  process.env.CONVEX_ENV === "development"
-    ? "https://pub-d90268f86a134686a1cf1d990af7b506.r2.dev"
-    : "https://cdn.htmlpix.com";
+const API_BASE_URL = process.env.API_BASE_URL || "https://api.htmlpix.com";
 
-export function cdnUrl(key: string): string {
-  return `${CDN_BASE_URL}/${key}`;
+export function cdnUrl(pathOrUrl: string): string {
+  if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) return pathOrUrl;
+  if (pathOrUrl.startsWith("/")) return `${API_BASE_URL}${pathOrUrl}`;
+  return `${API_BASE_URL}/${pathOrUrl}`;
 }

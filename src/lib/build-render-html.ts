@@ -1,5 +1,4 @@
 export interface BuildRenderHtmlOptions {
-  css?: string;
   googleFonts?: string[];
   background?: "transparent" | "white";
 }
@@ -14,7 +13,17 @@ function injectBeforeHeadClose(html: string, injection: string): string {
 
 function buildGoogleFontsUrl(fonts: string[]): string {
   if (fonts.length === 0) return "";
-  const families = fonts.map((font) => `family=${encodeURIComponent(font).replace(/%20/g, "+")}`);
+  const families = fonts.map((font) => {
+    // Split on first ":" to separate font name from variant spec (e.g. ":wght@400;700")
+    // Only the font name needs URL encoding; variant syntax (:, @, ;) must stay literal
+    const colonIdx = font.indexOf(":");
+    if (colonIdx === -1) {
+      return `family=${encodeURIComponent(font).replace(/%20/g, "+")}`;
+    }
+    const name = font.slice(0, colonIdx);
+    const variant = font.slice(colonIdx);
+    return `family=${encodeURIComponent(name).replace(/%20/g, "+")}${variant}`;
+  });
   return `https://fonts.googleapis.com/css2?${families.join("&")}&display=block`;
 }
 
@@ -44,12 +53,11 @@ function injectGoogleFonts(html: string, fonts: string[]): string {
 export function buildRenderHtml(html: string, options: BuildRenderHtmlOptions = {}): string {
   let result = html;
 
+  // Inject Tailwind CDN so preview iframes can render Tailwind utility classes
+  result = injectBeforeHeadClose(result, `<script src="https://cdn.tailwindcss.com"></script>`);
+
   if (options.background !== "transparent") {
     result = injectBeforeHeadClose(result, `<style>html, body { margin: 0; padding: 0; background-color: white; }</style>`);
-  }
-
-  if (options.css) {
-    result = injectBeforeHeadClose(result, `<style>${options.css}</style>`);
   }
 
   if (options.googleFonts && options.googleFonts.length > 0) {

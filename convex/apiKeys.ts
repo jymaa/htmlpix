@@ -3,7 +3,6 @@ import { components } from "./_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { usageAggregate } from "./usage";
-import { cdnUrl } from "./helpers/cdn";
 
 function generateApiKey(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -32,6 +31,13 @@ async function authenticateUser(ctx: { auth: { getUserIdentity: () => Promise<{ 
   });
   if (!user) throw new Error("Account not found");
   return userId;
+}
+
+const IMAGE_BASE_URL = process.env.API_BASE_URL || "https://api.htmlpix.com";
+
+function publicImageUrl(canonicalPath: string): string {
+  if (canonicalPath.startsWith("http://") || canonicalPath.startsWith("https://")) return canonicalPath;
+  return `${IMAGE_BASE_URL}${canonicalPath}`;
 }
 
 export const listUserKeys = query({
@@ -172,25 +178,18 @@ export const getUserRenders = query({
   },
   handler: async (ctx, { limit }) => {
     const userId = await authenticateUser(ctx);
-    const renders = await ctx.db
-      .query("renders")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
+    const events = await (ctx.db as any)
+      .query("renderEvents")
+      .withIndex("by_userId", (q: any) => q.eq("userId", userId))
       .order("desc")
       .take(limit ?? 50);
 
-    return Promise.all(
-      renders.map(async (render) => {
-        let imageUrl: string | undefined;
-        if (render.imageKey) {
-          try {
-            imageUrl = cdnUrl(render.imageKey);
-          } catch {
-            // Signed URL generation failed
-          }
-        }
-        return { ...render, imageUrl };
-      })
-    );
+    return events.map((event: any) => ({
+      ...event,
+      externalId: event.contentHash.slice(0, 12),
+      imageKey: `${event.contentHash}.${event.format}`,
+      imageUrl: event.status === "success" ? publicImageUrl(event.canonicalPath) : undefined,
+    }));
   },
 });
 
@@ -199,36 +198,33 @@ export const getUserRendersPaginated = query({
     paginationOpts: paginationOptsValidator,
     statusFilter: v.optional(v.union(v.literal("success"), v.literal("error"))),
     formatFilter: v.optional(v.string()),
+    cachedFilter: v.optional(v.boolean()),
   },
-  handler: async (ctx, { paginationOpts, statusFilter, formatFilter }) => {
+  handler: async (ctx, { paginationOpts, statusFilter, formatFilter, cachedFilter }) => {
     const userId = await authenticateUser(ctx);
-    let q = ctx.db
-      .query("renders")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
+    let q = (ctx.db as any)
+      .query("renderEvents")
+      .withIndex("by_userId", (q: any) => q.eq("userId", userId))
       .order("desc");
 
     if (statusFilter) {
-      q = q.filter((f) => f.eq(f.field("status"), statusFilter));
+      q = q.filter((f: any) => f.eq(f.field("status"), statusFilter));
     }
     if (formatFilter) {
-      q = q.filter((f) => f.eq(f.field("format"), formatFilter));
+      q = q.filter((f: any) => f.eq(f.field("format"), formatFilter));
+    }
+    if (cachedFilter !== undefined) {
+      q = q.filter((f: any) => f.eq(f.field("cached"), cachedFilter));
     }
 
     const result = await q.paginate(paginationOpts);
 
-    const page = await Promise.all(
-      result.page.map(async (render) => {
-        let imageUrl: string | undefined;
-        if (render.imageKey) {
-          try {
-            imageUrl = cdnUrl(render.imageKey);
-          } catch {
-            // Signed URL generation failed — leave undefined
-          }
-        }
-        return { ...render, imageUrl };
-      })
-    );
+    const page = result.page.map((event: any) => ({
+      ...event,
+      externalId: event.contentHash.slice(0, 12),
+      imageKey: `${event.contentHash}.${event.format}`,
+      imageUrl: event.status === "success" ? publicImageUrl(event.canonicalPath) : undefined,
+    }));
 
     return { ...result, page };
   },

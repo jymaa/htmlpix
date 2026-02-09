@@ -20,6 +20,12 @@ async function authenticateUser(ctx: { auth: { getUserIdentity: () => Promise<{ 
   return userId;
 }
 
+function validateServerSecret(secret: string) {
+  const expected = process.env.SERVER_SECRET;
+  if (!expected) throw new Error("SERVER_SECRET not configured");
+  if (secret !== expected) throw new Error("Invalid server secret");
+}
+
 export const listUserTemplates = query({
   args: {},
   handler: async (ctx) => {
@@ -54,12 +60,23 @@ export const getTemplate = query({
   },
 });
 
+export const getTemplateForServer = query({
+  args: {
+    serverSecret: v.string(),
+    templateId: v.string(),
+  },
+  handler: async (ctx, { serverSecret, templateId }) => {
+    validateServerSecret(serverSecret);
+    const template = await (ctx.db as any).get(templateId);
+    return template ?? null;
+  },
+});
+
 export const createTemplate = mutation({
   args: {
     name: v.string(),
     description: v.optional(v.string()),
     html: v.string(),
-    css: v.optional(v.string()),
     variables: v.array(variableValidator),
     width: v.optional(v.number()),
     height: v.optional(v.number()),
@@ -73,7 +90,6 @@ export const createTemplate = mutation({
       name: args.name,
       description: args.description,
       html: args.html,
-      css: args.css,
       variables: args.variables,
       width: args.width,
       height: args.height,
@@ -91,7 +107,6 @@ export const updateTemplate = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     html: v.optional(v.string()),
-    css: v.optional(v.string()),
     variables: v.optional(v.array(variableValidator)),
     width: v.optional(v.number()),
     height: v.optional(v.number()),
@@ -107,7 +122,6 @@ export const updateTemplate = mutation({
     if (updates.name !== undefined) patch.name = updates.name;
     if (updates.description !== undefined) patch.description = updates.description;
     if (updates.html !== undefined) patch.html = updates.html;
-    if (updates.css !== undefined) patch.css = updates.css;
     if (updates.variables !== undefined) patch.variables = updates.variables;
     if (updates.width !== undefined) patch.width = updates.width;
     if (updates.height !== undefined) patch.height = updates.height;
@@ -142,7 +156,6 @@ export const cloneTemplate = mutation({
       name: `${source.name} (Copy)`,
       description: source.description,
       html: source.html,
-      css: source.css,
       variables: source.variables,
       width: source.width,
       height: source.height,

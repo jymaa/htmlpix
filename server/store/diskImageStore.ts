@@ -3,7 +3,7 @@ import path from "path";
 import { logger } from "../lib/logger";
 
 const IMAGE_DIR = process.env.IMAGE_DIR || path.resolve(import.meta.dir, "../cache/images");
-const IMAGE_TTL_MS = parseInt(process.env.IMAGE_TTL_MS || "86400000", 10); // 24 hours default
+const IMAGE_TTL_MS = parseInt(process.env.IMAGE_TTL_MS || "0", 10); // 0 = no expiry
 
 const EXTENSIONS = ["png", "jpeg", "jpg", "webp"] as const;
 
@@ -71,7 +71,7 @@ class DiskImageStore {
       try {
         const stat = await fs.stat(filePath);
         if (!stat.isFile()) continue;
-        if (now - stat.mtimeMs > IMAGE_TTL_MS) {
+        if (IMAGE_TTL_MS > 0 && now - stat.mtimeMs > IMAGE_TTL_MS) {
           await fs.unlink(filePath).catch(() => undefined);
           continue;
         }
@@ -87,6 +87,8 @@ class DiskImageStore {
   }
 
   async cleanup(): Promise<void> {
+    if (IMAGE_TTL_MS <= 0) return;
+
     try {
       await this.ensureDir();
     } catch {

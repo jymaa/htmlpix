@@ -39,7 +39,7 @@ export default function PostUpgradeProTipsEmail({
 
       <Section style={styles.code}>
         <Text style={{ margin: 0, fontFamily: "monospace", fontSize: "13px" }}>
-          POST /render{"\n"}
+          POST /v1/image-url{"\n"}
           {"{"}{"\n"}
           {"  "}&quot;templateId&quot;: &quot;your-template-id&quot;,{"\n"}
           {"  "}&quot;variables&quot;: {"{"} &quot;title&quot;: &quot;My Post&quot; {"}"}{"\n"}
@@ -47,10 +47,10 @@ export default function PostUpgradeProTipsEmail({
         </Text>
       </Section>
 
-      <Text style={{ ...styles.text, fontWeight: "bold" }}>Stored images</Text>
+      <Text style={{ ...styles.text, fontWeight: "bold" }}>Signed OG URLs</Text>
       <Text style={styles.text}>
-        Every render is automatically stored and accessible via a direct URL. Use this for
-        og:image meta tags — no need to re-render on every page load.
+        Each mint returns a signed URL you can put directly in og:image tags. URLs are long-lived and
+        cache-friendly for crawlers.
       </Text>
 
       <Hr style={{ borderColor: "#eee", margin: "24px 0" }} />

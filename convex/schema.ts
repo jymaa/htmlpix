@@ -43,6 +43,36 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_contentHash", ["contentHash"]),
 
+  renderArtifacts: defineTable({
+    contentHash: v.string(),
+    canonicalPath: v.string(),
+    format: v.union(v.literal("png"), v.literal("jpeg"), v.literal("webp")),
+    templateId: v.string(),
+    tv: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    lastRenderMs: v.optional(v.number()),
+  })
+    .index("by_contentHash", ["contentHash"])
+    .index("by_templateId", ["templateId"]),
+
+  renderEvents: defineTable({
+    userId: v.string(),
+    templateId: v.string(),
+    tv: v.optional(v.string()),
+    canonicalPath: v.string(),
+    contentHash: v.string(),
+    status: v.union(v.literal("success"), v.literal("error")),
+    cached: v.boolean(),
+    format: v.union(v.literal("png"), v.literal("jpeg"), v.literal("webp")),
+    renderMs: v.number(),
+    errorCode: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_contentHash", ["contentHash"])
+    .index("by_userId_createdAt", ["userId", "createdAt"]),
+
   templates: defineTable({
     userId: v.string(),
     name: v.string(),

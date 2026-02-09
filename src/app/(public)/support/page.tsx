@@ -29,7 +29,7 @@ const resources = [
     label: "API REFERENCE",
     title: "Endpoints & Parameters",
     description:
-      "Full reference for the /render endpoint. Formats, viewports, CSS injection, fonts, and more.",
+      "Full reference for signed OG image delivery via /v1/image-url and /v1/image.",
     href: "/docs/endpoints",
   },
   {

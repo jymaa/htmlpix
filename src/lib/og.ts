@@ -1,6 +1,7 @@
 const HTMLPIX_API_URL =
   process.env.HTMLPIX_API_URL || "https://api.htmlpix.com";
 const HTMLPIX_API_KEY = process.env.HTMLPIX_API_KEY;
+const HTMLPIX_OG_TEMPLATE_ID = process.env.HTMLPIX_OG_TEMPLATE_ID;
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -35,38 +36,49 @@ export async function renderOgImage(
   if (!HTMLPIX_API_KEY) {
     throw new Error("HTMLPIX_API_KEY environment variable is not set");
   }
+  if (!HTMLPIX_OG_TEMPLATE_ID) {
+    throw new Error("HTMLPIX_OG_TEMPLATE_ID environment variable is not set");
+  }
 
-  const html = buildOgHtml(options);
-
-  const res = await fetch(`${HTMLPIX_API_URL}/render`, {
+  const mintRes = await fetch(`${HTMLPIX_API_URL}/v1/image-url`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${HTMLPIX_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      html,
+      templateId: HTMLPIX_OG_TEMPLATE_ID,
       width: 1200,
       height: 630,
       format: "png",
-      responseFormat: "base64",
-      googleFonts: ["Bebas Neue", "Space Mono:wght@400;700"],
-      cache: true,
+      variables: {
+        title: options.title,
+        subtitle: options.subtitle ?? "",
+        tag: options.tag ?? "",
+        variant: options.variant ?? "standard",
+      },
     }),
   });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
+  if (!mintRes.ok) {
+    const err = await mintRes.json().catch(() => ({}));
     throw new Error(
-      `HTMLPix API error ${res.status}: ${JSON.stringify(err)}`,
+      `HTMLPix API error ${mintRes.status}: ${JSON.stringify(err)}`,
     );
   }
 
-  const data = (await res.json()) as { base64: string };
-  let b64 = data.base64;
-  // Strip data-URI prefix when present
-  if (b64.startsWith("data:")) b64 = b64.split(",")[1];
-  return Buffer.from(b64, "base64");
+  const mintData = (await mintRes.json()) as { url?: string };
+  if (!mintData.url) {
+    throw new Error("HTMLPix API error: missing signed URL from /v1/image-url");
+  }
+
+  const imageRes = await fetch(mintData.url, { method: "GET" });
+  if (!imageRes.ok) {
+    throw new Error(`HTMLPix image fetch error ${imageRes.status}`);
+  }
+
+  const imageBuffer = await imageRes.arrayBuffer();
+  return Buffer.from(imageBuffer);
 }
 
 // ─── Internals ───────────────────────────────────────────
@@ -145,7 +157,7 @@ function homeHtml(): string {
         </div>
         <div style="width:56px;height:4px;background:#ff4d00;margin:20px 0;"></div>
         <div style="font-size:12px;color:rgba(26,26,26,0.4);max-width:360px;line-height:1.7;">
-          Send HTML, get pixel-perfect screenshots. One POST request. One API key. No more headaches.
+          Mint a signed OG URL from a template, then serve it forever. One POST request. One API key.
         </div>
       </div>
 
@@ -184,7 +196,7 @@ function homeHtml(): string {
             <span style="color:#28c840;">$</span>
             <span style="color:#f5f0e8;"> curl </span>
             <span style="color:#ff4d00;">-X POST</span>
-            <span style="color:rgba(245,240,232,0.6);"> api.htmlpix.com/render</span>
+            <span style="color:rgba(245,240,232,0.6);"> api.htmlpix.com/v1/image-url</span>
             <span style="color:rgba(245,240,232,0.15);"> \\</span>
           </div>
           <div style="padding-left:16px;">
@@ -194,20 +206,17 @@ function homeHtml(): string {
           </div>
           <div style="padding-left:16px;">
             <span style="color:#ff4d00;">-d</span>
-            <span style="color:#a5d6a7;"> '{"html":"&lt;h1&gt;Hello&lt;/h1&gt;"}'</span>
+            <span style="color:#a5d6a7;"> '{"templateId":"tmpl_123","variables":{"title":"Hello"}}'</span>
           </div>
 
           <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(245,240,232,0.06);">
             <div style="color:rgba(245,240,232,0.2);margin-bottom:4px;"># 200 OK (143ms)</div>
             <div style="color:rgba(245,240,232,0.2);">{</div>
             <div style="padding-left:16px;">
-              <span style="color:#81c784;">"id"</span><span style="color:rgba(245,240,232,0.2);">: </span><span style="color:#a5d6a7;">"abc123"</span><span style="color:rgba(245,240,232,0.2);">,</span>
+              <span style="color:#81c784;">"url"</span><span style="color:rgba(245,240,232,0.2);">: </span><span style="color:#a5d6a7;">"https://api.htmlpix.com/v1/image?...&amp;sig=..."</span><span style="color:rgba(245,240,232,0.2);">,</span>
             </div>
             <div style="padding-left:16px;">
-              <span style="color:#81c784;">"url"</span><span style="color:rgba(245,240,232,0.2);">: </span><span style="color:#a5d6a7;">"...abc123.png"</span><span style="color:rgba(245,240,232,0.2);">,</span>
-            </div>
-            <div style="padding-left:16px;">
-              <span style="color:#81c784;">"imageKey"</span><span style="color:rgba(245,240,232,0.2);">: </span><span style="color:#a5d6a7;">"abc123.png"</span>
+              <span style="color:#81c784;">"expiresAt"</span><span style="color:rgba(245,240,232,0.2);">: </span><span style="color:#a5d6a7;">1893456000000</span>
             </div>
             <div style="color:rgba(245,240,232,0.2);">}</div>
           </div>

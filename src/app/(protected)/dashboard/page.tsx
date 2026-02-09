@@ -274,7 +274,7 @@ export default function DashboardPage() {
             <CardDescription>Your last 10 render requests</CardDescription>
           </div>
           {renders && renders.length > 0 && (
-            <Link href="/media">
+            <Link href="/renders">
               <Button variant="outline" size="sm" className="font-mono text-xs tracking-wider uppercase">
                 View All
               </Button>
@@ -320,7 +320,7 @@ export default function DashboardPage() {
                 <span>Time</span>
                 <span>Date</span>
               </div>
-              {renders.map((render) => {
+              {renders.map((render: Render) => {
                 const imgUrl = render.imageUrl ?? null;
                 return (
                   <button

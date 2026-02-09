@@ -17,16 +17,16 @@ export default function WelcomeEmail({ name, unsubscribeUrl }: WelcomeEmailProps
       <Heading style={styles.h1}>Welcome to HTMLPix</Heading>
       <Text style={styles.text}>Hey {name},</Text>
       <Text style={styles.text}>
-        Your account is set up and your API key is ready. You can start converting HTML to pixel-perfect
-        images right away.
+        Your account is set up and your API key is ready. You can start minting signed OG image URLs
+        from templates right away.
       </Text>
 
       <Section style={styles.code}>
         <Text style={{ margin: 0, fontFamily: "monospace", fontSize: "13px" }}>
-          curl -X POST https://api.htmlpix.com/render \{"\n"}
+          curl -X POST https://api.htmlpix.com/v1/image-url \{"\n"}
           {"  "}-H &quot;Authorization: Bearer YOUR_API_KEY&quot; \{"\n"}
           {"  "}-H &quot;Content-Type: application/json&quot; \{"\n"}
-          {"  "}-d &apos;{"{"}&quot;html&quot;: &quot;&lt;h1&gt;Hello&lt;/h1&gt;&quot;{"}"}&apos;
+          {"  "}-d &apos;{"{"}&quot;templateId&quot;: &quot;tmpl_123&quot;, &quot;variables&quot;: {"{"}&quot;title&quot;: &quot;Hello&quot;{"}"}{"}"}&apos;
         </Text>
       </Section>
 

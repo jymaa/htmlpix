@@ -19,25 +19,23 @@ bun run typecheck       # TypeScript check
 
 ## Architecture
 
-Dual-stack application: HTML-to-image rendering API + Next.js web dashboard.
+Dual-stack application: OG image / social card rendering API + Next.js web dashboard. Uses Takumi (@takumi-rs/image-response) for HTML→image conversion (no Puppeteer). Templates use Tailwind classes or inline styles only.
 
 ### Rendering Server (`server/`)
 
-Bun HTTP server with Puppeteer for HTML→image conversion, Convex-synced auth/quota, in-memory + disk image cache, and a background upload queue.
+Bun HTTP server with Takumi for HTML→image conversion, Convex-synced auth/quota, in-memory + disk image cache, and a background upload queue.
 
 **Endpoints:**
 
 - `POST /render` - Render HTML to image (requires API key auth)
 - `GET /images/:id` - Fetch stored image
 - `GET /healthz` - Health check
-- `GET /readyz` - Readiness check (browser pool status)
+- `GET /readyz` - Readiness check (auth cache status)
 
 **Core modules:**
 
-- `server/server.ts` - HTTP routes, queue management, graceful shutdown
-- `server/render/browserPool.ts` - Puppeteer browser pool with semaphore concurrency
-- `server/render/render.ts` - HTML→screenshot with viewport, format, CSS/font injection
-- `server/render/requestPolicy.ts` - Request interception, domain allowlist, byte limits
+- `server/server.ts` - HTTP routes, graceful shutdown
+- `server/render/takumiRender.ts` - HTML→image via Takumi with Tailwind, Google Fonts fetching
 - `server/validation.ts` - Request validation and size limits
 - `server/middleware/auth.ts` - Auth header validation + quota checks
 - `server/cache/lmdb.ts` - LMDB cache for auth/quota vitals (Convex is source of truth)
@@ -64,10 +62,7 @@ Next.js 16 App Router with Convex backend and Better Auth.
 
 - `PORT`, `BASE_URL` - Server binding + external base URL
 - `CONVEX_URL` - Convex backend endpoint for sync/actions (required)
-- `BROWSER_INSTANCES`, `RENDER_CONCURRENCY` - Puppeteer pool sizing
-- `MAX_QUEUE_LENGTH`, `MAX_HTML_LENGTH`, `MAX_CSS_LENGTH` - Request limits
-- `ALLOWED_HOSTS`, `MAX_ASSET_BYTES` - Remote asset allowlist + download cap
-- `DEFAULT_TIMEOUT_MS`, `FONT_STABILIZATION_MS`, `ASSET_WAIT_MS` - Render timing
+- `MAX_HTML_LENGTH` - Request limits
 - `CACHE_PATH` - LMDB cache directory for auth/quota vitals
 - `IMAGE_DIR`, `IMAGE_TTL_MS`, `MAX_STORED_IMAGES` - Image cache controls
 - `UPLOAD_CONCURRENCY`, `UPLOAD_RETRY_*`, `LINK_RETRY_*` - Upload/link backoff tuning

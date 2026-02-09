@@ -221,10 +221,10 @@ export default function ApiKeysPage() {
           <div>
             <h3 className="font-medium">Example Request</h3>
             <pre className="bg-muted mt-2 overflow-x-auto rounded p-3 text-sm">
-              <code>{`curl -X POST https://api.htmlpix.com/render \\
+              <code>{`curl -X POST https://api.htmlpix.com/v1/image-url \\
   -H "Authorization: Bearer hpx_your_api_key" \\
   -H "Content-Type: application/json" \\
-  -d '{"html": "<h1>Hello World</h1>"}'`}</code>
+  -d '{"templateId":"YOUR_TEMPLATE_ID","variables":{"title":"Hello World"}}'`}</code>
             </pre>
           </div>
         </CardContent>

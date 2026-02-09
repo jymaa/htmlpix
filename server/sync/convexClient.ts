@@ -149,6 +149,73 @@ export function validateApiKey(authHeader: string | null): AuthResult {
   };
 }
 
+export interface UserQuotaSuccess {
+  allowed: true;
+  quota: CachedQuota;
+  usageThisMonth: number;
+}
+
+export interface UserQuotaError {
+  allowed: false;
+  code: "NOT_READY" | "INVALID_USER" | "QUOTA_EXCEEDED" | "SUBSCRIPTION_INACTIVE";
+  message: string;
+  status: number;
+}
+
+export type UserQuotaResult = UserQuotaSuccess | UserQuotaError;
+
+export function validateUserQuota(userId: string): UserQuotaResult {
+  const cacheStats = getCacheStats();
+  if (cacheStats.lastUpdate === 0) {
+    return {
+      allowed: false,
+      code: "NOT_READY",
+      message: "Auth system not ready yet",
+      status: 503,
+    };
+  }
+
+  const quota = getQuota(userId);
+  if (!quota) {
+    return {
+      allowed: false,
+      code: "INVALID_USER",
+      message: "No quota found for user",
+      status: 401,
+    };
+  }
+
+  const now = Date.now();
+  const status = quota.stripeSubscriptionStatus;
+  const periodEnd = quota.currentPeriodEnd;
+  if (status) {
+    const hasActiveSubscription =
+      status === "active" ||
+      status === "trialing" ||
+      (status === "canceled" && periodEnd && periodEnd > now);
+
+    if (!hasActiveSubscription) {
+      return {
+        allowed: false,
+        code: "SUBSCRIPTION_INACTIVE",
+        message: "Subscription is inactive. Please renew your subscription.",
+        status: 402,
+      };
+    }
+  }
+
+  if (quota.currentUsage >= quota.monthlyLimit) {
+    return {
+      allowed: false,
+      code: "QUOTA_EXCEEDED",
+      message: `Monthly quota of ${quota.monthlyLimit} renders exceeded`,
+      status: 429,
+    };
+  }
+
+  return { allowed: true, quota, usageThisMonth: quota.currentUsage };
+}
+
 export function getConvexClient(): ConvexClient {
   return client;
 }

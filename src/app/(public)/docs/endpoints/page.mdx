@@ -1,118 +1,75 @@
 export const metadata = {
   title: "Endpoints",
-  description: "Complete HTMLPix API endpoint reference. POST /render for HTML-to-image conversion, GET /images/:id for retrieval."
+  description: "OG-first API reference for signed image URLs."
 }
 
 # Endpoints
 
-## POST /render
+## POST /v1/image-url (private)
 
-Render HTML or a URL to an image.
+Mint a signed public URL for an OG image.
 
-### Request Body
+### Auth
+
+`Authorization: Bearer hpx_...`
+
+### Request body
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `html` | string | Yes* | HTML content to render (max 500KB) |
-| `url` | string | Yes* | URL to screenshot (max 2048 chars) |
-| `css` | string | No | CSS styles to inject (max 200KB) |
-| `selector` | string | No | CSS selector to capture specific element |
-| `width` | number | No | Viewport width in pixels (1-4096, default: 1200) |
-| `height` | number | No | Viewport height in pixels (1-4096, default: 800) |
-| `format` | string | No | "png", "jpeg", or "webp" (default: "png") |
-| `quality` | number | No | Image quality 0-100 (for jpeg/webp) |
-| `deviceScaleFactor` | number | No | Device scale factor 0.5-4 (default: 1) |
-| `fullPage` | boolean | No | Capture full scrollable page |
-| `background` | string | No | "transparent" or "white" (default: "white") |
-| `googleFonts` | string[] | No | Google Fonts to load (max 20) |
-| `timeoutMs` | number | No | Render timeout 100-60000ms (default: 5000) |
-| `responseFormat` | string | No | "url" or "base64" (default: "url") |
-| `cache` | boolean | No | Enable duplicate detection cache (default: true) |
+| `templateId` | string | Yes | Template document id |
+| `width` | number | No | 1-4096, default from template or 1200 |
+| `height` | number | No | 1-4096, default from template or 630 |
+| `format` | string | No | `png`, `jpeg`, `webp` |
+| `quality` | number | No | 0-100 (`jpeg`/`webp`) |
+| `tv` | string | No | Template version token override |
+| `variables` | object | No | Template variables |
 
-| `templateId` | string | Yes* | Render a saved template by ID |
-| `variables` | object | No | Key-value pairs for template placeholders |
-
-*Exactly one of `html`, `url`, or `templateId` is required.
-
-### URL Screenshots
-
-Capture a screenshot of any public URL:
+### Response
 
 ```json
 {
-  "url": "https://example.com",
-  "width": 1280,
-  "height": 720
+  "url": "https://api.htmlpix.com/v1/image?templateId=...&uid=...&exp=...&v_title=...&sig=...",
+  "expiresAt": 1914998400000
 }
 ```
 
-### DOM Selector Targeting
+## GET /v1/image (public, signed)
 
-Screenshot a specific element using a CSS selector:
+Returns **binary image bytes**. This is the URL you use in OG/Twitter tags.
 
-```json
-{
-  "html": "<div id='card'>...</div>",
-  "selector": "#card"
-}
-```
+### Signed query parameters
 
-The selector can be used with both HTML and URL modes.
+Reserved params:
 
-### Base64 Response
+- `templateId`
+- `uid`
+- `exp`
+- `sig`
+- `width`
+- `height`
+- `format`
+- `quality`
+- `tv`
 
-Get the image data directly in the response instead of a URL:
+Template variables must use `v_` prefix, for example:
 
-```json
-{
-  "html": "<h1>Hello</h1>",
-  "responseFormat": "base64"
-}
-```
+- `v_title=Launch+Day`
+- `v_subtitle=New+feature`
 
-Response:
-```json
-{
-  "id": "abc123",
-  "base64": "iVBORw0KGgo...",
-  "mimeType": "image/png"
-}
-```
+### Success response
 
-### Template Rendering
+- `200` + image body (`image/png`, `image/jpeg`, `image/webp`)
+- `304` if `If-None-Match` matches
 
-Render a saved template with dynamic variables:
+### Cache headers
 
-```json
-{
-  "templateId": "your_template_id",
-  "variables": {
-    "title": "My Blog Post",
-    "author": "Jane Smith",
-    "date": "Jan 2026"
-  }
-}
-```
+- `Cache-Control: public, max-age=31536000, immutable`
+- `ETag: "<content-hash>"`
+- `X-Render-Cached: 1|0`
+- `X-Render-Id: <request-id>`
 
-Templates use `{{variableName}}` placeholders in HTML/CSS that get replaced with the provided values. Create and manage templates in the [dashboard](/templates).
+## Deprecated endpoints
 
-### Duplicate Detection
-
-By default, identical render requests return cached results. This saves compute and provides faster responses. Disable with `cache: false` if you need fresh renders.
-
-When a cached result is returned, the response includes `cached: true`:
-
-```json
-{
-  "id": "abc123",
-  "url": "https://...",
-  "imageKey": "abc123.png",
-  "cached": true
-}
-```
-
-## GET /images/:id
-
-Retrieve a stored image by ID.
-
-Images are cached for 24 hours. After rendering, you'll receive an image ID that can be used to fetch the image without re-rendering.
+- `POST /render` -> returns `410 ENDPOINT_DEPRECATED`
+- `GET /images/:id` -> returns `410 ENDPOINT_DEPRECATED`

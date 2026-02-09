@@ -218,11 +218,10 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
                     Try this curl command to make your first render:
                   </p>
                   <pre className="overflow-x-auto rounded-lg bg-zinc-950 p-3 text-xs text-zinc-300">
-                    {`curl -X POST ${API_BASE_URL}/render \\
+                    {`curl -X POST ${API_BASE_URL}/v1/image-url \\
   -H "Authorization: Bearer ${createdKey}" \\
   -H "Content-Type: application/json" \\
-  -d '{"html": "<h1>Hello!</h1>"}' \\
-  --output test.png`}
+  -d '{"templateId":"YOUR_TEMPLATE_ID","variables":{"title":"Hello!"}}'`}
                   </pre>
                 </div>
               </div>

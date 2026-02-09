@@ -195,7 +195,7 @@ export default function LandingVariant2() {
                     <div className="mb-1">
                       <span className="text-[#28c840]">$</span> <span className="text-[#f5f0e8]">curl</span>{" "}
                       <span className="text-[#ff4d00]">-X POST</span>{" "}
-                      <span className="text-[#f5f0e8]/80">api.htmlpix.com/render</span>{" "}
+                      <span className="text-[#f5f0e8]/80">api.htmlpix.com/v1/image-url</span>{" "}
                       <span className="text-[#f5f0e8]/20">\</span>
                     </div>
                     <div className="mb-1 pl-4">
@@ -210,7 +210,7 @@ export default function LandingVariant2() {
                     </div>
                     <div className="mb-1 pl-4">
                       <span className="text-[#ff4d00]">-d</span>{" "}
-                      <span className="text-[#a5d6a7]">{`'{"html":"<h1>Hello</h1>","width":1200,"height":630}'`}</span>{" "}
+                      <span className="text-[#a5d6a7]">{`'{"templateId":"tmpl_123","variables":{"title":"Hello"}}'`}</span>{" "}
                     </div>
 
                     {/* Response */}
@@ -220,21 +220,15 @@ export default function LandingVariant2() {
                         <span className="text-[#f5f0e8]/30">{`{`}</span>
                       </div>
                       <div className="pl-4">
-                        <span className="text-[#81c784]">{`"id"`}</span>
-                        <span className="text-[#f5f0e8]/30">: </span>
-                        <span className="text-[#a5d6a7]">{`"abc123"`}</span>
-                        <span className="text-[#f5f0e8]/30">,</span>
-                      </div>
-                      <div className="pl-4">
                         <span className="text-[#81c784]">{`"url"`}</span>
                         <span className="text-[#f5f0e8]/30">: </span>
-                        <span className="text-[#a5d6a7]">{`"https://api.htmlpix.com/images/abc123.png"`}</span>
+                        <span className="text-[#a5d6a7]">{`"https://api.htmlpix.com/v1/image?...&sig=..."`}</span>
                         <span className="text-[#f5f0e8]/30">,</span>
                       </div>
                       <div className="pl-4">
-                        <span className="text-[#81c784]">{`"imageKey"`}</span>
+                        <span className="text-[#81c784]">{`"expiresAt"`}</span>
                         <span className="text-[#f5f0e8]/30">: </span>
-                        <span className="text-[#a5d6a7]">{`"abc123.png"`}</span>
+                        <span className="text-[#a5d6a7]">{`1893456000000`}</span>
                       </div>
                       <div>
                         <span className="text-[#f5f0e8]/30">{`}`}</span>
@@ -284,9 +278,9 @@ export default function LandingVariant2() {
             {[
               {
                 step: "01",
-                title: "Send Your HTML",
-                desc: "POST your HTML, CSS, and viewport settings to our API. Tailwind, Google Fonts, inline styles. It all works.",
-                code: `POST /render\n{ "html": "<div>...</div>" }`,
+                title: "Mint Signed URL",
+                desc: "POST template ID and variables from your backend. We return a long-lived signed image URL.",
+                code: `POST /v1/image-url\n{ "templateId": "tmpl_123", "variables": { ... } }`,
                 icon: (
                   <svg
                     className="h-5 w-5"
@@ -306,7 +300,7 @@ export default function LandingVariant2() {
               {
                 step: "02",
                 title: "We Render It",
-                desc: "Our rendering cluster boots a real browser, injects your HTML, waits for fonts and assets, and captures a screenshot.",
+                desc: "When crawlers request the signed URL, we render your template with variables and cache the output.",
                 code: `→ Parse → Render → Encode`,
                 icon: (
                   <svg
@@ -326,9 +320,9 @@ export default function LandingVariant2() {
               },
               {
                 step: "03",
-                title: "Get Your Image",
-                desc: "Receive a PNG, JPEG, or WebP binary in the response. Average turnaround under 200ms. Cache it, serve it, done.",
-                code: `Content-Type: image/png\n← 24.3 KB`,
+                title: "Serve Public OG",
+                desc: "Use the signed URL in og:image. It serves binary bytes with immutable caching and stable URLs.",
+                code: `GET /v1/image?...&sig=...\nContent-Type: image/png`,
                 icon: (
                   <svg
                     className="h-5 w-5"
@@ -471,7 +465,7 @@ export default function LandingVariant2() {
                   <span className="text-[#c586c0]">await</span>
                   <span className="text-[#dcdcaa]"> fetch</span>
                   <span className="text-[#f5f0e8]/40">(</span>
-                  <span className="text-[#a5d6a7]">{`"https://api.htmlpix.com/render"`}</span>
+                  <span className="text-[#a5d6a7]">{`"https://api.htmlpix.com/v1/image-url"`}</span>
                   <span className="text-[#f5f0e8]/40">{`, {`}</span>
                   {"\n"}
                   <span className="text-[#f5f0e8]/40">{"  "}</span>
@@ -497,7 +491,9 @@ export default function LandingVariant2() {
                   <span className="text-[#f5f0e8]/40">.</span>
                   <span className="text-[#dcdcaa]">stringify</span>
                   <span className="text-[#f5f0e8]/40">{`({ `}</span>
-                  <span className="text-[#9cdcfe]">html</span>
+                  <span className="text-[#9cdcfe]">templateId</span>
+                  <span className="text-[#f5f0e8]/40">{`: `}</span>
+                  <span className="text-[#a5d6a7]">{`"tmpl_123"`}</span>
                   <span className="text-[#f5f0e8]/40">{`, `}</span>
                   <span className="text-[#9cdcfe]">width</span>
                   <span className="text-[#f5f0e8]/40">{`: `}</span>
@@ -506,6 +502,13 @@ export default function LandingVariant2() {
                   <span className="text-[#9cdcfe]">height</span>
                   <span className="text-[#f5f0e8]/40">{`: `}</span>
                   <span className="text-[#b5cea8]">630</span>
+                  <span className="text-[#f5f0e8]/40">{`, `}</span>
+                  <span className="text-[#9cdcfe]">variables</span>
+                  <span className="text-[#f5f0e8]/40">{`: { `}</span>
+                  <span className="text-[#9cdcfe]">title</span>
+                  <span className="text-[#f5f0e8]/40">{`: `}</span>
+                  <span className="text-[#a5d6a7]">{`"Launch Week"`}</span>
+                  <span className="text-[#f5f0e8]/40">{` }`}</span>
                   <span className="text-[#f5f0e8]/40">{` })`}</span>
                   {"\n"}
                   <span className="text-[#f5f0e8]/40">{`});`}</span>

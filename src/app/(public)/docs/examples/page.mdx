@@ -1,234 +1,98 @@
 export const metadata = {
   title: "Examples",
-  description: "HTMLPix API code examples in TypeScript, Python, and curl. OG images, social cards, and more."
+  description: "Signed OG URL examples for cURL, TypeScript, and Python."
 }
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.htmlpix.com";
+# Examples
 
-# Code Examples
+## Mint signed URL (cURL)
 
-## Basic HTML Render
+```bash
+curl -X POST https://api.htmlpix.com/v1/image-url \
+  -H "Authorization: Bearer $HTMLPIX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "templateId": "k57k8w9n7n9r8b6r2x6f2q9v1h7p4y0c",
+    "variables": {
+      "title": "Quarterly Report",
+      "subtitle": "Q1 2026"
+    }
+  }'
+```
 
-<Tabs defaultValue="curl" className="w-full">
-  <TabsList className="grid w-full grid-cols-3">
-    <TabsTrigger value="curl">cURL</TabsTrigger>
+## Backend helper
+
+<Tabs defaultValue="typescript" className="w-full">
+  <TabsList className="grid w-full grid-cols-2">
     <TabsTrigger value="typescript">TypeScript</TabsTrigger>
     <TabsTrigger value="python">Python</TabsTrigger>
   </TabsList>
-  <TabsContent value="curl" className="mt-4">
-    <CodeBlock
-      language="bash"
-      filename="render.sh"
-      code={`curl -X POST ${API_BASE_URL}/render \\
-  -H "Authorization: Bearer hpx_your_api_key" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "html": "<div class=\\"card\\"><h1>Hello World</h1><p>Welcome to HTMLPix</p></div>",
-    "css": ".card { padding: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; }",
-    "width": 1200,
-    "height": 630,
-    "format": "png"
-  }'`}
-    />
-  </TabsContent>
   <TabsContent value="typescript" className="mt-4">
     <CodeBlock
       language="typescript"
-      filename="render.ts"
-      code={`async function renderImage() {
-  const response = await fetch('${API_BASE_URL}/render', {
-    method: 'POST',
+      filename="mint-og-url.ts"
+      code={`export async function mintOgUrl(title: string, subtitle: string) {
+  const res = await fetch("https://api.htmlpix.com/v1/image-url", {
+    method: "POST",
     headers: {
-      'Authorization': \`Bearer \${process.env.HTMLPIX_API_KEY}\`,
-      'Content-Type': 'application/json',
+      Authorization: \`Bearer \${process.env.HTMLPIX_API_KEY}\`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      html: '<div class="card"><h1>Hello World</h1></div>',
-      css: '.card { padding: 40px; background: #fff; }',
+      templateId: process.env.HTMLPIX_TEMPLATE_ID,
       width: 1200,
       height: 630,
-      format: 'png',
+      format: "png",
+      variables: { title, subtitle },
     }),
   });
 
-  const data = await response.json();
-  return data; // { id, url, imageKey }
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<{ url: string; expiresAt: number }>;
 }`}
     />
   </TabsContent>
   <TabsContent value="python" className="mt-4">
     <CodeBlock
       language="python"
-      filename="render.py"
-      code={`import requests
-import os
+      filename="mint_og_url.py"
+      code={`import os
+import requests
 
-def render_image():
+def mint_og_url(title: str, subtitle: str):
     response = requests.post(
-        '${API_BASE_URL}/render',
+        "https://api.htmlpix.com/v1/image-url",
         headers={
-            'Authorization': f'Bearer {os.environ["HTMLPIX_API_KEY"]}',
-            'Content-Type': 'application/json',
+            "Authorization": f"Bearer {os.environ['HTMLPIX_API_KEY']}",
+            "Content-Type": "application/json",
         },
         json={
-            'html': '<div class="card"><h1>Hello World</h1></div>',
-            'css': '.card { padding: 40px; background: #fff; }',
-            'width': 1200,
-            'height': 630,
-            'format': 'png',
+            "templateId": os.environ["HTMLPIX_TEMPLATE_ID"],
+            "width": 1200,
+            "height": 630,
+            "format": "png",
+            "variables": {"title": title, "subtitle": subtitle},
         },
     )
-    return response.json()  # { id, url, imageKey }`}
+    response.raise_for_status()
+    return response.json()  # {"url": ..., "expiresAt": ...}
+`}
     />
   </TabsContent>
 </Tabs>
 
-## URL Screenshot
+## Use in Next.js metadata
 
-Capture a screenshot of any public URL:
+```ts
+export async function generateMetadata() {
+  const { url } = await mintOgUrl("Launch Day", "New OG flow");
 
-<Tabs defaultValue="curl" className="w-full">
-  <TabsList className="grid w-full grid-cols-2">
-    <TabsTrigger value="curl">cURL</TabsTrigger>
-    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
-  </TabsList>
-  <TabsContent value="curl" className="mt-4">
-    <CodeBlock
-      language="bash"
-      filename="screenshot-url.sh"
-      code={`curl -X POST ${API_BASE_URL}/render \\
-  -H "Authorization: Bearer hpx_your_api_key" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "url": "https://example.com",
-    "width": 1280,
-    "height": 720,
-    "format": "png"
-  }'`}
-    />
-  </TabsContent>
-  <TabsContent value="typescript" className="mt-4">
-    <CodeBlock
-      language="typescript"
-      filename="screenshot-url.ts"
-      code={`async function screenshotUrl(url: string) {
-  const response = await fetch('${API_BASE_URL}/render', {
-    method: 'POST',
-    headers: {
-      'Authorization': \`Bearer \${process.env.HTMLPIX_API_KEY}\`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url,
-      width: 1280,
-      height: 720,
-      format: 'png',
-    }),
-  });
-
-  return response.json();
-}`}
-    />
-  </TabsContent>
-</Tabs>
-
-## Element Selector
-
-Screenshot a specific element using a CSS selector:
-
-<Tabs defaultValue="curl" className="w-full">
-  <TabsList className="grid w-full grid-cols-2">
-    <TabsTrigger value="curl">cURL</TabsTrigger>
-    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
-  </TabsList>
-  <TabsContent value="curl" className="mt-4">
-    <CodeBlock
-      language="bash"
-      filename="screenshot-element.sh"
-      code={`curl -X POST ${API_BASE_URL}/render \\
-  -H "Authorization: Bearer hpx_your_api_key" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "html": "<div id=\\"card\\"><h1>Card Title</h1></div><footer>Footer</footer>",
-    "css": "#card { padding: 20px; background: white; }",
-    "selector": "#card"
-  }'`}
-    />
-  </TabsContent>
-  <TabsContent value="typescript" className="mt-4">
-    <CodeBlock
-      language="typescript"
-      filename="screenshot-element.ts"
-      code={`async function screenshotElement(html: string, selector: string) {
-  const response = await fetch('${API_BASE_URL}/render', {
-    method: 'POST',
-    headers: {
-      'Authorization': \`Bearer \${process.env.HTMLPIX_API_KEY}\`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      html,
-      selector,
-      format: 'png',
-    }),
-  });
-
-  return response.json();
-}`}
-    />
-  </TabsContent>
-</Tabs>
-
-## Base64 Response
-
-Get image data directly instead of a URL:
-
-<Tabs defaultValue="curl" className="w-full">
-  <TabsList className="grid w-full grid-cols-2">
-    <TabsTrigger value="curl">cURL</TabsTrigger>
-    <TabsTrigger value="typescript">TypeScript</TabsTrigger>
-  </TabsList>
-  <TabsContent value="curl" className="mt-4">
-    <CodeBlock
-      language="bash"
-      filename="base64-response.sh"
-      code={`curl -X POST ${API_BASE_URL}/render \\
-  -H "Authorization: Bearer hpx_your_api_key" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "html": "<h1>Hello World</h1>",
-    "responseFormat": "base64"
-  }'
-
-# Response: { "id": "...", "base64": "iVBORw0K...", "mimeType": "image/png" }`}
-    />
-  </TabsContent>
-  <TabsContent value="typescript" className="mt-4">
-    <CodeBlock
-      language="typescript"
-      filename="base64-response.ts"
-      code={`async function renderToBase64(html: string) {
-  const response = await fetch('${API_BASE_URL}/render', {
-    method: 'POST',
-    headers: {
-      'Authorization': \`Bearer \${process.env.HTMLPIX_API_KEY}\`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      html,
-      responseFormat: 'base64',
-    }),
-  });
-
-  const { base64, mimeType } = await response.json();
-
-  // Convert to buffer if needed
-  const buffer = Buffer.from(base64, 'base64');
-  return { buffer, mimeType };
-}`}
-    />
-  </TabsContent>
-</Tabs>
+  return {
+    openGraph: { images: [url] },
+    twitter: { images: [url] },
+  };
+}
+```

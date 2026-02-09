@@ -89,7 +89,6 @@ export default function TemplateEditorPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [html, setHtml] = useState("");
-  const [css, setCss] = useState("");
   const [variables, setVariables] = useState<Variable[]>([]);
   const [width, setWidth] = useState(1200);
   const [height, setHeight] = useState(630);
@@ -97,12 +96,10 @@ export default function TemplateEditorPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const [activeTab, setActiveTab] = useState<"html" | "css">("html");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const htmlRef = useRef<HTMLTextAreaElement>(null);
-  const cssRef = useRef<HTMLTextAreaElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const isOwnerRef = useRef(false);
   const [containerSize, setContainerSize] = useState({ w: 600, h: 340 });
@@ -113,7 +110,6 @@ export default function TemplateEditorPage() {
       setName(template.name);
       setDescription(template.description || "");
       setHtml(template.html);
-      setCss(template.css || "");
       setVariables(template.variables);
       setWidth(template.width || 1200);
       setHeight(template.height || 630);
@@ -130,7 +126,6 @@ export default function TemplateEditorPage() {
         name: name.trim(),
         description: description.trim() || undefined,
         html,
-        css: css || undefined,
         variables,
         width,
         height,
@@ -141,7 +136,7 @@ export default function TemplateEditorPage() {
     } finally {
       setSaving(false);
     }
-  }, [templateId, name, description, html, css, variables, width, height, format, updateTemplate]);
+  }, [templateId, name, description, html, variables, width, height, format, updateTemplate]);
 
   // Cmd+S / Ctrl+S to save
   useEffect(() => {
@@ -184,22 +179,23 @@ export default function TemplateEditorPage() {
   // Build preview HTML with variables interpolated using defaults
   const previewHtml = useMemo(() => {
     let previewH = html;
-    let previewC = css;
     for (const v of variables) {
       const value = v.defaultValue ?? "";
       const placeholder = `{{${v.name}}}`;
       previewH = previewH.split(placeholder).join(value);
-      previewC = previewC.split(placeholder).join(value);
     }
-    return buildRenderHtml(previewH, { css: previewC, background: "white" });
-  }, [html, css, variables]);
+    return buildRenderHtml(previewH, { background: "white" });
+  }, [html, variables]);
 
   const handleCopySnippet = async () => {
-    const snippet = `curl -X POST $API_URL/render \\
+    const snippet = `curl -X POST $API_URL/v1/image-url \\
   -H "Authorization: Bearer YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
     "templateId": "${templateId}",
+    "width": ${width},
+    "height": ${height},
+    "format": "${format}",
     "variables": {
 ${variables.map((v) => `      "${v.name}": "${v.defaultValue || "..."}"`).join(",\n")}
     }
@@ -218,7 +214,7 @@ ${variables.map((v) => `      "${v.name}": "${v.defaultValue || "..."}"`).join("
     return Math.min(scaleW, scaleH, 1);
   }, [containerSize, width, height]);
 
-  // Handle tab key in textareas for indentation
+  // Handle tab key in textarea for indentation
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Tab") {
       e.preventDefault();
@@ -227,9 +223,7 @@ ${variables.map((v) => `      "${v.name}": "${v.defaultValue || "..."}"`).join("
       const end = textarea.selectionEnd;
       const value = textarea.value;
       const newValue = value.substring(0, start) + "  " + value.substring(end);
-      if (activeTab === "html") setHtml(newValue);
-      else setCss(newValue);
-      // Restore cursor position after React re-render
+      setHtml(newValue);
       requestAnimationFrame(() => {
         textarea.selectionStart = textarea.selectionEnd = start + 2;
       });
@@ -398,7 +392,7 @@ ${variables.map((v) => `      "${v.name}": "${v.defaultValue || "..."}"`).join("
                 <iframe
                   srcDoc={previewHtml}
                   title="Template preview"
-                  sandbox="allow-same-origin"
+                  sandbox="allow-scripts allow-same-origin"
                   className="pointer-events-none origin-top-left"
                   style={{
                     width,
@@ -417,34 +411,12 @@ ${variables.map((v) => `      "${v.name}": "${v.defaultValue || "..."}"`).join("
 
             {/* Editor area */}
             <div className="flex min-h-0 flex-1 flex-col">
-              {/* Editor tabs */}
+              {/* Editor header */}
               <div className="flex h-9 shrink-0 items-end border-b border-[var(--border)] bg-[var(--background)]">
-                <button
-                  onClick={() => setActiveTab("html")}
-                  className={`relative flex h-full items-center px-4 font-mono text-xs transition-colors ${
-                    activeTab === "html"
-                      ? "text-[var(--foreground)]"
-                      : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                  }`}
-                >
+                <div className="relative flex h-full items-center px-4 font-mono text-xs text-[var(--foreground)]">
                   HTML
-                  {activeTab === "html" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--primary)]" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("css")}
-                  className={`relative flex h-full items-center px-4 font-mono text-xs transition-colors ${
-                    activeTab === "css"
-                      ? "text-[var(--foreground)]"
-                      : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                  }`}
-                >
-                  CSS
-                  {activeTab === "css" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--primary)]" />
-                  )}
-                </button>
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--primary)]" />
+                </div>
               </div>
 
               {/* Textarea editor */}
@@ -456,22 +428,8 @@ ${variables.map((v) => `      "${v.name}": "${v.defaultValue || "..."}"`).join("
                   onKeyDown={handleKeyDown}
                   disabled={!isOwner}
                   spellCheck={false}
-                  className={`absolute inset-0 resize-none bg-[var(--background)] p-4 font-mono text-[13px] leading-[1.6] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/50 focus:outline-none disabled:opacity-50 ${
-                    activeTab === "html" ? "" : "hidden"
-                  }`}
+                  className="absolute inset-0 resize-none bg-[var(--background)] p-4 font-mono text-[13px] leading-[1.6] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/50 focus:outline-none disabled:opacity-50"
                   placeholder="<div>Your HTML here. Use {{variableName}} for placeholders.</div>"
-                />
-                <textarea
-                  ref={cssRef}
-                  value={css}
-                  onChange={(e) => setCss(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  disabled={!isOwner}
-                  spellCheck={false}
-                  className={`absolute inset-0 resize-none bg-[var(--background)] p-4 font-mono text-[13px] leading-[1.6] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/50 focus:outline-none disabled:opacity-50 ${
-                    activeTab === "css" ? "" : "hidden"
-                  }`}
-                  placeholder="body { padding: 40px; font-family: system-ui; }"
                 />
               </div>
             </div>
@@ -508,7 +466,7 @@ ${variables.map((v) => `      "${v.name}": "${v.defaultValue || "..."}"`).join("
                     <code className="rounded bg-[var(--muted)] px-1 py-0.5 font-mono text-[10px]">
                       {"{{name}}"}
                     </code>{" "}
-                    syntax in your HTML/CSS.
+                    syntax in your HTML.
                   </p>
                 ) : (
                   <div className="space-y-2.5">
@@ -649,11 +607,14 @@ ${variables.map((v) => `      "${v.name}": "${v.defaultValue || "..."}"`).join("
               <SidebarSection title="API Usage" defaultOpen={false}>
                 <div className="relative">
                   <pre className="max-h-[200px] overflow-auto rounded border border-[var(--border)] bg-[var(--muted)]/40 p-3 font-mono text-[10px] leading-relaxed text-[var(--foreground)]">
-                    {`curl -X POST $API_URL/render \\
+                    {`curl -X POST $API_URL/v1/image-url \\
   -H "Authorization: Bearer YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
     "templateId": "${templateId}",
+    "width": ${width},
+    "height": ${height},
+    "format": "${format}",
     "variables": {
 ${variables.map((v) => `      "${v.name}": "${v.defaultValue || "..."}"`).join(",\n")}
     }

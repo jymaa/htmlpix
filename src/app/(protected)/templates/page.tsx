@@ -70,8 +70,7 @@ export default function TemplatesPage() {
       const id = await createTemplate({
         name: newName.trim(),
         description: newDesc.trim() || undefined,
-        html: '<div class="card">\n  <h1>{{title}}</h1>\n  <p>{{subtitle}}</p>\n</div>',
-        css: ".card {\n  padding: 60px;\n  background: #1a1a1a;\n  color: #f5f0e8;\n  font-family: system-ui;\n}",
+        html: '<div class="w-[1200px] h-[630px] flex flex-col items-center justify-center bg-[#1a1a1a] text-[#f5f0e8]" style="font-family:system-ui">\n  <h1 style="font-size:64px;margin:0">{{title}}</h1>\n  <p style="font-size:24px;color:rgba(245,240,232,0.6);margin-top:16px">{{subtitle}}</p>\n</div>',
         variables: [
           { name: "title", type: "string" as const, defaultValue: "Hello World" },
           { name: "subtitle", type: "string" as const, defaultValue: "Edit this template" },
@@ -118,7 +117,7 @@ export default function TemplatesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Templates</h1>
-          <p className="text-muted-foreground">Reusable HTML/CSS templates with variable placeholders</p>
+          <p className="text-muted-foreground">Reusable HTML templates with variable placeholders</p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
@@ -128,7 +127,7 @@ export default function TemplatesPage() {
             <DialogHeader>
               <DialogTitle>Create Template</DialogTitle>
               <DialogDescription>
-                Give your template a name. You&apos;ll edit the HTML/CSS next.
+                Give your template a name. You&apos;ll edit the HTML next.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">

@@ -11,7 +11,6 @@ const LABELS: Record<string, string> = {
   endpoints: "Endpoints",
   examples: "Examples",
   "rate-limits": "Rate Limits",
-  "image-storage": "Image Storage",
   errors: "Errors",
   faq: "FAQ",
   "use-cases": "Use Cases",

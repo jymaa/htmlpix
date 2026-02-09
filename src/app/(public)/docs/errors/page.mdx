@@ -1,66 +1,48 @@
 export const metadata = {
   title: "Errors",
-  description: "HTMLPix API error codes and troubleshooting guide. Handle errors gracefully in your application."
+  description: "Error codes for signed OG URL minting and image delivery."
 }
 
 # Errors
 
-## Response Format
-
-### Success Response
-
-On success, the API returns a JSON object with the image URL or base64 data:
+All errors return JSON:
 
 ```json
 {
-  "id": "abc123",
-  "url": "https://api.htmlpix.com/images/abc123.png",
-  "imageKey": "abc123.png"
+  "code": "INVALID_SIGNATURE",
+  "message": "Invalid signed image URL"
 }
 ```
 
-Or with `responseFormat: "base64"`:
+## POST /v1/image-url
 
-```json
-{
-  "id": "abc123",
-  "base64": "iVBORw0K...",
-  "mimeType": "image/png"
-}
-```
+| HTTP | Code | Meaning |
+|------|------|---------|
+| 400 | `INVALID_JSON` | Body is not valid JSON |
+| 400 | `MISSING_TEMPLATE_ID` | `templateId` missing |
+| 400 | `INVALID_VARIABLES` | `variables` must be an object |
+| 400 | `INVALID_WIDTH` / `INVALID_HEIGHT` | Size outside 1-4096 |
+| 400 | `INVALID_FORMAT` | Unsupported image format |
+| 401 | `MISSING_KEY` / `INVALID_KEY` | API key issue |
+| 403 | `KEY_INACTIVE` | API key revoked |
+| 402 | `SUBSCRIPTION_INACTIVE` | Subscription inactive |
+| 429 | `QUOTA_EXCEEDED` | Monthly quota exhausted |
+| 404 | `TEMPLATE_NOT_FOUND` | Template missing or not accessible |
 
-### Error Response
+## GET /v1/image
 
-On error, the API returns a JSON object:
+| HTTP | Code | Meaning |
+|------|------|---------|
+| 400 | `MISSING_TEMPLATE_ID` / `MISSING_UID` / `MISSING_EXP` / `MISSING_SIG` | Required signed params missing |
+| 400 | `MISSING_TEMPLATE_VARIABLES` | Required template variable missing |
+| 403 | `URL_EXPIRED` | Signed URL expired |
+| 403 | `INVALID_SIGNATURE` | Signature mismatch |
+| 404 | `TEMPLATE_NOT_FOUND` | Template missing or not accessible |
+| 429 | `QUOTA_EXCEEDED` | User over quota on uncached render |
+| 500 | `RENDER_ERROR` | Takumi render failure |
 
-```json
-{
-  "code": "QUOTA_EXCEEDED",
-  "message": "Monthly quota of 1000 renders exceeded"
-}
-```
+## Deprecated endpoints
 
-## Error Codes
-
-| HTTP Status | Code | Description |
-|-------------|------|-------------|
-| 400 | `INVALID_BODY` | Request body is not valid JSON |
-| 400 | `MISSING_INPUT` | Either html, url, or templateId is required |
-| 400 | `CONFLICTING_INPUT` | Only one of html, url, or templateId allowed |
-| 400 | `HTML_TOO_LARGE` | HTML exceeds maximum size (500KB) |
-| 400 | `CSS_TOO_LARGE` | CSS exceeds maximum size (200KB) |
-| 400 | `URL_TOO_LONG` | URL exceeds maximum length (2048 chars) |
-| 400 | `INVALID_URL` | URL is not valid |
-| 400 | `INVALID_URL_PROTOCOL` | URL must use http or https |
-| 400 | `SELECTOR_TOO_LONG` | CSS selector exceeds max length |
-| 401 | `MISSING_KEY` | Authorization header missing |
-| 401 | `INVALID_KEY` | API key is invalid |
-| 401 | `KEY_INACTIVE` | API key has been revoked |
-| 402 | `SUBSCRIPTION_INACTIVE` | Subscription has expired |
-| 404 | `TEMPLATE_NOT_FOUND` | Template not found or not accessible |
-| 429 | `QUOTA_EXCEEDED` | Monthly render quota exceeded |
-| 429 | `QUEUE_FULL` | Server render queue is at capacity |
-| 500 | `RENDER_ERROR` | Failed to render the HTML |
-| 500 | `SELECTOR_NOT_FOUND` | The specified CSS selector was not found |
-| 500 | `RENDER_TIMEOUT` | Render timed out |
-| 503 | `NOT_READY` | Service is starting up |
+| HTTP | Code | Meaning |
+|------|------|---------|
+| 410 | `ENDPOINT_DEPRECATED` | `/render` or `/images/:id` is deprecated |
