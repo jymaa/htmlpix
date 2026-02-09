@@ -6,6 +6,16 @@ export const metadata: Metadata = {
   title: "Support",
   description:
     "Get help with HTMLPix. Docs, API reference, quickstart guides, and direct email support from the team.",
+  openGraph: {
+    images: [
+      {
+        url: "/api/og?variant=standard&title=Support&tag=HELP&subtitle=Docs%2C+API+reference%2C+quickstart+guides%2C+and+direct+email+support.",
+        width: 1200,
+        height: 630,
+        alt: "HTMLPix Support",
+      },
+    ],
+  },
 };
 
 const resources = [

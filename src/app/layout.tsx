@@ -38,11 +38,27 @@ export const metadata: Metadata = {
     title: "HTMLPix - HTML to Image API",
     description:
       "Generate images from HTML/CSS with a single API call. OG images, social cards, receipts, certificates — at scale.",
+    images: [
+      {
+        url: "/api/og?variant=standard&title=HTMLPix&subtitle=Generate+images+from+HTML%2FCSS+with+a+single+API+call.&tag=HTML+TO+IMAGE+API",
+        width: 1200,
+        height: 630,
+        alt: "HTMLPix - HTML to Image API",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "HTMLPix - HTML to Image API",
     description: "Generate images from HTML/CSS with a single API call. Free tier included.",
+    images: [
+      {
+        url: "/api/og?variant=standard&title=HTMLPix&subtitle=Generate+images+from+HTML%2FCSS+with+a+single+API+call.&tag=HTML+TO+IMAGE+API",
+        width: 1200,
+        height: 630,
+        alt: "HTMLPix - HTML to Image API",
+      },
+    ],
   },
 };
 

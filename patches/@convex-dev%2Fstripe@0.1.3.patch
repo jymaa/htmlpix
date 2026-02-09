@@ -1,0 +1,47 @@
+diff --git a/node_modules/@convex-dev/stripe/.bun-tag-a30ab3410305a2ab b/.bun-tag-a30ab3410305a2ab
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/dist/client/index.d.ts b/dist/client/index.d.ts
+index a3e8be3943330ad2b7cd5092daab5c3a7e380aeb..49e89d8e2c8227c57908592ea1b890c2dbdfac11 100644
+--- a/dist/client/index.d.ts
++++ b/dist/client/index.d.ts
+@@ -53,6 +53,8 @@ export declare class StripeSubscriptions {
+         subscriptionMetadata?: Record<string, string>;
+         /** Metadata to attach to the payment intent (only for mode: "payment") */
+         paymentIntentMetadata?: Record<string, string>;
++        /** Any additional Stripe Checkout Session create params */
++        extraParams?: Partial<import("stripe").Stripe.Checkout.SessionCreateParams>;
+     }): Promise<{
+         sessionId: string;
+         url: string | null;
+diff --git a/dist/client/index.js b/dist/client/index.js
+index cf39f1d613bd9c3da55e5292c7765f815f754ca5..23b3521643e5a2df244d7f88f26b9aa1d29086af 100644
+--- a/dist/client/index.js
++++ b/dist/client/index.js
+@@ -101,6 +101,7 @@ export class StripeSubscriptions {
+     async createCheckoutSession(ctx, args) {
+         const stripe = new StripeSDK(this.apiKey);
+         const sessionParams = {
++            ...args.extraParams,
+             mode: args.mode,
+             line_items: [
+                 {
+diff --git a/src/client/index.ts b/src/client/index.ts
+index b60bdfbcefd0b161a886b330629f7e0d5d7f5c28..2f53f610de4b395b1bbab8844b8e0895551bf5d7 100644
+--- a/src/client/index.ts
++++ b/src/client/index.ts
+@@ -166,11 +166,14 @@ export class StripeSubscriptions {
+       subscriptionMetadata?: Record<string, string>;
+       /** Metadata to attach to the payment intent (only for mode: "payment") */
+       paymentIntentMetadata?: Record<string, string>;
++      /** Any additional Stripe Checkout Session create params */
++      extraParams?: Partial<StripeSDK.Checkout.SessionCreateParams>;
+     },
+   ) {
+     const stripe = new StripeSDK(this.apiKey);
+ 
+     const sessionParams: StripeSDK.Checkout.SessionCreateParams = {
++      ...args.extraParams,
+       mode: args.mode,
+       line_items: [
+         {

@@ -61,6 +61,9 @@ export const createCheckoutSession = action({
       cancelUrl: args.cancelUrl,
       metadata: { userId },
       subscriptionMetadata: { userId },
+      extraParams: {
+        allow_promotion_codes: true,
+      },
     });
 
     return session;

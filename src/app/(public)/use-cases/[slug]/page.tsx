@@ -18,6 +18,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const uc = getUseCaseBySlug(slug);
   if (!uc) return {};
+  const ogUrl = `/api/og?variant=standard&title=${encodeURIComponent(uc.meta.title)}&tag=${encodeURIComponent(uc.tag)}&subtitle=${encodeURIComponent(uc.desc)}`;
   return {
     title: uc.meta.title,
     description: uc.meta.description,
@@ -25,6 +26,10 @@ export async function generateMetadata({
     openGraph: {
       title: `${uc.meta.title} | HTMLPix`,
       description: uc.meta.description,
+      images: [{ url: ogUrl, width: 1200, height: 630, alt: uc.meta.title }],
+    },
+    twitter: {
+      images: [{ url: ogUrl, width: 1200, height: 630, alt: uc.meta.title }],
     },
   };
 }

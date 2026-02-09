@@ -39,7 +39,9 @@
       "WebFetch(domain:www.screenshotapi.net)",
       "WebFetch(domain:htmlcsstoimg.com)",
       "Bash(head:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)"
     ]
   }
 }

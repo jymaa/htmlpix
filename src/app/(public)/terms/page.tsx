@@ -3,6 +3,16 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "HTMLPix terms of service. Rules and guidelines for using our HTML-to-image API.",
+  openGraph: {
+    images: [
+      {
+        url: "/api/og?variant=standard&title=Terms+of+Service&tag=LEGAL",
+        width: 1200,
+        height: 630,
+        alt: "HTMLPix Terms of Service",
+      },
+    ],
+  },
 };
 
 export default function TermsPage() {

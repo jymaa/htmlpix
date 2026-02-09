@@ -3,6 +3,16 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "HTMLPix privacy policy. How we collect, use, and protect your data.",
+  openGraph: {
+    images: [
+      {
+        url: "/api/og?variant=standard&title=Privacy+Policy&tag=LEGAL",
+        width: 1200,
+        height: 630,
+        alt: "HTMLPix Privacy Policy",
+      },
+    ],
+  },
 };
 
 export default function PrivacyPage() {
