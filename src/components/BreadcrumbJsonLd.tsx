@@ -21,6 +21,11 @@ const LABELS: Record<string, string> = {
   certificates: "Certificates",
   "email-banners": "Email Banners",
   "charts-and-reports": "Charts & Reports",
+  "website-screenshots": "Website Screenshots",
+  "ecommerce-product-images": "Product Images",
+  "personalized-marketing": "Personalized Images",
+  "blog-featured-images": "Blog Featured Images",
+  "pdf-thumbnails": "PDF Thumbnails",
 };
 
 export function BreadcrumbJsonLd() {

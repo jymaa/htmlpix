@@ -1,8 +1,16 @@
 import type { MetadataRoute } from "next";
+import { getAllSlugs } from "./(public)/use-cases/data";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://htmlpix.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const useCaseEntries: MetadataRoute.Sitemap = getAllSlugs().map((slug) => ({
+    url: `${BASE_URL}/use-cases/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly",
+    priority: 0.7,
+  }));
+
   return [
     {
       url: BASE_URL,
@@ -64,6 +72,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    {
+      url: `${BASE_URL}/use-cases`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.75,
+    },
+    ...useCaseEntries,
     {
       url: `${BASE_URL}/support`,
       lastModified: new Date(),

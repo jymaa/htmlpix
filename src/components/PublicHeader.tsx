@@ -32,6 +32,13 @@ export function PublicHeader() {
             Docs
           </Link>
           <Link
+            href="/use-cases"
+            className="flex items-center gap-2 text-[#1a1a1a]/50 transition-colors hover:text-[#ff4d00]"
+          >
+            <span className="h-1 w-1 bg-current" />
+            Use Cases
+          </Link>
+          <Link
             href="/#pricing"
             className="flex items-center gap-2 text-[#1a1a1a]/50 transition-colors hover:text-[#ff4d00]"
           >
@@ -61,6 +68,12 @@ export function PublicHeader() {
                 className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]"
               >
                 Docs
+              </Link>
+              <Link
+                href="/use-cases"
+                className="rounded-md px-3 py-2.5 text-[#1a1a1a]/70 transition-colors hover:bg-[#1a1a1a]/5 hover:text-[#ff4d00]"
+              >
+                Use Cases
               </Link>
               <Link
                 href="#pricing"

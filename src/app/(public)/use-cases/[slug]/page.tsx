@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { PublicHeader } from "@/components/PublicHeader";
 import { JsonLd } from "@/components/JsonLd";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
+import { IntegrationTabs } from "@/components/IntegrationTabs";
+import { FaqAccordion } from "@/components/FaqAccordion";
 import { getAllSlugs, getUseCaseBySlug, getAllUseCases } from "../data";
 
 export function generateStaticParams() {
@@ -238,12 +240,79 @@ export default async function UseCasePage({
         </div>
       </section>
 
+      {/* Integration Snippets */}
+      {uc.integrations && (
+        <section className="relative z-10 px-4 py-16 md:px-8 md:py-24">
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-8 flex flex-col gap-4 md:mb-12 md:flex-row md:items-center md:gap-8">
+              <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
+                SECTION 04
+              </div>
+              <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
+              <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide md:text-4xl">
+                Integration Snippets
+              </h2>
+              <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
+            </div>
+            <IntegrationTabs tabs={uc.integrations.tabs} />
+          </div>
+        </section>
+      )}
+
+      {/* ROI */}
+      {uc.roi && (
+        <section className="relative z-10 px-4 py-16 md:px-8 md:py-24">
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-8 flex flex-col gap-4 md:mb-12 md:flex-row md:items-center md:gap-8">
+              <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
+                SECTION 05
+              </div>
+              <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
+              <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide md:text-4xl">
+                Time &amp; Cost Savings
+              </h2>
+              <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Without */}
+              <div className="border-2 border-[#1a1a1a]/10 p-6">
+                <div className="mb-4 text-[10px] font-bold tracking-wider text-[#1a1a1a]/30 uppercase">
+                  Without HTMLPix
+                </div>
+                <p className="text-sm leading-relaxed text-[#1a1a1a]/40">
+                  {uc.roi.manual}
+                </p>
+              </div>
+              {/* With */}
+              <div className="border-2 border-[#ff4d00]/30 bg-[#ff4d00]/5 p-6">
+                <div className="mb-4 text-[10px] font-bold tracking-wider text-[#ff4d00] uppercase">
+                  With HTMLPix
+                </div>
+                <p className="text-sm leading-relaxed text-[#1a1a1a]/60">
+                  {uc.roi.withApi}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 border-2 border-[#28c840]/30 bg-[#28c840]/5 p-6 text-center">
+              <div className="mb-1 text-[10px] font-bold tracking-wider text-[#28c840] uppercase">
+                Estimated Savings
+              </div>
+              <div className="font-[family-name:var(--font-bebas-neue)] text-4xl text-[#28c840] md:text-5xl">
+                {uc.roi.savings}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Benefits */}
       <section className="relative z-10 px-4 py-16 md:px-8 md:py-24">
         <div className="mx-auto max-w-4xl">
           <div className="mb-8 flex flex-col gap-4 md:mb-12 md:flex-row md:items-center md:gap-8">
             <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
-              SECTION 04
+              SECTION 06
             </div>
             <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
             <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide md:text-4xl">
@@ -272,12 +341,45 @@ export default async function UseCasePage({
         </div>
       </section>
 
+      {/* FAQ */}
+      {uc.faq && uc.faq.length > 0 && (
+        <section className="relative z-10 px-4 py-16 md:px-8 md:py-24">
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-8 flex flex-col gap-4 md:mb-12 md:flex-row md:items-center md:gap-8">
+              <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
+                SECTION 07
+              </div>
+              <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
+              <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide md:text-4xl">
+                Frequently Asked Questions
+              </h2>
+              <div className="hidden h-px flex-grow bg-[#1a1a1a]/10 md:block" />
+            </div>
+            <FaqAccordion items={uc.faq} />
+          </div>
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: uc.faq.map((f) => ({
+                "@type": "Question",
+                name: f.question,
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: f.answer,
+                },
+              })),
+            }}
+          />
+        </section>
+      )}
+
       {/* Other Use Cases */}
       <section className="relative z-10 bg-[#1a1a1a] px-4 py-16 md:px-8 md:py-24">
         <div className="mx-auto max-w-4xl">
           <div className="mb-8 flex flex-col gap-4 md:mb-12 md:flex-row md:items-center md:gap-8">
             <div className="text-xs tracking-widest whitespace-nowrap text-[#ff4d00] uppercase">
-              SECTION 05
+              SECTION 08
             </div>
             <div className="hidden h-px flex-grow bg-[#f5f0e8]/10 md:block" />
             <h2 className="font-[family-name:var(--font-bebas-neue)] text-3xl tracking-wide text-[#f5f0e8] md:text-4xl">
@@ -287,7 +389,7 @@ export default async function UseCasePage({
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {otherUseCases.map((other) => (
+            {otherUseCases.slice(0, 6).map((other) => (
               <Link
                 key={other.slug}
                 href={`/use-cases/${other.slug}`}
