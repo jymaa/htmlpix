@@ -18,10 +18,6 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.htmlpix.com",
       },
-      {
-        protocol: "https",
-        hostname: "pub-d90268f86a134686a1cf1d990af7b506.r2.dev",
-      },
     ],
   },
 };

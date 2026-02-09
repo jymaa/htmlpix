@@ -11,6 +11,7 @@ import { imageStore } from "./store/imageStore";
 import { diskImageStore } from "./store/diskImageStore";
 import {
   validateImageUrlMintRequest,
+  validateTemplatePreviewRenderRequest,
   parseSignedImageQuery,
   isValidationError,
   type RenderRequest,
@@ -18,12 +19,14 @@ import {
 import { canonicalizeQuery, signCanonicalQuery, verifyCanonicalQuery } from "./lib/signing";
 import { api } from "../convex/_generated/api";
 import { logger, type Logger } from "./lib/logger";
+import { interpolateTemplate, resolveTemplateVariables } from "./render/templateInterpolation";
 
 const PORT = parseInt(process.env.PORT || "3201", 10);
 const IS_DEV = process.env.NODE_ENV !== "production";
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || (IS_DEV ? "*" : "");
 const SERVER_SECRET = process.env.SERVER_SECRET || "";
+const TEMPLATE_PREVIEW_SECRET = process.env.TEMPLATE_PREVIEW_SECRET || "";
 const DEFAULT_IMAGE_TTL_MS = 5 * 365 * 24 * 60 * 60 * 1000; // 5 years
 
 if (!SERVER_SECRET) {
@@ -75,17 +78,6 @@ function generateRequestId(): string {
   return crypto.randomUUID().slice(0, 8);
 }
 
-function injectStyleIntoHtml(html: string, css: string): string {
-  const trimmed = css.trim();
-  if (!trimmed) return html;
-  const styleTag = `<style>${trimmed}</style>`;
-  const headCloseIndex = html.toLowerCase().indexOf("</head>");
-  if (headCloseIndex !== -1) {
-    return html.slice(0, headCloseIndex) + styleTag + "\n" + html.slice(headCloseIndex);
-  }
-  return `${styleTag}\n${html}`;
-}
-
 function toStringRecord(input: Record<string, string | number> | undefined): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [key, value] of Object.entries(input || {})) {
@@ -99,38 +91,6 @@ async function fetchTemplate(templateId: string): Promise<ServerTemplate | null>
     serverSecret: SERVER_SECRET,
     templateId,
   })) as ServerTemplate | null;
-}
-
-function resolveTemplateVariables(
-  template: ServerTemplate,
-  provided: Record<string, string>
-): { values: Record<string, string>; missing: string[] } {
-  const values: Record<string, string> = {};
-  const missing: string[] = [];
-
-  for (const tmplVar of template.variables) {
-    const val = provided[tmplVar.name] ?? tmplVar.defaultValue;
-    if (val === undefined) {
-      missing.push(tmplVar.name);
-      continue;
-    }
-    values[tmplVar.name] = String(val);
-  }
-
-  return { values, missing };
-}
-
-function interpolateTemplate(template: ServerTemplate, values: Record<string, string>): string {
-  let html = template.html;
-  let css = template.css || "";
-
-  for (const [name, value] of Object.entries(values)) {
-    const placeholder = `{{${name}}}`;
-    html = html.split(placeholder).join(value);
-    css = css.split(placeholder).join(value);
-  }
-
-  return injectStyleIntoHtml(html, css);
 }
 
 function hashContent(input: string): string {
@@ -174,6 +134,100 @@ async function writeRenderEvent(event: RenderEventPayload, log: Logger): Promise
     });
   } catch (error) {
     log.error("event.ingest_failed", { error, templateId: event.templateId });
+  }
+}
+
+async function handleTemplatePreview(req: Request, log: Logger, requestId: string): Promise<Response> {
+  if (!TEMPLATE_PREVIEW_SECRET) {
+    log.error("template_preview.misconfigured", { reason: "missing_secret" });
+    return jsonResponse(
+      { code: "PREVIEW_NOT_CONFIGURED", message: "Template preview is not configured on the render server" },
+      503,
+      undefined,
+      requestId
+    );
+  }
+
+  const providedSecret = req.headers.get("X-Template-Preview-Secret");
+  if (!providedSecret || providedSecret !== TEMPLATE_PREVIEW_SECRET) {
+    log.warn("template_preview.unauthorized");
+    return jsonResponse({ code: "UNAUTHORIZED", message: "Invalid template preview secret" }, 401, undefined, requestId);
+  }
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return jsonResponse({ code: "INVALID_JSON", message: "Request body must be valid JSON" }, 400, undefined, requestId);
+  }
+
+  const validated = validateTemplatePreviewRenderRequest(body);
+  if (isValidationError(validated)) {
+    return jsonResponse(validated, 400, undefined, requestId);
+  }
+
+  const resolved = resolveTemplateVariables(
+    {
+      html: validated.html,
+      css: validated.css,
+      variables: validated.variables,
+    },
+    toStringRecord(validated.variableValues)
+  );
+
+  if (resolved.missing.length > 0) {
+    return jsonResponse(
+      {
+        code: "MISSING_TEMPLATE_VARIABLES",
+        message: `Missing required template variables: ${resolved.missing.join(", ")}`,
+      },
+      400,
+      undefined,
+      requestId
+    );
+  }
+
+  const html = interpolateTemplate(
+    {
+      html: validated.html,
+      css: validated.css,
+      variables: validated.variables,
+    },
+    resolved.values
+  );
+  const renderRequest: RenderRequest = {
+    html,
+    width: validated.width,
+    height: validated.height,
+    format: validated.format,
+    quality: validated.quality,
+  };
+
+  log.info("template_preview.render_start", {
+    width: validated.width,
+    height: validated.height,
+    format: validated.format,
+  });
+
+  try {
+    const rendered = await renderWithTakumi(renderRequest, log);
+    log.info("template_preview.render_success", {
+      renderMs: rendered.renderMs,
+      bytes: rendered.buffer.length,
+    });
+
+    return new Response(Buffer.from(rendered.buffer), {
+      status: 200,
+      headers: {
+        "Content-Type": rendered.contentType,
+        "X-Render-Ms": String(rendered.renderMs),
+        "X-Request-Id": requestId,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown render error";
+    log.warn("template_preview.render_error", { error: message });
+    return jsonResponse({ code: "RENDER_ERROR", message }, 500, undefined, requestId);
   }
 }
 
@@ -522,6 +576,11 @@ async function handleRequest(req: Request): Promise<Response> {
 
   if (path === "/v1/image-url" && method === "POST") {
     const res = await handleMintImageUrl(req, log, requestId);
+    return withCors(res, origin);
+  }
+
+  if (path === "/internal/template-preview" && method === "POST") {
+    const res = await handleTemplatePreview(req, log, requestId);
     return withCors(res, origin);
   }
 

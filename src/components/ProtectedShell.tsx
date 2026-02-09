@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { ConvexClientProvider } from "@/app/ConvexClientProvider";
@@ -9,7 +9,9 @@ import { BlueprintSpinner } from "@/components/ui/blueprint-spinner";
 
 export function ProtectedShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, isPending } = authClient.useSession();
+  const isTemplateEditorRoute = /^\/templates\/[^/]+$/.test(pathname);
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -53,7 +55,7 @@ export function ProtectedShell({ children }: { children: React.ReactNode }) {
   return (
     <ConvexClientProvider>
       <DashboardHeader />
-      <main className="container mx-auto p-4">{children}</main>
+      <main className={isTemplateEditorRoute ? "w-full p-4" : "container mx-auto p-4"}>{children}</main>
     </ConvexClientProvider>
   );
 }

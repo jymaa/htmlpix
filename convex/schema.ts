@@ -27,22 +27,6 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_stripeSubscriptionId", ["stripeSubscriptionId"]),
 
-  renders: defineTable({
-    apiKeyId: v.id("apiKeys"),
-    userId: v.string(),
-    externalId: v.string(),
-    status: v.union(v.literal("success"), v.literal("error")),
-    htmlHash: v.string(),
-    contentHash: v.optional(v.string()),
-    format: v.string(),
-    renderMs: v.number(),
-    imageKey: v.optional(v.string()),
-    createdAt: v.number(),
-  })
-    .index("by_externalId", ["externalId"])
-    .index("by_userId", ["userId"])
-    .index("by_contentHash", ["contentHash"]),
-
   renderArtifacts: defineTable({
     contentHash: v.string(),
     canonicalPath: v.string(),
@@ -51,10 +35,8 @@ export default defineSchema({
     tv: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
-    lastRenderMs: v.optional(v.number()),
   })
-    .index("by_contentHash", ["contentHash"])
-    .index("by_templateId", ["templateId"]),
+    .index("by_contentHash", ["contentHash"]),
 
   renderEvents: defineTable({
     userId: v.string(),
@@ -91,6 +73,7 @@ export default defineSchema({
     format: v.optional(v.union(v.literal("png"), v.literal("jpeg"), v.literal("webp"))),
     isPublic: v.boolean(),
     isStarter: v.optional(v.boolean()),
+    tier: v.optional(v.union(v.literal("free"), v.literal("paid"))),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

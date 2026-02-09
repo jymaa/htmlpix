@@ -41,28 +41,9 @@ Environment Variables
 PORT=3301
 BASE_URL=https://api.htmlpix.com
 CONVEX_URL=<convex deployment url>
-
-# Browser pool
-
-BROWSER_INSTANCES=1
-RENDER_CONCURRENCY=3
-
-# Request limits
-
-MAX_QUEUE_LENGTH=50
-MAX_HTML_LENGTH=500000
-MAX_CSS_LENGTH=200000
-MAX_ASSET_BYTES=10485760
-
-# Render timing
-
-DEFAULT_TIMEOUT_MS=5000
-FONT_STABILIZATION_MS=100
-ASSET_WAIT_MS=2000
-
-# Asset allowlist
-
-ALLOWED_HOSTS=fonts.googleapis.com,fonts.gstatic.com
+SERVER_SECRET=<shared secret for server↔Convex auth>
+IMAGE_SIGNING_SECRET=<HMAC secret for signed image URLs>
+TEMPLATE_PREVIEW_SECRET=<shared secret for /internal/template-preview>
 
 # Cache / storage
 
@@ -71,16 +52,12 @@ IMAGE_DIR=./cache/images
 IMAGE_TTL_MS=86400000
 MAX_STORED_IMAGES=1000
 
-# Upload queue
-
-UPLOAD_CONCURRENCY=2
-UPLOAD_RETRY_MAX=5
-UPLOAD_RETRY_BASE_MS=500
-UPLOAD_RETRY_MAX_MS=60000
-
 # Optional
 
 CORS_ORIGIN=
+TAKUMI_RENDER_TIMEOUT_MS=10000
+AXIOM_TOKEN=<axiom ingest token>
+AXIOM_DATASET=<axiom dataset name>
 
 Requirements for Code Changes
 

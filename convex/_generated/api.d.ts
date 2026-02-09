@@ -33,7 +33,6 @@ import type * as emails_usageWarning75 from "../emails/usageWarning75.js";
 import type * as emails_welcome from "../emails/welcome.js";
 import type * as helpers_cdn from "../helpers/cdn.js";
 import type * as http from "../http.js";
-import type * as images from "../images.js";
 import type * as stripe from "../stripe.js";
 import type * as stripeActions from "../stripeActions.js";
 import type * as sync from "../sync.js";
@@ -73,7 +72,6 @@ declare const fullApi: ApiFromModules<{
   "emails/welcome": typeof emails_welcome;
   "helpers/cdn": typeof helpers_cdn;
   http: typeof http;
-  images: typeof images;
   stripe: typeof stripe;
   stripeActions: typeof stripeActions;
   sync: typeof sync;

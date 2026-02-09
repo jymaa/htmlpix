@@ -19,6 +19,23 @@ export interface ImageUrlMintRequest {
   variables?: Record<string, string | number>;
 }
 
+export interface TemplatePreviewVariable {
+  name: string;
+  type: "string" | "number" | "url";
+  defaultValue?: string;
+}
+
+export interface TemplatePreviewRenderRequest {
+  html: string;
+  css?: string;
+  variables: TemplatePreviewVariable[];
+  variableValues?: Record<string, string | number>;
+  width: number;
+  height: number;
+  format: "png" | "jpeg" | "webp";
+  quality?: number;
+}
+
 export interface SignedImageQueryParams {
   templateId: string;
   uid: string;
@@ -81,6 +98,13 @@ function parseQuality(value: unknown): number | undefined | ValidationError {
   return parsed;
 }
 
+function parseRequiredFormat(value: unknown): "png" | "jpeg" | "webp" | ValidationError {
+  if (value === undefined || value === null || value === "") {
+    return { code: "MISSING_FORMAT", message: "format is required" };
+  }
+  return parseFormat(value);
+}
+
 export function validateImageUrlMintRequest(body: unknown): ImageUrlMintRequest | ValidationError {
   if (!body || typeof body !== "object") {
     return { code: "INVALID_BODY", message: "Request body must be a JSON object" };
@@ -127,6 +151,105 @@ export function validateImageUrlMintRequest(body: unknown): ImageUrlMintRequest 
     quality,
     tv: req.tv as string | undefined,
     variables: req.variables as Record<string, string | number> | undefined,
+  };
+}
+
+export function validateTemplatePreviewRenderRequest(body: unknown): TemplatePreviewRenderRequest | ValidationError {
+  if (!body || typeof body !== "object") {
+    return { code: "INVALID_BODY", message: "Request body must be a JSON object" };
+  }
+
+  const req = body as Record<string, unknown>;
+  if (typeof req.html !== "string" || req.html.trim().length === 0) {
+    return { code: "MISSING_HTML", message: "html is required" };
+  }
+  if (req.css !== undefined && typeof req.css !== "string") {
+    return { code: "INVALID_CSS", message: "css must be a string" };
+  }
+  if (!Array.isArray(req.variables)) {
+    return { code: "INVALID_VARIABLES", message: "variables must be an array" };
+  }
+
+  const parsedVariables: TemplatePreviewVariable[] = [];
+  for (let idx = 0; idx < req.variables.length; idx += 1) {
+    const variable = req.variables[idx];
+    if (!variable || typeof variable !== "object" || Array.isArray(variable)) {
+      return {
+        code: "INVALID_VARIABLES",
+        message: `variables[${idx}] must be an object`,
+      };
+    }
+    const v = variable as Record<string, unknown>;
+    if (typeof v.name !== "string" || v.name.trim().length === 0) {
+      return {
+        code: "INVALID_VARIABLES",
+        message: `variables[${idx}].name must be a non-empty string`,
+      };
+    }
+    if (v.type !== "string" && v.type !== "number" && v.type !== "url") {
+      return {
+        code: "INVALID_VARIABLES",
+        message: `variables[${idx}].type must be string, number, or url`,
+      };
+    }
+    if (v.defaultValue !== undefined && typeof v.defaultValue !== "string") {
+      return {
+        code: "INVALID_VARIABLES",
+        message: `variables[${idx}].defaultValue must be a string`,
+      };
+    }
+    parsedVariables.push({
+      name: v.name,
+      type: v.type,
+      defaultValue: v.defaultValue as string | undefined,
+    });
+  }
+
+  const width = parseInteger(req.width, "width", {
+    min: 1,
+    max: MAX_DIMENSION,
+  });
+  if (isValidationError(width)) return width;
+
+  const height = parseInteger(req.height, "height", {
+    min: 1,
+    max: MAX_DIMENSION,
+  });
+  if (isValidationError(height)) return height;
+
+  const format = parseRequiredFormat(req.format);
+  if (isValidationError(format)) return format;
+
+  const quality = parseQuality(req.quality);
+  if (isValidationError(quality)) return quality;
+
+  if (
+    req.variableValues !== undefined &&
+    (typeof req.variableValues !== "object" || req.variableValues === null || Array.isArray(req.variableValues))
+  ) {
+    return { code: "INVALID_VARIABLE_VALUES", message: "variableValues must be an object" };
+  }
+
+  const variableValues: Record<string, string | number> = {};
+  for (const [key, value] of Object.entries((req.variableValues as Record<string, unknown>) || {})) {
+    if (typeof value !== "string" && typeof value !== "number") {
+      return {
+        code: "INVALID_VARIABLE_VALUES",
+        message: `variableValues.${key} must be a string or number`,
+      };
+    }
+    variableValues[key] = value;
+  }
+
+  return {
+    html: req.html,
+    css: req.css as string | undefined,
+    variables: parsedVariables,
+    variableValues: Object.keys(variableValues).length > 0 ? variableValues : undefined,
+    width,
+    height,
+    format,
+    quality,
   };
 }
 
@@ -189,7 +312,14 @@ export function parseSignedImageQuery(query: URLSearchParams): SignedImageQueryP
 }
 
 export function isValidationError(
-  result: ValidationError | ImageUrlMintRequest | SignedImageQueryParams | number | string | undefined
+  result:
+    | ValidationError
+    | ImageUrlMintRequest
+    | TemplatePreviewRenderRequest
+    | SignedImageQueryParams
+    | number
+    | string
+    | undefined
 ): result is ValidationError {
   return !!result && typeof result === "object" && "code" in result && "message" in result;
 }

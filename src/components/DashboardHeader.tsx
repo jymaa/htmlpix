@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/api-keys", label: "API Keys" },
-  { href: "/renders", label: "Renders" },
+  { href: "/renders", label: "Logs" },
   { href: "/templates", label: "Templates" },
   { href: "/docs", label: "Docs" },
 ];

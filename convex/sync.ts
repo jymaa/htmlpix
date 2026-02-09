@@ -49,123 +49,6 @@ export const getAuthData = query({
   },
 });
 
-export const ingestRenders = mutation({
-  args: {
-    serverSecret: v.string(),
-    renders: v.array(
-      v.object({
-        externalId: v.string(),
-        apiKeyId: v.id("apiKeys"),
-        userId: v.string(),
-        status: v.union(v.literal("success"), v.literal("error")),
-        htmlHash: v.string(),
-        contentHash: v.optional(v.string()),
-        format: v.string(),
-        renderMs: v.number(),
-        imageKey: v.optional(v.string()),
-        createdAt: v.number(),
-      })
-    ),
-  },
-  handler: async (ctx, { serverSecret, renders }) => {
-    validateServerSecret(serverSecret);
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-
-    // Track which users had successful renders in this batch
-    const usersWithSuccessfulRenders = new Set<string>();
-
-    for (const r of renders) {
-      const existing = await ctx.db
-        .query("renders")
-        .withIndex("by_externalId", (q) => q.eq("externalId", r.externalId))
-        .first();
-
-      if (existing) continue;
-
-      await ctx.db.insert("renders", r);
-
-      if (r.status === "success") {
-        usersWithSuccessfulRenders.add(r.userId);
-        const usageDoc = await ctx.db.insert("usageMonthly", {
-          userId: r.userId,
-          year,
-          month,
-        });
-        await usageAggregate.insert(ctx, {
-          _id: usageDoc,
-          _creationTime: Date.now(),
-          userId: r.userId,
-          year,
-          month,
-        });
-      }
-    }
-
-    // Check email triggers for users with successful renders
-    for (const userId of usersWithSuccessfulRenders) {
-      // Check for first render ever
-      const firstRenderSent = await ctx.db
-        .query("emailEvents")
-        .withIndex("by_userId_emailType", (q) => q.eq("userId", userId).eq("emailType", "first_render"))
-        .first();
-
-      if (!firstRenderSent) {
-        // Count total successful renders
-        const allRenders = await ctx.db
-          .query("renders")
-          .withIndex("by_userId", (q) => q.eq("userId", userId))
-          .filter((q) => q.eq(q.field("status"), "success"))
-          .collect();
-
-        if (
-          allRenders.length <= renders.filter((r) => r.userId === userId && r.status === "success").length
-        ) {
-          // These are their first renders ever
-          await workflow.start(ctx, internal.emailWorkflows.firstRenderWorkflow, { userId });
-        }
-      }
-
-      // Check usage milestones
-      const quota = await ctx.db
-        .query("quotas")
-        .withIndex("by_userId", (q) => q.eq("userId", userId))
-        .first();
-
-      const monthlyLimit = quota?.monthlyLimit ?? 50;
-      const currentUsage = await usageAggregate.count(ctx, {
-        bounds: {
-          lower: { key: [userId, year, month], inclusive: true },
-          upper: { key: [userId, year, month], inclusive: true },
-        },
-      });
-
-      const usagePercent = currentUsage / monthlyLimit;
-
-      if (usagePercent >= 1) {
-        const emailType100 = `usage_100_${year}_${month}`;
-        const sent100 = await ctx.db
-          .query("emailEvents")
-          .withIndex("by_userId_emailType", (q) => q.eq("userId", userId).eq("emailType", emailType100))
-          .first();
-        if (!sent100) {
-          await workflow.start(ctx, internal.emailWorkflows.usage100Workflow, { userId });
-        }
-      } else if (usagePercent >= 0.75) {
-        const emailType75 = `usage_75_${year}_${month}`;
-        const sent75 = await ctx.db
-          .query("emailEvents")
-          .withIndex("by_userId_emailType", (q) => q.eq("userId", userId).eq("emailType", emailType75))
-          .first();
-        if (!sent75) {
-          await workflow.start(ctx, internal.emailWorkflows.usage75Workflow, { userId });
-        }
-      }
-    }
-  },
-});
-
 export const insertUsage = internalMutation({
   args: {
     userId: v.string(),
@@ -246,7 +129,6 @@ export const ingestRenderEvents = mutation({
             templateId: event.templateId,
             tv: event.tv,
             updatedAt: event.createdAt,
-            lastRenderMs: event.renderMs,
           });
         } else {
           await ctx.db.insert("renderArtifacts", {
@@ -257,7 +139,6 @@ export const ingestRenderEvents = mutation({
             tv: event.tv,
             createdAt: event.createdAt,
             updatedAt: event.createdAt,
-            lastRenderMs: event.renderMs,
           });
         }
       }

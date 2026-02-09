@@ -34,7 +34,7 @@ else
     git clone --branch $BRANCH $REPO .
 fi
 
-# Install server deps only (puppeteer, lmdb, convex)
+# Install server deps only (takumi, lmdb, convex)
 echo "Installing server dependencies..."
 cd server
 /home/deploy/.bun/bin/bun install --frozen-lockfile

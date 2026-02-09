@@ -164,9 +164,9 @@ export const findInactiveUsers = internalQuery({
     const inactiveUsers: string[] = [];
 
     for (const userId of userIds) {
-      // Check last render
+      // Check last render event
       const lastRender = await ctx.db
-        .query("renders")
+        .query("renderEvents")
         .withIndex("by_userId", (q) => q.eq("userId", userId))
         .order("desc")
         .first();

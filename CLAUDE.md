@@ -23,12 +23,13 @@ Dual-stack application: OG image / social card rendering API + Next.js web dashb
 
 ### Rendering Server (`server/`)
 
-Bun HTTP server with Takumi for HTML→image conversion, Convex-synced auth/quota, in-memory + disk image cache, and a background upload queue.
+Bun HTTP server with Takumi for HTML→image conversion, Convex-synced auth/quota, in-memory + disk image cache.
 
 **Endpoints:**
 
-- `POST /render` - Render HTML to image (requires API key auth)
-- `GET /images/:id` - Fetch stored image
+- `POST /v1/image-url` - Mint a signed image URL (requires API key auth)
+- `GET /v1/image` - Serve a rendered image via signed URL
+- `POST /internal/template-preview` - Render template preview (internal, secret-auth)
 - `GET /healthz` - Health check
 - `GET /readyz` - Readiness check (auth cache status)
 
@@ -36,12 +37,12 @@ Bun HTTP server with Takumi for HTML→image conversion, Convex-synced auth/quot
 
 - `server/server.ts` - HTTP routes, graceful shutdown
 - `server/render/takumiRender.ts` - HTML→image via Takumi with Tailwind, Google Fonts fetching
+- `server/render/templateInterpolation.ts` - Template variable interpolation
 - `server/validation.ts` - Request validation and size limits
 - `server/middleware/auth.ts` - Auth header validation + quota checks
 - `server/cache/lmdb.ts` - LMDB cache for auth/quota vitals (Convex is source of truth)
 - `server/sync/convexClient.ts` - Convex sync client + auth cache refresh
-- `server/sync/usageSync.ts` - Render usage reporting
-- `server/sync/uploadQueue.ts` - Image upload/link retry queue
+- `server/lib/signing.ts` - HMAC signing for image URLs
 - `server/store/imageStore.ts` - In-memory image cache with TTL
 - `server/store/diskImageStore.ts` - Disk image cache with TTL
 
@@ -62,10 +63,13 @@ Next.js 16 App Router with Convex backend and Better Auth.
 
 - `PORT`, `BASE_URL` - Server binding + external base URL
 - `CONVEX_URL` - Convex backend endpoint for sync/actions (required)
-- `MAX_HTML_LENGTH` - Request limits
+- `SERVER_SECRET` - Shared secret for server↔Convex auth
+- `IMAGE_SIGNING_SECRET` - HMAC secret for signed image URLs
+- `TEMPLATE_PREVIEW_SECRET` - Shared secret for /internal/template-preview
 - `CACHE_PATH` - LMDB cache directory for auth/quota vitals
 - `IMAGE_DIR`, `IMAGE_TTL_MS`, `MAX_STORED_IMAGES` - Image cache controls
-- `UPLOAD_CONCURRENCY`, `UPLOAD_RETRY_*`, `LINK_RETRY_*` - Upload/link backoff tuning
+- `TAKUMI_RENDER_TIMEOUT_MS` - Render timeout (default 10s)
+- `AXIOM_TOKEN`, `AXIOM_DATASET` - Optional Axiom logging
 
 **Frontend/Convex:**
 

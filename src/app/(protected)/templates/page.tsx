@@ -5,7 +5,6 @@ import { useQuery, useMutation } from "convex/react";
 import { api as _api } from "../../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 
-// TODO: Remove cast after running `convex dev` to regenerate types
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const api = _api as any;
 import Link from "next/link";
@@ -41,6 +40,7 @@ type Template = {
   format?: "png" | "jpeg" | "webp";
   isPublic: boolean;
   isStarter?: boolean;
+  tier?: "free" | "paid";
   createdAt: number;
   updatedAt: number;
 };
@@ -52,6 +52,7 @@ export default function TemplatesPage() {
 
   const userTemplates = useQuery(api.templates.listUserTemplates, userId ? {} : "skip");
   const starterTemplates = useQuery(api.templates.listStarterTemplates);
+  const canCreate = useQuery(api.templates.canCreateTemplates, userId ? {} : "skip");
 
   const createTemplate = useMutation(api.templates.createTemplate);
   const deleteTemplate = useMutation(api.templates.deleteTemplate);
@@ -71,6 +72,7 @@ export default function TemplatesPage() {
         name: newName.trim(),
         description: newDesc.trim() || undefined,
         html: '<div class="w-[1200px] h-[630px] flex flex-col items-center justify-center bg-[#1a1a1a] text-[#f5f0e8]" style="font-family:system-ui">\n  <h1 style="font-size:64px;margin:0">{{title}}</h1>\n  <p style="font-size:24px;color:rgba(245,240,232,0.6);margin-top:16px">{{subtitle}}</p>\n</div>',
+        css: "",
         variables: [
           { name: "title", type: "string" as const, defaultValue: "Hello World" },
           { name: "subtitle", type: "string" as const, defaultValue: "Edit this template" },
@@ -110,6 +112,7 @@ export default function TemplatesPage() {
     });
 
   const isLoading = userTemplates === undefined;
+  const isPaidUser = canCreate === true;
 
   return (
     <div className="space-y-8">
@@ -119,47 +122,60 @@ export default function TemplatesPage() {
           <h1 className="text-3xl font-bold">Templates</h1>
           <p className="text-muted-foreground">Reusable HTML templates with variable placeholders</p>
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>New Template</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Template</DialogTitle>
-              <DialogDescription>
-                Give your template a name. You&apos;ll edit the HTML next.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="tmpl-name">Name</Label>
-                <Input
-                  id="tmpl-name"
-                  placeholder="e.g., OG Image Card"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                />
+        {isPaidUser ? (
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>New Template</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Template</DialogTitle>
+                <DialogDescription>
+                  Give your template a name. You&apos;ll edit the HTML next.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tmpl-name">Name</Label>
+                  <Input
+                    id="tmpl-name"
+                    placeholder="e.g., OG Image Card"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tmpl-desc">Description (optional)</Label>
+                  <Input
+                    id="tmpl-desc"
+                    placeholder="e.g., Dynamic OG image for blog posts"
+                    value={newDesc}
+                    onChange={(e) => setNewDesc(e.target.value)}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="tmpl-desc">Description (optional)</Label>
-                <Input
-                  id="tmpl-desc"
-                  placeholder="e.g., Dynamic OG image for blog posts"
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreate} disabled={creating || !newName.trim()}>
-                {creating ? "Creating..." : "Create"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setCreateOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreate} disabled={creating || !newName.trim()}>
+                  {creating ? "Creating..." : "Create"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <Link href="/settings">
+            <Button variant="outline">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+              Upgrade to Create Templates
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* User Templates */}
@@ -189,7 +205,11 @@ export default function TemplatesPage() {
               </svg>
             </div>
             <p className="mb-1 font-medium">No templates yet</p>
-            <p className="text-muted-foreground text-sm">Create one or clone a starter template below.</p>
+            <p className="text-muted-foreground text-sm">
+              {isPaidUser
+                ? "Create one or clone a starter template below."
+                : "Clone a starter template below to get started."}
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -262,7 +282,14 @@ export default function TemplatesPage() {
               <Card key={tmpl._id} className="h-full">
                 <CardContent className="flex h-full flex-col justify-between p-4">
                   <div>
-                    <h3 className="mb-1 font-medium">{tmpl.name}</h3>
+                    <div className="mb-1 flex items-center gap-2">
+                      <h3 className="font-medium">{tmpl.name}</h3>
+                      {tmpl.tier === "paid" && (
+                        <Badge variant="secondary" className="font-mono text-[10px]">
+                          Pro
+                        </Badge>
+                      )}
+                    </div>
                     {tmpl.description && (
                       <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">{tmpl.description}</p>
                     )}

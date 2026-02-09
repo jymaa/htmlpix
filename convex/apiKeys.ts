@@ -219,11 +219,24 @@ export const getUserRendersPaginated = query({
 
     const result = await q.paginate(paginationOpts);
 
+    // Batch-resolve template names
+    const templateIds = [...new Set(result.page.map((e: any) => e.templateId as string))] as string[];
+    const templateMap: Record<string, string> = {};
+    for (const tid of templateIds) {
+      try {
+        const tmpl = await (ctx.db as any).get(tid);
+        if (tmpl) templateMap[tid] = tmpl.name;
+      } catch {
+        // template may have been deleted
+      }
+    }
+
     const page = result.page.map((event: any) => ({
       ...event,
       externalId: event.contentHash.slice(0, 12),
       imageKey: `${event.contentHash}.${event.format}`,
       imageUrl: event.status === "success" ? publicImageUrl(event.canonicalPath) : undefined,
+      templateName: templateMap[event.templateId] ?? event.templateId.slice(0, 8),
     }));
 
     return { ...result, page };

@@ -1,3 +1,5 @@
+import { timingSafeEqual } from "node:crypto";
+
 export interface SignableQuery {
   templateId: string;
   uid: string;
@@ -64,4 +66,3 @@ export function verifyCanonicalQuery(canonicalQuery: string, providedSig: string
   if (expectedSig.length !== providedSig.length) return false;
   return timingSafeEqual(Buffer.from(expectedSig), Buffer.from(providedSig));
 }
-import { timingSafeEqual } from "node:crypto";
