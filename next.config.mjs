@@ -1,4 +1,5 @@
 import createMDX from "@next/mdx";
+import { withPlausibleProxy } from "next-plausible";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -31,4 +32,11 @@ const withMDX = createMDX({
   },
 });
 
-export default withMDX(nextConfig);
+const withPlausible = process.env.NEXT_PUBLIC_PLAUSIBLE_HOST?.trim()
+  ? withPlausibleProxy({
+      customDomain: process.env.NEXT_PUBLIC_PLAUSIBLE_HOST.trim(),
+      scriptName: "vitals",
+    })
+  : (config) => config;
+
+export default withPlausible(withMDX(nextConfig));

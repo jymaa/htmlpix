@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Mono, Bebas_Neue } from "next/font/google";
+import PlausibleProvider from "next-plausible";
 import { JsonLd } from "@/components/JsonLd";
 import "./globals.css";
 
@@ -62,17 +63,43 @@ export const metadata: Metadata = {
   },
 };
 
+function getHostname(value: string | undefined): string {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    return new URL(value).hostname;
+  } catch {
+    return "";
+  }
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const plausibleHost = process.env.NEXT_PUBLIC_PLAUSIBLE_HOST?.trim() ?? "";
+  const plausibleDomain =
+    process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN?.trim() || getHostname(process.env.NEXT_PUBLIC_SITE_URL);
+
   return (
     <html lang="en">
       <head>
         <meta name="apple-mobile-web-app-title" content="HTMLPix" />
       </head>
       <body className={`${spaceMono.variable} ${bebasNeue.variable} antialiased`}>
+        {plausibleHost && plausibleDomain ? (
+          <PlausibleProvider
+            enabled
+            trackLocalhost={false}
+            domain={plausibleDomain}
+            customDomain={plausibleHost}
+            trackOutboundLinks
+            selfHosted
+          />
+        ) : null}
         <JsonLd
           data={{
             "@context": "https://schema.org",
