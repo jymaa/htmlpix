@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api as _api } from "../../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
@@ -21,6 +21,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,6 +55,99 @@ type Template = {
   createdAt: number;
   updatedAt: number;
 };
+
+function TemplateCardPreview({ template }: { template: Template }) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const urlRef = useRef<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          observer.disconnect();
+          setLoading(true);
+          const variableValues: Record<string, string> = {};
+          for (const v of template.variables) {
+            if (v.defaultValue) variableValues[v.name] = v.defaultValue;
+          }
+          fetch("/api/templates/preview", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              templateId: template._id,
+              jsx: template.jsx,
+              variables: template.variables,
+              variableValues,
+              googleFonts: template.googleFonts,
+              width: template.width || 1200,
+              height: template.height || 630,
+              format: template.format || "png",
+            }),
+          })
+            .then(async (res) => {
+              if (!res.ok) throw new Error("Failed");
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              urlRef.current = url;
+              setImageUrl(url);
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(containerRef.current);
+    return () => {
+      observer.disconnect();
+      if (urlRef.current) {
+        URL.revokeObjectURL(urlRef.current);
+        urlRef.current = null;
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [template._id]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="bg-muted/50 mb-3 flex aspect-[1200/630] w-full items-center justify-center overflow-hidden rounded-sm"
+    >
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageUrl}
+          alt={template.name}
+          className="h-full w-full object-cover"
+        />
+      ) : loading ? (
+        <div className="text-muted-foreground flex items-center gap-1.5 text-[10px]">
+          <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+          Loading...
+        </div>
+      ) : (
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="text-muted-foreground/40"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+      )}
+    </div>
+  );
+}
 
 export default function TemplatesPage() {
   const { data: session } = authClient.useSession();
@@ -89,7 +193,6 @@ export default function TemplatesPage() {
   };
 
   const handleDelete = async (templateId: Id<"templates">) => {
-    if (!confirm("Delete this template permanently?")) return;
     await deleteTemplate({ templateId });
   };
 
@@ -121,7 +224,7 @@ export default function TemplatesPage() {
           <h1 className="text-3xl font-bold">Templates</h1>
           <p className="text-muted-foreground">Reusable JSX templates with variable props</p>
         </div>
-        {isPaidUser ? (
+        {isLoading ? null : isPaidUser ? (
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
               <Button>New Template</Button>
@@ -215,34 +318,53 @@ export default function TemplatesPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {userTemplates.map((tmpl: Template) => (
             <Link key={tmpl._id} href={`/templates/${tmpl._id}`} className="group block">
-              <Card className="hover:border-foreground/30 h-full transition-colors">
+              <Card className="hover:border-foreground/30 h-full transition-colors overflow-hidden">
                 <CardContent className="flex h-full flex-col justify-between p-4">
                   <div>
+                    <TemplateCardPreview template={tmpl} />
                     <div className="mb-2 flex items-start justify-between">
                       <h3 className="leading-tight font-medium group-hover:underline">{tmpl.name}</h3>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDelete(tmpl._id);
-                        }}
-                        className="text-muted-foreground hover:text-destructive shrink-0 p-1 opacity-0 transition-opacity group-hover:opacity-100"
-                        title="Delete template"
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                          <path d="M10 11v6" />
-                          <path d="M14 11v6" />
-                        </svg>
-                      </button>
+                      <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            className="text-muted-foreground hover:text-destructive shrink-0 p-1 opacity-0 transition-opacity group-hover:opacity-100"
+                            title="Delete template"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                              <path d="M10 11v6" />
+                              <path d="M14 11v6" />
+                            </svg>
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete template</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete &ldquo;{tmpl.name}&rdquo;. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              variant="destructive"
+                              onClick={() => handleDelete(tmpl._id)}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      </div>
                     </div>
                     {tmpl.description && (
                       <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">{tmpl.description}</p>
@@ -278,9 +400,10 @@ export default function TemplatesPage() {
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {starterTemplates.map((tmpl: Template) => (
-              <Card key={tmpl._id} className="h-full">
+              <Card key={tmpl._id} className="h-full overflow-hidden">
                 <CardContent className="flex h-full flex-col justify-between p-4">
                   <div>
+                    <TemplateCardPreview template={tmpl} />
                     <div className="mb-1 flex items-center gap-2">
                       <h3 className="font-medium">{tmpl.name}</h3>
                       {tmpl.tier === "paid" && (

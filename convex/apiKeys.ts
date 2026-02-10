@@ -66,9 +66,6 @@ export const createKey = mutation({
   },
   handler: async (ctx, { name }) => {
     const userId = await authenticateUser(ctx);
-    const rawKey = generateApiKey();
-    const keyHash = await hashKey(rawKey);
-    const keyPrefix = rawKey.slice(0, 12);
 
     // Auto-provision free quota if user has no quota yet
     const existingQuota = await ctx.db
@@ -83,6 +80,22 @@ export const createKey = mutation({
         monthlyLimit: 50,
       });
     }
+
+    // Free users are limited to 1 API key
+    const plan = existingQuota?.plan ?? "free";
+    if (plan === "free") {
+      const existingKeys = await ctx.db
+        .query("apiKeys")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect();
+      if (existingKeys.length >= 1) {
+        throw new Error("Free plan is limited to 1 API key. Upgrade your plan to create more.");
+      }
+    }
+
+    const rawKey = generateApiKey();
+    const keyHash = await hashKey(rawKey);
+    const keyPrefix = rawKey.slice(0, 12);
 
     const keyId = await ctx.db.insert("apiKeys", {
       userId,
@@ -175,14 +188,20 @@ export const getUserQuota = query({
 export const getUserRenders = query({
   args: {
     limit: v.optional(v.number()),
+    cachedFilter: v.optional(v.boolean()),
   },
-  handler: async (ctx, { limit }) => {
+  handler: async (ctx, { limit, cachedFilter }) => {
     const userId = await authenticateUser(ctx);
-    const events = await (ctx.db as any)
+    let q = (ctx.db as any)
       .query("renderEvents")
       .withIndex("by_userId", (q: any) => q.eq("userId", userId))
-      .order("desc")
-      .take(limit ?? 50);
+      .order("desc");
+
+    if (cachedFilter !== undefined) {
+      q = q.filter((f: any) => f.eq(f.field("cached"), cachedFilter));
+    }
+
+    const events = await q.take(limit ?? 50);
 
     return events.map((event: any) => ({
       ...event,

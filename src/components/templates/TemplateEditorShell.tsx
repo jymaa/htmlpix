@@ -8,6 +8,17 @@ import { api as _api } from "../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { TemplateCodeEditor } from "./TemplateCodeEditor";
 import { TemplateInspector } from "./TemplateInspector";
 import { TemplatePreviewPane } from "./TemplatePreviewPane";
@@ -50,6 +61,7 @@ export function TemplateEditorShell({ templateId }: TemplateEditorShellProps) {
 
   const template = useQuery(api.templates.getTemplate, { templateId });
   const updateTemplate = useMutation(api.templates.updateTemplate);
+  const deleteTemplate = useMutation(api.templates.deleteTemplate);
 
   const [initialized, setInitialized] = useState(false);
   const [name, setName] = useState("");
@@ -66,6 +78,7 @@ export function TemplateEditorShell({ templateId }: TemplateEditorShellProps) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -170,6 +183,17 @@ export function TemplateEditorShell({ templateId }: TemplateEditorShellProps) {
       setSaving(false);
     }
   }, [currentSnapshot, description, format, googleFonts, height, isOwner, jsx, name, templateId, updateTemplate, variables, width]);
+
+  const handleDelete = useCallback(async () => {
+    if (!isOwner) return;
+    setDeleting(true);
+    try {
+      await deleteTemplate({ templateId });
+      router.push("/templates");
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteTemplate, isOwner, router, templateId]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -380,9 +404,41 @@ ${lines}
             {inspectorOpen ? "Hide Inspector" : "Show Inspector"}
           </Button>
           {isOwner && (
-            <Button size="sm" className="h-7 px-3 text-xs" disabled={saving || !isDirty} onClick={() => void handleSave()}>
-              {saving ? "Saving..." : "Save"}
-            </Button>
+            <>
+              <Button size="sm" className="h-7 px-3 text-xs" disabled={saving || !isDirty} onClick={() => void handleSave()}>
+                {saving ? "Saving..." : "Save"}
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive h-7 w-7">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                    </svg>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete template</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete &ldquo;{name || "this template"}&rdquo;. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      disabled={deleting}
+                      onClick={() => void handleDelete()}
+                    >
+                      {deleting ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
           )}
         </div>
       </div>

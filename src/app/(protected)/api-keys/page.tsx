@@ -26,6 +26,7 @@ export default function ApiKeysPage() {
   const userId = session?.user?.id;
 
   const apiKeys = useQuery(api.apiKeys.listUserKeys, userId ? {} : "skip");
+  const quota = useQuery(api.apiKeys.getUserQuota, userId ? {} : "skip");
   const createKey = useMutation(api.apiKeys.createKey);
   const revokeKey = useMutation(api.apiKeys.revokeKey);
   const deleteKey = useMutation(api.apiKeys.deleteKey);
@@ -37,6 +38,9 @@ export default function ApiKeysPage() {
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const plausible = usePlausible();
+
+  const isFree = !quota || quota.plan === "free";
+  const atKeyLimit = isFree && (apiKeys?.length ?? 0) >= 1;
 
   const handleCreateKey = async () => {
     if (!userId || !newKeyName.trim()) return;
@@ -81,7 +85,9 @@ export default function ApiKeysPage() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Create New Key</Button>
+            <Button disabled={atKeyLimit}>
+              {atKeyLimit ? "Key Limit Reached" : "Create New Key"}
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -113,6 +119,16 @@ export default function ApiKeysPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {atKeyLimit && (
+        <p className="text-muted-foreground text-sm">
+          Free plan is limited to 1 API key.{" "}
+          <a href="/billing" className="text-primary underline">
+            Upgrade your plan
+          </a>{" "}
+          to create more.
+        </p>
+      )}
 
       <Dialog open={isKeyDialogOpen} onOpenChange={setIsKeyDialogOpen}>
         <DialogContent>

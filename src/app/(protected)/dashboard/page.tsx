@@ -47,7 +47,7 @@ export default function DashboardPage() {
 
   const quota = useQuery(api.apiKeys.getUserQuota, userId ? {} : "skip");
   const apiKeys = useQuery(api.apiKeys.listUserKeys, userId ? {} : "skip");
-  const renders = useQuery(api.apiKeys.getUserRenders, userId ? { limit: 10 } : "skip");
+  const renders = useQuery(api.apiKeys.getUserRenders, userId ? { limit: 10, cachedFilter: false } : "skip");
   const onboardingStatus = useQuery(api.users.hasCompletedOnboarding, userId ? {} : "skip");
 
   const [dismissed, setDismissed] = useState(false);
@@ -266,15 +266,15 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Recent Renders */}
+      {/* Recent Logs */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Recent Renders</CardTitle>
+            <CardTitle>Recent Logs</CardTitle>
             <CardDescription>Your last 10 render requests</CardDescription>
           </div>
           {renders && renders.length > 0 && (
-            <Link href="/renders">
+            <Link href="/logs">
               <Button variant="outline" size="sm" className="font-mono text-xs tracking-wider uppercase">
                 View All
               </Button>
