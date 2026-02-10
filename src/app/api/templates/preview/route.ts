@@ -6,7 +6,7 @@ import {
   isValidationError,
   validateTemplatePreviewRenderRequest,
   type TemplatePreviewRenderRequest,
-} from "../../../../../server/validation";
+} from "../../../../../shared/validation";
 
 export const runtime = "nodejs";
 
