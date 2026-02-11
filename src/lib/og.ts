@@ -68,7 +68,6 @@ const mintSignedOgImageUrlCached = cache(
           variant,
         },
       }),
-      cache: "no-store",
     });
 
     if (!mintRes.ok) {
@@ -87,7 +86,8 @@ const mintSignedOgImageUrlCached = cache(
 
 export async function mintSignedOgImageUrl(options: MintSignedOgUrlOptions): Promise<string> {
   const variant = options.variant ?? "standard";
-  const title = options.title ?? (variant === "home" ? "HTMLPix - HTML In. Image Out." : "HTMLPix - HTML to Image API");
+  const title =
+    options.title ?? (variant === "home" ? "HTMLPix - HTML In. Image Out." : "HTMLPix - HTML to Image API");
   const subtitle =
     options.subtitle ??
     (variant === "home"
