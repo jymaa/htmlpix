@@ -3,30 +3,24 @@ import Link from "next/link";
 import { PublicHeader } from "@/components/PublicHeader";
 import { JsonLd } from "@/components/JsonLd";
 import { TrackedCTA } from "@/components/TrackedCTA";
+import { getOgMetadataImage } from "@/lib/og";
 import { getAllUseCases } from "./use-cases/data";
 
-export const metadata: Metadata = {
-  openGraph: {
-    images: [
-      {
-        url: "/api/og?variant=home",
-        width: 1200,
-        height: 630,
-        alt: "HTMLPix - HTML In. Image Out.",
-      },
-    ],
-  },
-  twitter: {
-    images: [
-      {
-        url: "/api/og?variant=home",
-        width: 1200,
-        height: 630,
-        alt: "HTMLPix - HTML In. Image Out.",
-      },
-    ],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const ogImage = await getOgMetadataImage({
+    variant: "home",
+    alt: "HTMLPix - HTML In. Image Out.",
+  });
+
+  return {
+    openGraph: {
+      images: ogImage ? [ogImage] : undefined,
+    },
+    twitter: {
+      images: ogImage ? [ogImage] : undefined,
+    },
+  };
+}
 
 export default function LandingVariant2() {
   return (

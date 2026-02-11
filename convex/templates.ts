@@ -1,4 +1,5 @@
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation, type QueryCtx, type MutationCtx } from "./_generated/server";
+
 import { components } from "./_generated/api";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
@@ -9,10 +10,7 @@ const variableValidator = v.object({
   defaultValue: v.optional(v.string()),
 });
 
-async function authenticateUser(ctx: {
-  auth: { getUserIdentity: () => Promise<{ subject: string } | null> };
-  runQuery: Function;
-}) {
+async function authenticateUser(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new Error("Not authenticated");
   const userId = identity.subject;
@@ -204,46 +202,143 @@ export const seedDefaultTemplates = internalMutation({
       .query("templates")
       .withIndex("by_isPublic", (q) => q.eq("isPublic", true))
       .collect();
-    const existingStarters = existing.filter((t) => t.isStarter);
-    if (existingStarters.length > 0) return { seeded: 0, skipped: existingStarters.length };
 
     const now = Date.now();
     const defaults = getDefaultTemplates();
+    const existingByName = new Map(existing.filter((t) => t.isStarter).map((t) => [t.name, t]));
+
+    let inserted = 0;
+    let updated = 0;
     for (const tmpl of defaults) {
-      await ctx.db.insert("templates", {
-        ...tmpl,
-        userId: "system",
-        isPublic: true,
-        isStarter: true,
-        tier: "free",
-        createdAt: now,
-        updatedAt: now,
-      });
+      const starter = existingByName.get(tmpl.name);
+      if (starter) {
+        await ctx.db.patch(starter._id, {
+          userId: "system",
+          name: tmpl.name,
+          description: tmpl.description,
+          jsx: tmpl.jsx,
+          variables: tmpl.variables,
+          googleFonts: tmpl.googleFonts,
+          width: tmpl.width,
+          height: tmpl.height,
+          format: tmpl.format,
+          isPublic: true,
+          isStarter: true,
+          tier: "free",
+          updatedAt: now,
+        });
+        updated += 1;
+      } else {
+        await ctx.db.insert("templates", {
+          ...tmpl,
+          userId: "system",
+          isPublic: true,
+          isStarter: true,
+          tier: "free",
+          createdAt: now,
+          updatedAt: now,
+        });
+        inserted += 1;
+      }
     }
-    return { seeded: defaults.length };
+    return { inserted, updated, total: defaults.length };
   },
 });
 
 function getDefaultTemplates() {
   return [
     {
+      name: "Website OG Card",
+      description: "HTMLPix marketing OG card with standard and home variants",
+      jsx: `const { title, subtitle, tag, variant } = props;
+const isHome = variant === "home";
+const resolvedTitle = (title && title.trim()) || (isHome ? "HTML IN. IMAGE OUT." : "HTMLPix - HTML to Image API");
+const resolvedSubtitle =
+  (subtitle && subtitle.trim()) ||
+  (isHome ? "Mint once. Reuse everywhere." : "Generate images from HTML/CSS with a single API call.");
+const resolvedTag = (tag && tag.trim()) || "HTML TO IMAGE API";
+
+return (
+  <div style={{ position: "relative", width: "100%", height: "100%", backgroundColor: "#f5f0e8", color: "#1a1a1a", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "48px 56px", fontFamily: "Space Mono, monospace" }}>
+    <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(26,26,26,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(26,26,26,0.05) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+    <div style={{ position: "absolute", top: "22px", left: "22px", width: "22px", height: "22px", borderTop: "2px solid rgba(26,26,26,0.16)", borderLeft: "2px solid rgba(26,26,26,0.16)" }} />
+    <div style={{ position: "absolute", top: "22px", right: "22px", width: "22px", height: "22px", borderTop: "2px solid rgba(26,26,26,0.16)", borderRight: "2px solid rgba(26,26,26,0.16)" }} />
+    <div style={{ position: "absolute", bottom: "22px", left: "22px", width: "22px", height: "22px", borderBottom: "2px solid rgba(26,26,26,0.16)", borderLeft: "2px solid rgba(26,26,26,0.16)" }} />
+    <div style={{ position: "absolute", bottom: "22px", right: "22px", width: "22px", height: "22px", borderBottom: "2px solid rgba(26,26,26,0.16)", borderRight: "2px solid rgba(26,26,26,0.16)" }} />
+
+    <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ width: "30px", height: "30px", backgroundColor: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ color: "#f5f0e8", fontSize: "10px", fontWeight: 700 }}>{"</>"}</span>
+        </div>
+        <span style={{ fontSize: "12px", letterSpacing: "3px", fontWeight: 700 }}>HTMLPIX</span>
+      </div>
+      <span style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(26,26,26,0.35)" }}>api.htmlpix.com</span>
+    </div>
+
+    <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", maxWidth: "900px" }}>
+      <div style={{ display: "flex", marginBottom: "18px" }}>
+        <span style={{ fontSize: "10px", letterSpacing: "3px", color: "#ff4d00", textTransform: "uppercase", border: "1px solid rgba(255,77,0,0.35)", padding: "6px 12px" }}>{resolvedTag}</span>
+      </div>
+      <h1 style={{ margin: 0, fontFamily: "Bebas Neue, sans-serif", fontSize: isHome ? "108px" : "86px", lineHeight: 0.9, letterSpacing: "-1px", color: "#1a1a1a" }}>{resolvedTitle}</h1>
+      <div style={{ width: "58px", height: "4px", backgroundColor: "#ff4d00", margin: "16px 0" }} />
+      <p style={{ margin: 0, fontSize: "18px", lineHeight: 1.5, color: "rgba(26,26,26,0.55)", maxWidth: "760px" }}>{resolvedSubtitle}</p>
+    </div>
+
+    <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid rgba(26,26,26,0.12)", paddingTop: "12px", fontSize: "10px", letterSpacing: "2px", color: "rgba(26,26,26,0.35)", textTransform: "uppercase" }}>
+      <span>1200 x 630</span>
+      <span>Signed URL delivery</span>
+    </div>
+  </div>
+);`,
+      variables: [
+        { name: "title", defaultValue: "HTMLPix - HTML to Image API" },
+        {
+          name: "subtitle",
+          defaultValue: "Generate images from HTML/CSS with a single API call.",
+        },
+        { name: "tag", defaultValue: "HTML TO IMAGE API" },
+        { name: "variant", defaultValue: "standard" },
+      ],
+      googleFonts: ["Space Mono:wght@400;700", "Bebas Neue:wght@400"],
+      width: 1200,
+      height: 630,
+      format: "png" as const,
+    },
+    {
       name: "Blog Post",
-      description: "Clean blog post OG card with title, author, date, and category",
+      description: "Blueprint-style blog post card with title, author, date, and category",
       jsx: `const { title, author, date, category } = props;
 return (
-  <div style={{display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%", height: "100%", backgroundColor: "#0a0a0a", padding: "72px", fontFamily: "Inter, system-ui, sans-serif"}}>
-    <div style={{display: "flex", alignItems: "center", gap: "12px"}}>
-      <div style={{width: "40px", height: "40px", borderRadius: "9999px", background: "#6366f1", display: "flex", alignItems: "center", justifyContent: "center"}}>
-        <span style={{fontSize: "18px", color: "#fff", fontWeight: 700}}>{author ? author[0] : "?"}</span>
+  <div style={{ position: "relative", width: "100%", height: "100%", backgroundColor: "#f5f0e8", color: "#1a1a1a", overflow: "hidden", display: "flex", flexDirection: "column", fontFamily: "Space Mono, monospace" }}>
+    <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(26,26,26,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(26,26,26,0.04) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+    <div style={{ position: "absolute", top: "20px", left: "20px", width: "20px", height: "20px", borderTop: "2px solid rgba(26,26,26,0.15)", borderLeft: "2px solid rgba(26,26,26,0.15)" }} />
+    <div style={{ position: "absolute", top: "20px", right: "20px", width: "20px", height: "20px", borderTop: "2px solid rgba(26,26,26,0.15)", borderRight: "2px solid rgba(26,26,26,0.15)" }} />
+    <div style={{ position: "absolute", bottom: "20px", left: "20px", width: "20px", height: "20px", borderBottom: "2px solid rgba(26,26,26,0.15)", borderLeft: "2px solid rgba(26,26,26,0.15)" }} />
+    <div style={{ position: "absolute", bottom: "20px", right: "20px", width: "20px", height: "20px", borderBottom: "2px solid rgba(26,26,26,0.15)", borderRight: "2px solid rgba(26,26,26,0.15)" }} />
+
+    <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "48px 56px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex" }}>
+          <span style={{ fontSize: "10px", letterSpacing: "3px", color: "#ff4d00", textTransform: "uppercase", border: "1px solid rgba(255,77,0,0.3)", padding: "5px 12px" }}>{category}</span>
+        </div>
+        <span style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(26,26,26,0.25)" }}>FIG. 01 — ARTICLE</span>
       </div>
-      <span style={{fontSize: "18px", color: "rgba(255,255,255,0.5)"}}>{author}</span>
-      <span style={{fontSize: "18px", color: "rgba(255,255,255,0.3)"}}>{date}</span>
-    </div>
-    <div style={{display: "flex", flexDirection: "column"}}>
-      <div style={{display: "flex", marginBottom: "24px"}}>
-        <span style={{fontSize: "14px", fontWeight: 600, color: "#6366f1", textTransform: "uppercase", letterSpacing: "2px", border: "1px solid rgba(99,102,241,0.3)", padding: "6px 16px", borderRadius: "9999px"}}>{category}</span>
+
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <h1 style={{ margin: 0, fontFamily: "Bebas Neue, sans-serif", fontSize: "82px", lineHeight: 0.95, letterSpacing: "-1px", color: "#1a1a1a" }}>{title}</h1>
+        <div style={{ width: "56px", height: "4px", backgroundColor: "#ff4d00", marginTop: "20px" }} />
       </div>
-      <h1 style={{fontSize: "64px", fontWeight: 700, color: "#fafafa", margin: 0, lineHeight: 1.1, letterSpacing: "-1px"}}>{title}</h1>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid rgba(26,26,26,0.1)", paddingTop: "14px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ width: "32px", height: "32px", backgroundColor: "#ff4d00", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ color: "#f5f0e8", fontSize: "14px", fontWeight: 700 }}>{author ? author[0].toUpperCase() : "?"}</span>
+          </div>
+          <span style={{ fontSize: "12px", letterSpacing: "1px", color: "rgba(26,26,26,0.5)" }}>{author}</span>
+        </div>
+        <span style={{ fontSize: "11px", letterSpacing: "2px", color: "rgba(26,26,26,0.3)", textTransform: "uppercase" }}>{date}</span>
+      </div>
     </div>
   </div>
 );`,
@@ -253,26 +348,55 @@ return (
         { name: "date", defaultValue: "Mar 15, 2026" },
         { name: "category", defaultValue: "Engineering" },
       ],
-      googleFonts: ["Inter:wght@400;700"],
+      googleFonts: ["Space Mono:wght@400;700", "Bebas Neue:wght@400"],
       width: 1200,
       height: 630,
       format: "png" as const,
     },
     {
       name: "Documentation",
-      description: "Technical documentation page card with section and description",
+      description: "Terminal-style documentation card with breadcrumb path and section details",
       jsx: `const { title, description, site } = props;
 return (
-  <div style={{display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%", height: "100%", backgroundColor: "#fafafa", padding: "72px", fontFamily: "Inter, system-ui, sans-serif"}}>
-    <div style={{display: "flex", alignItems: "center", gap: "16px"}}>
-      <div style={{width: "48px", height: "48px", background: "#18181b", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center"}}>
-        <span style={{fontSize: "24px", color: "#fafafa"}}>&lt;/&gt;</span>
+  <div style={{ position: "relative", width: "100%", height: "100%", backgroundColor: "#1a1a1a", color: "#f5f0e8", overflow: "hidden", display: "flex", flexDirection: "column", fontFamily: "Space Mono, monospace" }}>
+    <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(245,240,232,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(245,240,232,0.025) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+
+    <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid rgba(245,240,232,0.08)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ width: "10px", height: "10px", borderRadius: "9999px", backgroundColor: "#ff5f57" }} />
+        <div style={{ width: "10px", height: "10px", borderRadius: "9999px", backgroundColor: "#febc2e" }} />
+        <div style={{ width: "10px", height: "10px", borderRadius: "9999px", backgroundColor: "#28c840" }} />
       </div>
-      <span style={{fontSize: "16px", fontWeight: 600, color: "rgba(0,0,0,0.4)", textTransform: "uppercase", letterSpacing: "2px"}}>{site}</span>
+      <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.25)" }}>docs.htmlpix.com</span>
     </div>
-    <div style={{display: "flex", flexDirection: "column"}}>
-      <h1 style={{fontSize: "56px", fontWeight: 700, color: "#18181b", margin: 0, lineHeight: 1.15, letterSpacing: "-1px"}}>{title}</h1>
-      <p style={{fontSize: "22px", color: "rgba(0,0,0,0.45)", margin: "16px 0 0 0", lineHeight: 1.5, maxWidth: "700px"}}>{description}</p>
+
+    <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "40px 56px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.3)" }}>{site}</span>
+        <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.15)" }}>/</span>
+        <span style={{ fontSize: "11px", color: "#ff4d00" }}>{title}</span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "18px" }}>
+          <div style={{ width: "4px", height: "44px", backgroundColor: "#ff4d00" }} />
+          <h1 style={{ margin: 0, fontFamily: "Bebas Neue, sans-serif", fontSize: "72px", lineHeight: 0.95, color: "#f5f0e8" }}>{title}</h1>
+        </div>
+        <p style={{ margin: 0, fontSize: "18px", lineHeight: 1.6, color: "rgba(245,240,232,0.4)", maxWidth: "700px" }}>{description}</p>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid rgba(245,240,232,0.08)", paddingTop: "14px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ width: "24px", height: "24px", backgroundColor: "#f5f0e8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: "8px", fontWeight: 700, color: "#1a1a1a" }}>{"</>"}</span>
+          </div>
+          <span style={{ fontSize: "10px", letterSpacing: "3px", fontWeight: 700, color: "rgba(245,240,232,0.5)" }}>HTMLPIX</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ width: "6px", height: "6px", borderRadius: "9999px", backgroundColor: "#28c840" }} />
+          <span style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(245,240,232,0.25)" }}>DOCS</span>
+        </div>
+      </div>
     </div>
   </div>
 );`,
@@ -281,29 +405,47 @@ return (
         { name: "description", defaultValue: "Set up API key authentication and manage user quotas" },
         { name: "site", defaultValue: "API Reference" },
       ],
-      googleFonts: ["Inter:wght@400;700"],
+      googleFonts: ["Space Mono:wght@400;700", "Bebas Neue:wght@400"],
       width: 1200,
       height: 630,
       format: "png" as const,
     },
     {
       name: "Product Card",
-      description: "Product announcement card with name, price, and description",
+      description: "Architectural spec-sheet product card with name, price, and description",
       jsx: `const { productName, price, description, brand } = props;
 return (
-  <div style={{display: "flex", width: "100%", height: "100%", backgroundColor: "#0a0a0a", fontFamily: "Inter, system-ui, sans-serif"}}>
-    <div style={{flex: 1, padding: "72px", display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
-      <div style={{display: "flex", flexDirection: "column"}}>
-        <span style={{fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "16px"}}>{brand}</span>
-        <h1 style={{fontSize: "64px", fontWeight: 800, color: "#fafafa", margin: 0, lineHeight: 1, letterSpacing: "-2px"}}>{productName}</h1>
-        <p style={{fontSize: "22px", color: "rgba(255,255,255,0.5)", margin: "24px 0 0 0", lineHeight: 1.4, maxWidth: "500px"}}>{description}</p>
+  <div style={{ position: "relative", width: "100%", height: "100%", backgroundColor: "#f5f0e8", color: "#1a1a1a", overflow: "hidden", display: "flex", fontFamily: "Space Mono, monospace" }}>
+    <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(26,26,26,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(26,26,26,0.04) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+    <div style={{ position: "absolute", top: "20px", left: "20px", width: "20px", height: "20px", borderTop: "2px solid rgba(26,26,26,0.15)", borderLeft: "2px solid rgba(26,26,26,0.15)" }} />
+    <div style={{ position: "absolute", top: "20px", right: "20px", width: "20px", height: "20px", borderTop: "2px solid rgba(26,26,26,0.15)", borderRight: "2px solid rgba(26,26,26,0.15)" }} />
+    <div style={{ position: "absolute", bottom: "20px", left: "20px", width: "20px", height: "20px", borderBottom: "2px solid rgba(26,26,26,0.15)", borderLeft: "2px solid rgba(26,26,26,0.15)" }} />
+    <div style={{ position: "absolute", bottom: "20px", right: "20px", width: "20px", height: "20px", borderBottom: "2px solid rgba(26,26,26,0.15)", borderRight: "2px solid rgba(26,26,26,0.15)" }} />
+
+    <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "48px 56px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontSize: "10px", letterSpacing: "4px", fontWeight: 700, color: "rgba(26,26,26,0.35)", textTransform: "uppercase" }}>{brand}</span>
+        <span style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(26,26,26,0.2)" }}>SPEC SHEET</span>
       </div>
-      <div style={{display: "flex", alignItems: "center", gap: "16px"}}>
-        <span style={{fontSize: "48px", fontWeight: 800, color: "#22d3ee"}}>{price}</span>
+
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <h1 style={{ margin: 0, fontFamily: "Bebas Neue, sans-serif", fontSize: "88px", lineHeight: 0.9, letterSpacing: "-1px" }}>{productName}</h1>
+        <div style={{ width: "56px", height: "4px", backgroundColor: "#ff4d00", margin: "18px 0" }} />
+        <p style={{ margin: 0, fontSize: "16px", lineHeight: 1.6, color: "rgba(26,26,26,0.45)", maxWidth: "500px" }}>{description}</p>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid rgba(26,26,26,0.1)", paddingTop: "16px" }}>
+        <span style={{ fontFamily: "Bebas Neue, sans-serif", fontSize: "52px", color: "#ff4d00", lineHeight: 1 }}>{price}</span>
+        <span style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(26,26,26,0.25)", textTransform: "uppercase" }}>Starting price</span>
       </div>
     </div>
-    <div style={{width: "320px", height: "100%", background: "linear-gradient(135deg, #6366f1 0%, #22d3ee 100%)", display: "flex", alignItems: "center", justifyContent: "center"}}>
-      <span style={{fontSize: "80px", fontWeight: 900, color: "rgba(255,255,255,0.15)"}}>{brand ? brand[0] : ""}</span>
+
+    <div style={{ position: "relative", width: "200px", backgroundColor: "#1a1a1a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px" }}>
+      <div style={{ width: "60px", height: "60px", border: "2px solid rgba(245,240,232,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontFamily: "Bebas Neue, sans-serif", fontSize: "32px", color: "#ff4d00" }}>{brand ? brand[0] : ""}</span>
+      </div>
+      <div style={{ width: "1px", height: "40px", backgroundColor: "rgba(245,240,232,0.1)" }} />
+      <span style={{ fontSize: "9px", letterSpacing: "4px", color: "rgba(245,240,232,0.25)", textTransform: "uppercase" }}>PRODUCT</span>
     </div>
   </div>
 );`,
@@ -313,7 +455,7 @@ return (
         { name: "description", defaultValue: "Ship faster with AI-powered workflows" },
         { name: "brand", defaultValue: "Acme" },
       ],
-      googleFonts: ["Inter:wght@400;600;800"],
+      googleFonts: ["Space Mono:wght@400;700", "Bebas Neue:wght@400"],
       width: 1200,
       height: 630,
       format: "png" as const,

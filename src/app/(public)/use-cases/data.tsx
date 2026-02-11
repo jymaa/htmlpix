@@ -99,29 +99,22 @@ export const useCases: UseCase[] = [
         {
           label: "Next.js",
           language: "TypeScript",
-          filename: "app/api/og/route.ts",
-          snippet: `import { NextResponse } from "next/server";
+          filename: "app/blog/[slug]/page.tsx",
+          snippet: `import type { Metadata } from "next";
+import { mintSignedOgImageUrl } from "@/lib/og";
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const title = searchParams.get("title") ?? "Default Title";
-
-  const res = await fetch("https://api.htmlpix.com/render", {
-    method: "POST",
-    headers: {
-      Authorization: \`Bearer \${process.env.HTMLPIX_KEY}\`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      html: \`<div style="width:1200px;height:630px;display:flex;align-items:center;justify-content:center;background:#111"><h1 style="color:white;font-size:64px">\${title}</h1></div>\`,
-      width: 1200,
-      height: 630,
-    }),
+export async function generateMetadata(): Promise<Metadata> {
+  const ogUrl = await mintSignedOgImageUrl({
+    variant: "standard",
+    title: "Launch Day",
+    subtitle: "New signed OG flow",
+    tag: "BLOG",
   });
 
-  return new NextResponse(await res.arrayBuffer(), {
-    headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" },
-  });
+  return {
+    openGraph: { images: [{ url: ogUrl, width: 1200, height: 630 }] },
+    twitter: { images: [{ url: ogUrl, width: 1200, height: 630 }] },
+  };
 }`,
         },
         {

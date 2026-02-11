@@ -1,19 +1,25 @@
 import type { Metadata } from "next";
+import { getOgMetadataImage } from "@/lib/og";
 
-export const metadata: Metadata = {
-  title: "Terms of Service",
-  description: "HTMLPix terms of service. Rules and guidelines for using our HTML-to-image API.",
-  openGraph: {
-    images: [
-      {
-        url: "/api/og?variant=standard&title=Terms+of+Service&tag=LEGAL",
-        width: 1200,
-        height: 630,
-        alt: "HTMLPix Terms of Service",
-      },
-    ],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const ogImage = await getOgMetadataImage({
+    variant: "standard",
+    title: "Terms of Service",
+    tag: "LEGAL",
+    alt: "HTMLPix Terms of Service",
+  });
+
+  return {
+    title: "Terms of Service",
+    description: "HTMLPix terms of service. Rules and guidelines for using our HTML-to-image API.",
+    openGraph: {
+      images: ogImage ? [ogImage] : undefined,
+    },
+    twitter: {
+      images: ogImage ? [ogImage] : undefined,
+    },
+  };
+}
 
 export default function TermsPage() {
   return (

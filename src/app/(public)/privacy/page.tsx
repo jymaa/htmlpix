@@ -1,19 +1,25 @@
 import type { Metadata } from "next";
+import { getOgMetadataImage } from "@/lib/og";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description: "HTMLPix privacy policy. How we collect, use, and protect your data.",
-  openGraph: {
-    images: [
-      {
-        url: "/api/og?variant=standard&title=Privacy+Policy&tag=LEGAL",
-        width: 1200,
-        height: 630,
-        alt: "HTMLPix Privacy Policy",
-      },
-    ],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const ogImage = await getOgMetadataImage({
+    variant: "standard",
+    title: "Privacy Policy",
+    tag: "LEGAL",
+    alt: "HTMLPix Privacy Policy",
+  });
+
+  return {
+    title: "Privacy Policy",
+    description: "HTMLPix privacy policy. How we collect, use, and protect your data.",
+    openGraph: {
+      images: ogImage ? [ogImage] : undefined,
+    },
+    twitter: {
+      images: ogImage ? [ogImage] : undefined,
+    },
+  };
+}
 
 export default function PrivacyPage() {
   return (

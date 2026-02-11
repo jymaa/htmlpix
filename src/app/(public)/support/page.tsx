@@ -1,22 +1,29 @@
 import Link from "next/link";
 import { PublicHeader } from "@/components/PublicHeader";
 import type { Metadata } from "next";
+import { getOgMetadataImage } from "@/lib/og";
 
-export const metadata: Metadata = {
-  title: "Support",
-  description:
-    "Get help with HTMLPix. Docs, API reference, quickstart guides, and direct email support from the team.",
-  openGraph: {
-    images: [
-      {
-        url: "/api/og?variant=standard&title=Support&tag=HELP&subtitle=Docs%2C+API+reference%2C+quickstart+guides%2C+and+direct+email+support.",
-        width: 1200,
-        height: 630,
-        alt: "HTMLPix Support",
-      },
-    ],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const ogImage = await getOgMetadataImage({
+    variant: "standard",
+    title: "Support",
+    tag: "HELP",
+    subtitle: "Docs, API reference, quickstart guides, and direct email support.",
+    alt: "HTMLPix Support",
+  });
+
+  return {
+    title: "Support",
+    description:
+      "Get help with HTMLPix. Docs, API reference, quickstart guides, and direct email support from the team.",
+    openGraph: {
+      images: ogImage ? [ogImage] : undefined,
+    },
+    twitter: {
+      images: ogImage ? [ogImage] : undefined,
+    },
+  };
+}
 
 const resources = [
   {

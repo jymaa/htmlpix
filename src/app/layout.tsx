@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Mono, Bebas_Neue } from "next/font/google";
 import PlausibleProvider from "next-plausible";
 import { JsonLd } from "@/components/JsonLd";
+import { getOgMetadataImage } from "@/lib/og";
 import "./globals.css";
 
 const spaceMono = Space_Mono({
@@ -22,46 +23,42 @@ const bebasNeue = Bebas_Neue({
   fallback: ["Impact", "Arial Narrow", "sans-serif"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: `${process.env.NODE_ENV === "production" ? "" : "[DEV] "}HTMLPix - HTML to Image API`,
-    template: `${process.env.NODE_ENV === "production" ? "" : "[DEV] "}%s | HTMLPix`,
-  },
-  description:
-    "Generate images from HTML/CSS with a single API call. OG images, social cards, receipts, certificates — at scale. Free tier included.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://htmlpix.com"),
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    type: "website",
-    siteName: "HTMLPix",
-    title: "HTMLPix - HTML to Image API",
+export async function generateMetadata(): Promise<Metadata> {
+  const ogImage = await getOgMetadataImage({
+    variant: "standard",
+    title: "HTMLPix",
+    subtitle: "Generate images from HTML/CSS with a single API call.",
+    tag: "HTML TO IMAGE API",
+    alt: "HTMLPix - HTML to Image API",
+  });
+
+  return {
+    title: {
+      default: `${process.env.NODE_ENV === "production" ? "" : "[DEV] "}HTMLPix - HTML to Image API`,
+      template: `${process.env.NODE_ENV === "production" ? "" : "[DEV] "}%s | HTMLPix`,
+    },
     description:
-      "Generate images from HTML/CSS with a single API call. OG images, social cards, receipts, certificates — at scale.",
-    images: [
-      {
-        url: "/api/og?variant=standard&title=HTMLPix&subtitle=Generate+images+from+HTML%2FCSS+with+a+single+API+call.&tag=HTML+TO+IMAGE+API",
-        width: 1200,
-        height: 630,
-        alt: "HTMLPix - HTML to Image API",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "HTMLPix - HTML to Image API",
-    description: "Generate images from HTML/CSS with a single API call. Free tier included.",
-    images: [
-      {
-        url: "/api/og?variant=standard&title=HTMLPix&subtitle=Generate+images+from+HTML%2FCSS+with+a+single+API+call.&tag=HTML+TO+IMAGE+API",
-        width: 1200,
-        height: 630,
-        alt: "HTMLPix - HTML to Image API",
-      },
-    ],
-  },
-};
+      "Generate images from HTML/CSS with a single API call. OG images, social cards, receipts, certificates — at scale. Free tier included.",
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://htmlpix.com"),
+    alternates: {
+      canonical: "/",
+    },
+    openGraph: {
+      type: "website",
+      siteName: "HTMLPix",
+      title: "HTMLPix - HTML to Image API",
+      description:
+        "Generate images from HTML/CSS with a single API call. OG images, social cards, receipts, certificates — at scale.",
+      images: ogImage ? [ogImage] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "HTMLPix - HTML to Image API",
+      description: "Generate images from HTML/CSS with a single API call. Free tier included.",
+      images: ogImage ? [ogImage] : undefined,
+    },
+  };
+}
 
 function getHostname(value: string | undefined): string {
   if (!value) {

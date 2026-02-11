@@ -6,6 +6,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import { IntegrationTabs } from "@/components/IntegrationTabs";
 import { FaqAccordion } from "@/components/FaqAccordion";
+import { getOgMetadataImage } from "@/lib/og";
 import { getAllSlugs, getUseCaseBySlug, getAllUseCases } from "../data";
 
 export function generateStaticParams() {
@@ -20,7 +21,15 @@ export async function generateMetadata({
   const { slug } = await params;
   const uc = getUseCaseBySlug(slug);
   if (!uc) return {};
-  const ogUrl = `/api/og?variant=standard&title=${encodeURIComponent(uc.meta.title)}&tag=${encodeURIComponent(uc.tag)}&subtitle=${encodeURIComponent(uc.desc)}`;
+
+  const ogImage = await getOgMetadataImage({
+    variant: "standard",
+    title: uc.meta.title,
+    tag: uc.tag,
+    subtitle: uc.desc,
+    alt: uc.meta.title,
+  });
+
   return {
     title: uc.meta.title,
     description: uc.meta.description,
@@ -28,10 +37,10 @@ export async function generateMetadata({
     openGraph: {
       title: `${uc.meta.title} | HTMLPix`,
       description: uc.meta.description,
-      images: [{ url: ogUrl, width: 1200, height: 630, alt: uc.meta.title }],
+      images: ogImage ? [ogImage] : undefined,
     },
     twitter: {
-      images: [{ url: ogUrl, width: 1200, height: 630, alt: uc.meta.title }],
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
