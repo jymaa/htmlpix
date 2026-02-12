@@ -60,7 +60,7 @@ const mintSignedOgImageUrlCached = cache(
         templateId,
         width: OG_IMAGE_WIDTH,
         height: OG_IMAGE_HEIGHT,
-        format: "png",
+        format: "webp",
         variables: {
           title,
           subtitle,

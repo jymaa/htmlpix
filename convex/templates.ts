@@ -303,7 +303,7 @@ return (
       googleFonts: ["Space Mono:wght@400;700", "Bebas Neue:wght@400"],
       width: 1200,
       height: 630,
-      format: "png" as const,
+      format: "webp" as const,
     },
     {
       name: "Blog Post",
@@ -351,7 +351,7 @@ return (
       googleFonts: ["Space Mono:wght@400;700", "Bebas Neue:wght@400"],
       width: 1200,
       height: 630,
-      format: "png" as const,
+      format: "webp" as const,
     },
     {
       name: "Documentation",
@@ -408,7 +408,7 @@ return (
       googleFonts: ["Space Mono:wght@400;700", "Bebas Neue:wght@400"],
       width: 1200,
       height: 630,
-      format: "png" as const,
+      format: "webp" as const,
     },
     {
       name: "Product Card",
@@ -458,7 +458,7 @@ return (
       googleFonts: ["Space Mono:wght@400;700", "Bebas Neue:wght@400"],
       width: 1200,
       height: 630,
-      format: "png" as const,
+      format: "webp" as const,
     },
   ];
 }

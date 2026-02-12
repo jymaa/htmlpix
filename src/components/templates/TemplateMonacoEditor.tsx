@@ -14,46 +14,51 @@ interface TemplateMonacoEditorProps {
 
 function createHighlighter() {
   return createHighlighterCore({
-    themes: [import("shiki/themes/dark-plus.mjs")],
+    themes: [import("shiki/themes/github-dark-default.mjs")],
     langs: [import("shiki/langs/tsx.mjs")],
     engine: createOnigurumaEngine(import("shiki/wasm")),
     langAlias: {
       typescript: "tsx",
-      typescriptreact: "tsx",
     },
   });
 }
 
-type GlobalThisWithShiki = typeof globalThis & {
-  templateEditorShikiInstanceV2: ReturnType<typeof createHighlighter>;
+type GlobalThis = typeof globalThis & {
+  shikiInstance: ReturnType<typeof createHighlighter>;
 };
 
-(globalThis as GlobalThisWithShiki).templateEditorShikiInstanceV2 ??= createHighlighter();
+(globalThis as GlobalThis).shikiInstance ??= createHighlighter();
 
-const highlighter = (globalThis as GlobalThisWithShiki).templateEditorShikiInstanceV2;
+const highlighter = await (globalThis as GlobalThis).shikiInstance;
+
+const tailwindTypings = `
+declare namespace React {
+  interface HTMLAttributes<T> {
+    tw?: string;
+  }
+}
+`;
 
 const handleBeforeMount: BeforeMount = (monaco) => {
   monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-    target: monaco.languages.typescript.ScriptTarget.ESNext,
-    module: monaco.languages.typescript.ModuleKind.ESNext,
-    jsx: monaco.languages.typescript.JsxEmit.React,
-    jsxFactory: "__h",
-    allowJs: true,
+    target: monaco.languages.typescript.ScriptTarget.Latest,
     allowNonTsExtensions: true,
-    noEmit: true,
-    strict: false,
-    skipLibCheck: true,
+    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+    module: monaco.languages.typescript.ModuleKind.ESNext,
+    reactNamespace: "React",
+    esModuleInterop: true,
+    jsx: monaco.languages.typescript.JsxEmit.ReactJSX,
+    typeRoots: ["node_modules/@types"],
   });
 
-  monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-    noSemanticValidation: true,
-    noSyntaxValidation: false,
-  });
+  monaco.languages.typescript.typescriptDefaults.setExtraLibs([
+    {
+      content: tailwindTypings,
+      filePath: "file:///tw.d.ts",
+    },
+  ]);
 
-  void highlighter.then((shiki) => {
-    shikiToMonaco(shiki, monaco);
-    monaco.editor.setTheme("dark-plus");
-  });
+  shikiToMonaco(highlighter, monaco);
 };
 
 export default function TemplateMonacoEditor({
@@ -64,25 +69,34 @@ export default function TemplateMonacoEditor({
 }: TemplateMonacoEditorProps) {
   return (
     <Editor
-      defaultLanguage="typescriptreact"
+      defaultLanguage="typescript"
       width="100%"
       height="100%"
       language={language}
-      theme="dark-plus"
+      theme="github-dark-default"
       value={value}
       path="template.tsx"
       beforeMount={handleBeforeMount}
+      loading="Loading editor..."
       options={{
-        minimap: { enabled: false },
-        fontSize: 14,
-        tabSize: 2,
-        readOnly,
-        "semanticHighlighting.enabled": false,
         wordWrap: "on",
+        tabSize: 2,
+        minimap: {
+          enabled: false,
+        },
+        stickyScroll: {
+          enabled: false,
+        },
+        scrollbar: {
+          useShadows: false,
+        },
+        fontSize: 12,
+        padding: {
+          top: 8,
+          bottom: 8,
+        },
+        readOnly,
         scrollBeyondLastLine: false,
-        automaticLayout: true,
-        smoothScrolling: true,
-        bracketPairColorization: { enabled: true },
       }}
       onChange={(next) => onChange(next ?? "")}
     />

@@ -105,7 +105,7 @@ export async function POST(req: Request) {
         googleFonts: parsed.googleFonts,
         width: parsed.width,
         height: parsed.height,
-        format: parsed.format,
+        format: "webp",
         quality: parsed.quality,
       }),
       signal: controller.signal,
@@ -149,7 +149,11 @@ export async function POST(req: Request) {
       error: error instanceof Error ? error.message : String(error),
       aborted: isAbort,
     });
-    return jsonError("PREVIEW_UPSTREAM_ERROR", isAbort ? "Preview request timed out" : "Preview request failed", 502);
+    return jsonError(
+      "PREVIEW_UPSTREAM_ERROR",
+      isAbort ? "Preview request timed out" : "Preview request failed",
+      502
+    );
   } finally {
     clearTimeout(timeout);
   }
